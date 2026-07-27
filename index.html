@@ -167,6 +167,63 @@
     border-color:var(--ink);
   }
 
+  button.link-card{
+    font-family:inherit;
+    font-size:inherit;
+    width:100%;
+    text-align:left;
+    cursor:pointer;
+  }
+
+  .captcha-panel{
+    margin-top:-2px;
+    margin-bottom:12px;
+    padding:16px 18px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+  }
+  .captcha-question{
+    margin:0 0 10px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .captcha-row{
+    display:flex;
+    gap:10px;
+  }
+  .captcha-row input{
+    flex:1;
+    font-family:inherit;
+    font-size:15px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .captcha-row input:focus{
+    outline:none;
+    border-color:var(--green-dark);
+  }
+  .captcha-row button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:10px 18px;
+    background:var(--green);
+    color:var(--ink);
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .captcha-row button:hover{background:var(--green-dark);}
+  .captcha-error{
+    margin:10px 0 0;
+    font-size:13px;
+    color:#c0392b;
+  }
+
   .contact-form{
     display:flex;
     flex-direction:column;
@@ -356,7 +413,7 @@
       <span class="arrow" aria-hidden="true">&#8594;</span>
     </a>
 
-    <a class="link-card support" href="mailto:mail.zsh@proton.me?subject=Bankverbindung%20anfragen&body=Hallo%2C%0A%0Aich%20w%C3%BCrde%20gerne%20per%20Banku%CC%88berweisung%20unterstu%CC%88tzen%20und%20bitte%20um%20die%20Kontodaten.%0A%0AViele%20Gru%CC%88%C3%9Fe">
+    <button type="button" class="link-card support" id="bank-request-btn">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 10L12 5L20 10V11H4V10Z" fill="currentColor"/><path d="M5 12H7V18H5V12Z" fill="currentColor"/><path d="M11 12H13V18H11V12Z" fill="currentColor"/><path d="M17 12H19V18H17V12Z" fill="currentColor"/><path d="M4 19H20V21H4V19Z" fill="currentColor"/></svg>
       </span>
@@ -365,7 +422,16 @@
         <span class="sub">Für Unterstützung per Überweisung</span>
       </span>
       <span class="arrow" aria-hidden="true">&#8594;</span>
-    </a>
+    </button>
+
+    <div class="captcha-panel" id="captcha-panel" hidden>
+      <p class="captcha-question" id="captcha-question"></p>
+      <div class="captcha-row">
+        <input type="text" id="captcha-answer" inputmode="numeric" placeholder="Antwort">
+        <button type="button" id="captcha-submit">Bestätigen</button>
+      </div>
+      <p class="captcha-error" id="captcha-error" hidden>Falsche Antwort, versuch's nochmal.</p>
+    </div>
 
   </div>
 
@@ -576,6 +642,62 @@
   }
 
   loadVideos();
+})();
+
+(function(){
+  var btn = document.getElementById('bank-request-btn');
+  var panel = document.getElementById('captcha-panel');
+  var question = document.getElementById('captcha-question');
+  var answerInput = document.getElementById('captcha-answer');
+  var submitBtn = document.getElementById('captcha-submit');
+  var errorMsg = document.getElementById('captcha-error');
+  if(!btn || !panel) return;
+
+  var a, b, sum;
+
+  function newChallenge(){
+    a = Math.floor(Math.random() * 8) + 2;
+    b = Math.floor(Math.random() * 8) + 2;
+    sum = a + b;
+    question.textContent = 'Kurze Sicherheitsfrage: Was ist ' + a + ' + ' + b + '?';
+    answerInput.value = '';
+    errorMsg.hidden = true;
+  }
+
+  function openMail(){
+    var subject = 'Bankverbindung anfragen';
+    var body = 'Hallo,\n\nich würde gerne per Banküberweisung unterstützen und bitte um die Kontodaten.\n\nViele Grüße';
+    window.location.href = 'mailto:mail.zsh@proton.me?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  }
+
+  btn.addEventListener('click', function(){
+    var isHidden = panel.hasAttribute('hidden');
+    if(isHidden){
+      newChallenge();
+      panel.hidden = false;
+      answerInput.focus();
+    }else{
+      panel.hidden = true;
+    }
+  });
+
+  function checkAnswer(){
+    if(parseInt(answerInput.value, 10) === sum){
+      panel.hidden = true;
+      openMail();
+    }else{
+      errorMsg.hidden = false;
+      newChallenge();
+    }
+  }
+
+  submitBtn.addEventListener('click', checkAnswer);
+  answerInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
 })();
 
 (function(){
