@@ -212,46 +212,45 @@
   .video-cta .vtitle{font-weight:700; font-size:16px; margin:0 0 6px;}
   .video-cta .vsub{font-size:13px; color:#c7c7c2; margin:0;}
 
-  .lit-section{
-    max-width:var(--max);
-    margin:0 auto 24px;
-    padding:0 24px;
-  }
-  .lit-section .label{
-    text-transform:uppercase;
-    letter-spacing:0.14em;
-    font-size:12px;
-    font-weight:600;
-    color:var(--muted);
-    margin:0 0 16px;
-  }
-  .lit-list{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-bottom:14px;
-  }
-  .lit-card{
+  .book-inline{
     display:flex;
     align-items:center;
-    justify-content:space-between;
     gap:16px;
-    padding:16px 20px;
+    margin:28px 0;
+    padding:14px;
     background:#fff;
     border:1px solid var(--line);
+    border-left:3px solid var(--green);
     border-radius:14px;
     text-decoration:none;
     color:var(--ink);
     transition:transform 180ms ease, box-shadow 180ms ease;
   }
-  .lit-card:hover{
+  .book-inline:hover{
     transform:translateY(-3px);
-    box-shadow:0 12px 28px rgba(27,27,27,0.08);
+    box-shadow:0 12px 28px rgba(27,27,27,0.1);
   }
-  .lit-card .ltitle{font-weight:600; font-size:15px; margin:0 0 4px;}
-  .lit-card .lmeta{font-size:13px; color:var(--muted); margin:0;}
-  .lit-card .larrow{flex:none; color:var(--muted); font-size:14px;}
-  .lit-disclosure{font-size:12px; color:var(--muted); margin:0;}
+  .book-inline .cover{
+    flex:none;
+    width:52px;
+    height:78px;
+    object-fit:cover;
+    border-radius:4px;
+    box-shadow:0 3px 8px rgba(27,27,27,0.2);
+  }
+  .book-inline .info{flex:1; min-width:0;}
+  .book-inline .tag{
+    display:block;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--green-dark);
+    margin:0 0 4px;
+  }
+  .book-inline .btitle{display:block; font-weight:600; font-size:15px; margin:0 0 2px;}
+  .book-inline .bauthor{display:block; font-size:13px; color:var(--muted);}
+  .book-inline .barrow{flex:none; color:var(--muted); font-size:14px;}
 
   .back-link{
     display:block;
@@ -288,6 +287,7 @@
   <a class="brand" href="../index.html"><img src="../assets/logo.png" alt="">Zeitreise Seelower Höhen</a>
   <nav>
     <a href="index.html">Artikel</a>
+    <a href="../karte.html">Karte</a>
     <a href="../index.html">Startseite</a>
   </nav>
 </header>
@@ -311,6 +311,16 @@
     <p>Während die Front nördlich Berlins immer weiter auseinanderbricht, zieht Generaloberst Heinrici die Konsequenzen. Er beauftragt den ehemaligen Befehlshaber der 11. SS-Panzerarmee, entlang des Finow- und Hohenzollernkanals eine neue Sicherungslinie aufzubauen. Diese verläuft entlang des Kanals – einer Wasserlinie, die sich von Hohensaaten über Eberswalde und Finowfurt bis nach Oranienburg zieht.</p>
   </section>
 
+  <a class="book-inline" href="https://www.amazon.de/dp/3869332212?tag=histograf-21" target="_blank" rel="noopener sponsored">
+    <img class="cover" src="https://m.media-amazon.com/images/I/61jhreVl8xL._SY342_.jpg" alt="Buchcover: Der Kampf um die Seelower Höhen">
+    <span class="info">
+      <span class="tag">Buchtipp · Werbung</span>
+      <span class="btitle">Der Kampf um die Seelower Höhen</span>
+      <span class="bauthor">Karl Stich — die Schlacht, die alles auslöste</span>
+    </span>
+    <span class="barrow" aria-hidden="true">&#8594;</span>
+  </a>
+
   <section class="chapter">
     <h2>Der große Bluff – Himmlers Papierarmee</h2>
     <p>Anfang Februar 1945 entstand die 11. SS-Panzerarmee unter außergewöhnlichen militärischen und politischen Umständen. Nach dem sowjetischen Großangriff im Januar klaffte zwischen der 2. Armee in Pommern und der 9. Armee an der Oder eine gefährliche Lücke, die dringend geschlossen werden musste. Reichsführer-SS Heinrich Himmler nutzte diese Krise, um sich eine eigene Armee aufzubauen. Den Oberbefehl erhielt Felix Steiner. Doch hinter dem klangvollen Namen verbarg sich keine schlagkräftige Panzerarmee, sondern ein improvisierter Verband aus zusammengewürfelten Einheiten – ein Widerspruch, der nur wenige Wochen später dramatische Folgen haben sollte.</p>
@@ -325,6 +335,16 @@
     <blockquote>Er verfügte über ein phänomenales Gedächtnis und galt als eine „Führernatur", die selbst in aussichtslosen Lagen Ruhe ausstrahlte.</blockquote>
     <p>Gerade diese Gelassenheit sollte ihn wenige Wochen später vor eine Entscheidung stellen, die über den weiteren Verlauf der Ereignisse mitentscheiden würde.</p>
   </section>
+
+  <a class="book-inline" href="https://www.amazon.de/dp/3944951018?tag=histograf-21" target="_blank" rel="noopener sponsored">
+    <img class="cover" src="https://m.media-amazon.com/images/I/51DBuARttVL._SY342_.jpg" alt="Buchcover: Die Armee der Geächteten">
+    <span class="info">
+      <span class="tag">Buchtipp · Werbung</span>
+      <span class="btitle">Die Armee der Geächteten</span>
+      <span class="bauthor">Felix Steiner selbst — seine eigenen Memoiren</span>
+    </span>
+    <span class="barrow" aria-hidden="true">&#8594;</span>
+  </a>
 
   <section class="chapter">
     <h2>Steiners Auftrag</h2>
@@ -353,6 +373,16 @@
     <p>Während einer Besprechung am 25. April forderte Generaloberst Heinrici Steiner auf, „um Ihres Führers willen" anzugreifen. Nach späteren Berichten soll Steiner Heinrici daraufhin wütend angeschrien haben: „Er ist auch Ihr Führer!" Trotz dieses Ausbruchs handelten beide später einvernehmlich gegen die unrealistischen Befehle, um ihre Soldaten zu retten.</p>
     <p>Am Ende entschieden sich beide nicht für den Gehorsam, sondern für die Realität. Der berühmte „Angriff Steiner" endet nicht mit einem Angriff, sondern mit der Erkenntnis, dass es ihn nie geben konnte.</p>
   </section>
+
+  <a class="book-inline" href="https://www.amazon.de/dp/3570003698?tag=histograf-21" target="_blank" rel="noopener sponsored">
+    <img class="cover" src="https://m.media-amazon.com/images/I/61vIbrnl97L._SY342_.jpg" alt="Buchcover: Berlin 1945 - Das Ende">
+    <span class="info">
+      <span class="tag">Buchtipp · Werbung</span>
+      <span class="btitle">Berlin 1945 – Das Ende</span>
+      <span class="bauthor">Antony Beevor — der Zusammenbruch aus nächster Nähe</span>
+    </span>
+    <span class="barrow" aria-hidden="true">&#8594;</span>
+  </a>
 </main>
 
 <div class="video-cta">
@@ -369,34 +399,6 @@
       <p class="vsub">Auf YouTube ansehen →</p>
     </div>
   </a>
-</div>
-
-<div class="lit-section">
-  <p class="label">Weiterführende Literatur</p>
-  <div class="lit-list">
-    <a class="lit-card" href="https://www.amazon.de/dp/3869332212?tag=histograf-21" target="_blank" rel="noopener sponsored">
-      <span class="text">
-        <span class="ltitle">Der Kampf um die Seelower Höhen</span>
-        <span class="lmeta">Karl Stich — die Schlacht, die den Zusammenbruch erst auslöste</span>
-      </span>
-      <span class="larrow" aria-hidden="true">&#8594;</span>
-    </a>
-    <a class="lit-card" href="https://www.amazon.de/dp/3944951018?tag=histograf-21" target="_blank" rel="noopener sponsored">
-      <span class="text">
-        <span class="ltitle">Die Armee der Geächteten</span>
-        <span class="lmeta">Felix Steiner selbst — seine eigenen Memoiren</span>
-      </span>
-      <span class="larrow" aria-hidden="true">&#8594;</span>
-    </a>
-    <a class="lit-card" href="https://www.amazon.de/dp/3570003698?tag=histograf-21" target="_blank" rel="noopener sponsored">
-      <span class="text">
-        <span class="ltitle">Berlin 1945 – Das Ende</span>
-        <span class="lmeta">Antony Beevor — Standardwerk zum Zusammenbruch Berlins</span>
-      </span>
-      <span class="larrow" aria-hidden="true">&#8594;</span>
-    </a>
-  </div>
-  <p class="lit-disclosure">Werbung / Affiliate-Links: Bei einem Kauf über diese Links erhalten wir ggf. eine kleine Provision – für dich ändert sich der Preis nicht.</p>
 </div>
 
 <a class="back-link" href="index.html">&#8592; Alle Artikel</a>
@@ -496,8 +498,8 @@
       opacity:1, y:0, duration:0.6, ease:'power2.out',
       scrollTrigger:{trigger:'.video-cta', start:'top 90%'}
     });
-    gsap.utils.toArray('.lit-card').forEach(function(card){
-      gsap.fromTo(card, {opacity:0, y:20}, {
+    gsap.utils.toArray('.book-inline').forEach(function(card){
+      gsap.fromTo(card, {opacity:0, y:16}, {
         opacity:1, y:0, duration:0.5, ease:'power2.out',
         scrollTrigger:{trigger:card, start:'top 92%'}
       });

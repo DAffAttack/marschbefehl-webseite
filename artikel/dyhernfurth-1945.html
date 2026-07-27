@@ -217,46 +217,45 @@
   .video-cta .vtitle{font-weight:700; font-size:16px; margin:0 0 6px;}
   .video-cta .vsub{font-size:13px; color:#c7c7c2; margin:0;}
 
-  .lit-section{
-    max-width:var(--max);
-    margin:0 auto 24px;
-    padding:0 24px;
-  }
-  .lit-section .label{
-    text-transform:uppercase;
-    letter-spacing:0.14em;
-    font-size:12px;
-    font-weight:600;
-    color:var(--muted);
-    margin:0 0 16px;
-  }
-  .lit-list{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-bottom:14px;
-  }
-  .lit-card{
+  .book-inline{
     display:flex;
     align-items:center;
-    justify-content:space-between;
     gap:16px;
-    padding:16px 20px;
+    margin:28px 0;
+    padding:14px;
     background:#fff;
     border:1px solid var(--line);
+    border-left:3px solid var(--green);
     border-radius:14px;
     text-decoration:none;
     color:var(--ink);
     transition:transform 180ms ease, box-shadow 180ms ease;
   }
-  .lit-card:hover{
+  .book-inline:hover{
     transform:translateY(-3px);
-    box-shadow:0 12px 28px rgba(27,27,27,0.08);
+    box-shadow:0 12px 28px rgba(27,27,27,0.1);
   }
-  .lit-card .ltitle{font-weight:600; font-size:15px; margin:0 0 4px;}
-  .lit-card .lmeta{font-size:13px; color:var(--muted); margin:0;}
-  .lit-card .larrow{flex:none; color:var(--muted); font-size:14px;}
-  .lit-disclosure{font-size:12px; color:var(--muted); margin:0;}
+  .book-inline .cover{
+    flex:none;
+    width:52px;
+    height:78px;
+    object-fit:cover;
+    border-radius:4px;
+    box-shadow:0 3px 8px rgba(27,27,27,0.2);
+  }
+  .book-inline .info{flex:1; min-width:0;}
+  .book-inline .tag{
+    display:block;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--green-dark);
+    margin:0 0 4px;
+  }
+  .book-inline .btitle{display:block; font-weight:600; font-size:15px; margin:0 0 2px;}
+  .book-inline .bauthor{display:block; font-size:13px; color:var(--muted);}
+  .book-inline .barrow{flex:none; color:var(--muted); font-size:14px;}
 
   .back-link{
     display:block;
@@ -293,6 +292,7 @@
   <a class="brand" href="../index.html"><img src="../assets/logo.png" alt="">Zeitreise Seelower Höhen</a>
   <nav>
     <a href="index.html">Artikel</a>
+    <a href="../karte.html">Karte</a>
     <a href="../index.html">Startseite</a>
   </nav>
 </header>
@@ -318,6 +318,16 @@
     <blockquote>In den Bunkeranlagen lagerten tausende Tonnen eines Kampfmittels, das dem Gegner technologisch weit überlegen war – aber man verfügte über keine Truppen vor Ort, um es zu schützen oder fachgerecht zu vernichten.</blockquote>
   </section>
 
+  <a class="book-inline" href="https://www.amazon.de/dp/3964034878?tag=histograf-21" target="_blank" rel="noopener sponsored">
+    <img class="cover" src="https://m.media-amazon.com/images/I/71jyybV2PTL._SY342_.jpg" alt="Buchcover: Es begann an der Weichsel">
+    <span class="info">
+      <span class="tag">Buchtipp · Werbung</span>
+      <span class="btitle">Es begann an der Weichsel</span>
+      <span class="bauthor">Jürgen Thorwald — der Zusammenbruch, der alles auslöste</span>
+    </span>
+    <span class="barrow" aria-hidden="true">&#8594;</span>
+  </a>
+
   <section class="chapter">
     <h2>Das vergessene Gift</h2>
     <p class="kicker">Tabun – ein Nervenkampfstoff der neuesten Generation</p>
@@ -325,6 +335,16 @@
     <p>In den Betonkatakomben des Werkes lagern in neun Bunkergruppen insgesamt 12.000 Tonnen dieses Agens in ungesicherten Hochbottichen. Trotz dringender Warnungen des Generals der Nebeltruppen, General Ochsner, wurde auf eine rechtzeitige Unschädlichmachung der Bestände verzichtet.</p>
     <p>Eine Zerstörung der Anlage durch schwere Artillerie oder Luftangriffe wird nach fachlicher Beurteilung verworfen: Die Gefahr einer unkontrollierten Freisetzung über bewohntem Gebiet und die Tatsache, dass verbleibende Rückstände eine feindliche Analyse der Molekularstruktur nicht ausschließen würden, erfordern eine andere Lösung. Das Kampfmittel muss physisch vernichtet werden – durch einen Einbruch in den feindbesetzten Raum, um das Gas über die werkseigenen Rohrleitungen kontrolliert in die Oder abzupumpen. Nur die totale Verdünnung in den Fluten der Oder garantiert die endgültige Neutralisierung dieser 12.000 Tonnen tödlicher Fracht.</p>
   </section>
+
+  <a class="book-inline" href="https://www.amazon.de/dp/3835331698?tag=histograf-21" target="_blank" rel="noopener sponsored">
+    <img class="cover" src="https://m.media-amazon.com/images/I/91x3HsFmj6L._SY342_.jpg" alt="Buchcover: Kampfstoff-Forschung im Nationalsozialismus">
+    <span class="info">
+      <span class="tag">Buchtipp · Werbung</span>
+      <span class="btitle">Kampfstoff-Forschung im Nationalsozialismus</span>
+      <span class="bauthor">Florian Schmaltz — fundierte Aufarbeitung inkl. Dyhernfurth</span>
+    </span>
+    <span class="barrow" aria-hidden="true">&#8594;</span>
+  </a>
 
   <section class="chapter">
     <h2>Der Mann und sein Auftrag</h2>
@@ -375,27 +395,6 @@
       <p class="vsub">Auf YouTube ansehen →</p>
     </div>
   </a>
-</div>
-
-<div class="lit-section">
-  <p class="label">Weiterführende Literatur</p>
-  <div class="lit-list">
-    <a class="lit-card" href="https://www.amazon.de/dp/3835331698?tag=histograf-21" target="_blank" rel="noopener sponsored">
-      <span class="text">
-        <span class="ltitle">Kampfstoff-Forschung im Nationalsozialismus</span>
-        <span class="lmeta">Florian Schmaltz — fundierte Aufarbeitung inkl. Anorgana/Dyhernfurth</span>
-      </span>
-      <span class="larrow" aria-hidden="true">&#8594;</span>
-    </a>
-    <a class="lit-card" href="https://www.amazon.de/dp/3964034878?tag=histograf-21" target="_blank" rel="noopener sponsored">
-      <span class="text">
-        <span class="ltitle">Es begann an der Weichsel</span>
-        <span class="lmeta">Jürgen Thorwald — der Zusammenbruch, der Dyhernfurth erst gefährdete</span>
-      </span>
-      <span class="larrow" aria-hidden="true">&#8594;</span>
-    </a>
-  </div>
-  <p class="lit-disclosure">Werbung / Affiliate-Links: Bei einem Kauf über diese Links erhalten wir ggf. eine kleine Provision – für dich ändert sich der Preis nicht.</p>
 </div>
 
 <a class="back-link" href="index.html">&#8592; Alle Artikel</a>
@@ -495,8 +494,8 @@
       opacity:1, y:0, duration:0.6, ease:'power2.out',
       scrollTrigger:{trigger:'.video-cta', start:'top 90%'}
     });
-    gsap.utils.toArray('.lit-card').forEach(function(card){
-      gsap.fromTo(card, {opacity:0, y:20}, {
+    gsap.utils.toArray('.book-inline').forEach(function(card){
+      gsap.fromTo(card, {opacity:0, y:16}, {
         opacity:1, y:0, duration:0.5, ease:'power2.out',
         scrollTrigger:{trigger:card, start:'top 92%'}
       });
