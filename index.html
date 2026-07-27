@@ -83,15 +83,16 @@
     margin:0 0 36px;
   }
   .scroll-cue{
-    width:1px;
-    height:44px;
-    background:linear-gradient(#fff, transparent);
-    opacity:0.4;
-    animation:pulse 2s ease-in-out infinite;
+    width:26px;
+    height:26px;
+    color:#fff;
+    opacity:0.75;
+    animation:bounce 1.8s ease-in-out infinite;
   }
-  @keyframes pulse{
-    0%,100%{opacity:0.15;}
-    50%{opacity:0.5;}
+  .scroll-cue svg{width:100%; height:100%;}
+  @keyframes bounce{
+    0%,100%{transform:translateY(0); opacity:0.5;}
+    50%{transform:translateY(8px); opacity:0.9;}
   }
 
   main{
@@ -356,7 +357,9 @@
     <img class="logo" src="assets/logo-hero.png" alt="Zeitreise Seelower Höhen Logo">
     <h1>Zeitreise Seelower Höhen</h1>
     <p>Geschichte hautnah – Dokumentationen zur Schlacht um die Seelower Höhen und zur Ostfront im Zweiten Weltkrieg, erzählt anhand von Zeitzeugen, Quellen und Feldrecherche.</p>
-    <div class="scroll-cue"></div>
+    <div class="scroll-cue" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
   </div>
 </section>
 
