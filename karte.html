@@ -289,6 +289,7 @@
   var DRAG_THRESHOLD = 5;
 
   frame.addEventListener('pointerdown', function(e){
+    if(e.target.closest('.zoom-controls, .pin')) return;
     if(e.button !== undefined && e.button !== 0) return;
     dragging = true;
     moved = false;
@@ -297,10 +298,10 @@
     startPanX = panX;
     startPanY = panY;
     frame.classList.add('dragging');
-    frame.setPointerCapture(e.pointerId);
+    e.preventDefault();
   });
 
-  frame.addEventListener('pointermove', function(e){
+  document.addEventListener('pointermove', function(e){
     if(!dragging) return;
     var dx = e.clientX - startX, dy = e.clientY - startY;
     if(Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) moved = true;
@@ -312,17 +313,9 @@
     }
   });
 
-  function endDrag(){
+  document.addEventListener('pointerup', function(){
     dragging = false;
     frame.classList.remove('dragging');
-  }
-  frame.addEventListener('pointerup', endDrag);
-  frame.addEventListener('pointercancel', endDrag);
-
-  document.querySelectorAll('.pin').forEach(function(pin){
-    pin.addEventListener('click', function(e){
-      if(moved){ e.preventDefault(); }
-    });
   });
 
   apply();
