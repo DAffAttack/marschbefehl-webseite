@@ -223,6 +223,12 @@
     font-size:13px;
     color:#c0392b;
   }
+  .bank-details p{
+    margin:0 0 6px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .bank-details p:last-child{margin-bottom:0;}
 
   .contact-form{
     display:flex;
@@ -425,12 +431,19 @@
     </button>
 
     <div class="captcha-panel" id="captcha-panel" hidden>
-      <p class="captcha-question" id="captcha-question"></p>
-      <div class="captcha-row">
-        <input type="text" id="captcha-answer" inputmode="numeric" placeholder="Antwort">
-        <button type="button" id="captcha-submit">Bestätigen</button>
+      <div id="captcha-challenge">
+        <p class="captcha-question" id="captcha-question"></p>
+        <div class="captcha-row">
+          <input type="text" id="captcha-answer" inputmode="numeric" placeholder="Antwort">
+          <button type="button" id="captcha-submit">Bestätigen</button>
+        </div>
+        <p class="captcha-error" id="captcha-error" hidden>Falsche Antwort, versuch's nochmal.</p>
       </div>
-      <p class="captcha-error" id="captcha-error" hidden>Falsche Antwort, versuch's nochmal.</p>
+      <div id="captcha-result" class="bank-details" hidden>
+        <p><strong>Kontoinhaber:</strong> Enrico Holland</p>
+        <p><strong>IBAN:</strong> DE26500240242823093632</p>
+        <p><strong>Bank:</strong> C24</p>
+      </div>
     </div>
 
   </div>
@@ -647,6 +660,8 @@
 (function(){
   var btn = document.getElementById('bank-request-btn');
   var panel = document.getElementById('captcha-panel');
+  var challenge = document.getElementById('captcha-challenge');
+  var result = document.getElementById('captcha-result');
   var question = document.getElementById('captcha-question');
   var answerInput = document.getElementById('captcha-answer');
   var submitBtn = document.getElementById('captcha-submit');
@@ -662,12 +677,8 @@
     question.textContent = 'Kurze Sicherheitsfrage: Was ist ' + a + ' + ' + b + '?';
     answerInput.value = '';
     errorMsg.hidden = true;
-  }
-
-  function openMail(){
-    var subject = 'Bankverbindung anfragen';
-    var body = 'Hallo,\n\nich würde gerne per Banküberweisung unterstützen und bitte um die Kontodaten.\n\nViele Grüße';
-    window.location.href = 'mailto:mail.zsh@proton.me?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    challenge.hidden = false;
+    result.hidden = true;
   }
 
   btn.addEventListener('click', function(){
@@ -683,8 +694,8 @@
 
   function checkAnswer(){
     if(parseInt(answerInput.value, 10) === sum){
-      panel.hidden = true;
-      openMail();
+      challenge.hidden = true;
+      result.hidden = false;
     }else{
       errorMsg.hidden = false;
       newChallenge();
