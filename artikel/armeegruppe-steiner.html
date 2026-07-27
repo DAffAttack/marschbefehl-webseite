@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armeegruppe Steiner: Warum Hitlers letzte Hoffnung nie existierte – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Am 21. April 1945 setzt Hitler seine letzte Hoffnung auf Felix Steiner und eine Armee, die praktisch nicht existiert. Die wahre Geschichte hinter dem berühmten „Angriff Steiner“.">
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:700px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  .topnav{
+    position:sticky;
+    top:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 24px;
+    background:rgba(250,250,248,0.9);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .topnav .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:14px;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .topnav .brand img{width:26px; height:26px;}
+  .topnav nav a{
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--ink);
+    margin-left:20px;
+  }
+  .topnav nav a:hover{color:var(--green-dark);}
+
+  .hero{
+    background:var(--ink);
+    color:#fff;
+    min-height:64vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:64px 24px;
+    position:relative;
+    overflow:hidden;
+  }
+  #terrain-canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index:0;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    background:radial-gradient(ellipse at 50% 40%, rgba(27,27,27,0) 0%, rgba(27,27,27,0.5) 70%, rgba(27,27,27,0.88) 100%);
+    pointer-events:none;
+  }
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    max-width:780px;
+  }
+  .hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--green);
+    margin:0 0 18px;
+  }
+  .hero h1{
+    font-size:clamp(28px, 5vw, 46px);
+    font-weight:700;
+    letter-spacing:-0.02em;
+    line-height:1.15;
+    margin:0 0 18px;
+  }
+  .hero p{
+    font-size:clamp(15px, 2vw, 18px);
+    color:#c7c7c2;
+    max-width:560px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  main.article{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:64px 24px 24px;
+  }
+  .lead{
+    font-size:19px;
+    line-height:1.75;
+    color:var(--ink-soft);
+    margin:0 0 48px;
+  }
+  .chapter{
+    margin-bottom:44px;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .chapter h2{
+    font-size:22px;
+    margin:0 0 16px;
+    color:var(--ink);
+  }
+  .chapter p{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+  .chapter blockquote{
+    margin:28px 0;
+    padding:4px 0 4px 20px;
+    border-left:3px solid var(--green);
+    font-size:18px;
+    font-style:italic;
+    color:var(--ink);
+  }
+
+  .video-cta{
+    max-width:var(--max);
+    margin:24px auto 72px;
+    padding:0 24px;
+  }
+  .video-cta .label{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .video-cta a{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    background:var(--ink);
+    border-radius:16px;
+    overflow:hidden;
+    text-decoration:none;
+    color:#fff;
+    transition:transform 180ms ease, box-shadow 180ms ease;
+  }
+  .video-cta a:hover{
+    transform:translateY(-3px);
+    box-shadow:0 16px 32px rgba(27,27,27,0.18);
+  }
+  .video-cta .thumb-wrap{
+    position:relative;
+    flex:none;
+    width:44%;
+    aspect-ratio:16/9;
+  }
+  .video-cta .thumb-wrap img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .video-cta .play{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .video-cta .play span{
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .video-cta .play svg{width:20px; height:20px; color:var(--ink);}
+  .video-cta .vtext{padding:16px 24px 16px 0;}
+  .video-cta .vtitle{font-weight:700; font-size:16px; margin:0 0 6px;}
+  .video-cta .vsub{font-size:13px; color:#c7c7c2; margin:0;}
+
+  .back-link{
+    display:block;
+    max-width:var(--max);
+    margin:0 auto 64px;
+    padding:0 24px;
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .back-link:hover{color:var(--green-dark);}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+
+  @media (max-width:560px){
+    .video-cta a{flex-direction:column;}
+    .video-cta .thumb-wrap{width:100%;}
+    .video-cta .vtext{padding:16px 20px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <a class="brand" href="../index.html"><img src="../assets/logo.png" alt="">Zeitreise Seelower Höhen</a>
+  <nav>
+    <a href="index.html">Artikel</a>
+    <a href="../index.html">Startseite</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <canvas id="terrain-canvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">Ostfront · April 1945</p>
+    <h1>Armeegruppe Steiner: Warum Hitlers letzte Hoffnung nie existierte</h1>
+    <p>Berlin war nie das Ziel, das erreicht werden konnte – denn die Armee, die es retten sollte, gab es praktisch gar nicht.</p>
+  </div>
+</section>
+
+<main class="article">
+  <p class="lead">Am 21. April 1945 setzt Adolf Hitler seine letzte Hoffnung auf einen Mann: Felix Steiner. Innerhalb von nur 24 Stunden soll dessen Armee Berlin entsetzen und den Vormarsch der Roten Armee aufhalten. Doch was Hitler nicht weiß: Diese Armee existiert praktisch gar nicht. Aus dieser folgenschweren Fehleinschätzung entsteht eine der bekanntesten Szenen der Weltgeschichte – und der endgültige Zusammenbruch der deutschen militärischen Führung. Doch wie konnte es überhaupt so weit kommen? Warum setzte Hitler seine letzten Hoffnungen auf einen Verband, der kaum noch kampffähig war? Um das zu verstehen, müssen wir einige Wochen zurückgehen.</p>
+
+  <section class="chapter">
+    <h2>Eine Krise ist nicht genug – Die zerbrechende Front</h2>
+    <p>April 1945: An der Oderfront bricht die Verteidigung endgültig zusammen. Nachdem die Rote Armee die Seelower Höhen überrannt hat, wird die deutsche 9. Armee im Zentrum gespalten. Nördlich von Berlin entsteht eine tödliche operative Lücke: Zwischen Wriezen und dem Raum Schwedt reißt die Front auf über 40 Kilometern komplett auf.</p>
+    <p>Sowjetische Panzerkolonnen stoßen durch dieses Vakuum ungehindert nach Nordwesten vor. Für die 3. Panzerarmee, die noch am Unterlauf der Oder bei Stettin kämpft, droht die sofortige Abschneidung von hinten.</p>
+    <p>Während die Front nördlich Berlins immer weiter auseinanderbricht, zieht Generaloberst Heinrici die Konsequenzen. Er beauftragt den ehemaligen Befehlshaber der 11. SS-Panzerarmee, entlang des Finow- und Hohenzollernkanals eine neue Sicherungslinie aufzubauen. Diese verläuft entlang des Kanals – einer Wasserlinie, die sich von Hohensaaten über Eberswalde und Finowfurt bis nach Oranienburg zieht.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Der große Bluff – Himmlers Papierarmee</h2>
+    <p>Anfang Februar 1945 entstand die 11. SS-Panzerarmee unter außergewöhnlichen militärischen und politischen Umständen. Nach dem sowjetischen Großangriff im Januar klaffte zwischen der 2. Armee in Pommern und der 9. Armee an der Oder eine gefährliche Lücke, die dringend geschlossen werden musste. Reichsführer-SS Heinrich Himmler nutzte diese Krise, um sich eine eigene Armee aufzubauen. Den Oberbefehl erhielt Felix Steiner. Doch hinter dem klangvollen Namen verbarg sich keine schlagkräftige Panzerarmee, sondern ein improvisierter Verband aus zusammengewürfelten Einheiten – ein Widerspruch, der nur wenige Wochen später dramatische Folgen haben sollte.</p>
+    <p>Die 11. SS-Panzerarmee war damit zugleich militärische Notlösung und politisches Prestigeprojekt Himmlers. Sie sollte die Lücke an der Front schließen und zugleich den Anspruch der Waffen-SS untermauern, dem Heer ebenbürtig zu sein. Offiziell trug der Verband die Bezeichnung „11. Armee". Im allgemeinen Sprachgebrauch setzte sich jedoch der Name „11. SS-Panzerarmee" durch – ein Titel, der weit mehr Schlagkraft versprach, als tatsächlich vorhanden war.</p>
+    <p>Ihre größte Stärke erreichte die 11. SS-Panzerarmee Mitte Februar 1945, unmittelbar vor Beginn des Unternehmens „Sonnenwende". Zu diesem Zeitpunkt verfügte sie über rund 290 einsatzbereite Panzer und Sturmgeschütze. Doch der Verschleiß war enorm. Bereits Ende Februar waren nur noch 19 Panzer und etwa 164 Sturmgeschütze einsatzbereit.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Der Mann hinter dem Namen – Felix Steiner</h2>
+    <p>Felix Steiner war einer der profiliertesten und eigenwilligsten Führer der Waffen-SS. Als ehemaliger aktiver Offizier des Ersten Weltkriegs unterschied er sich durch seine professionelle militärische Ausbildung deutlich von den rein politisch ernannten SS-Führern. Steiner galt in Fachkreisen neben Paul Hausser als der einzige höhere SS-Führer, der die tatsächlichen Qualifikationen für eine hohe militärische Führungsposition besaß.</p>
+    <p>Steiner prägte das Gesicht der Waffen-SS maßgeblich mit. Er spezialisierte sich auf die Führung von Verbänden mit internationalen Freiwilligen, wie der Division „Wiking" und dem III. (germanischen) SS-Panzerkorps. Unter seinen Soldaten war er als „der Alte" bekannt und wurde für seinen ruhigen, fordernden, aber zugleich kameradschaftlichen Führungsstil verehrt.</p>
+    <blockquote>Er verfügte über ein phänomenales Gedächtnis und galt als eine „Führernatur", die selbst in aussichtslosen Lagen Ruhe ausstrahlte.</blockquote>
+    <p>Gerade diese Gelassenheit sollte ihn wenige Wochen später vor eine Entscheidung stellen, die über den weiteren Verlauf der Ereignisse mitentscheiden würde.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Steiners Auftrag</h2>
+    <p>Generaloberst Heinrici hatte Felix Steiner ursprünglich mit einer klar begrenzten Aufgabe betraut. Mit den Resten des III. (germanischen) SS-Panzerkorps – das für diesen Einsatz als Armee-Gruppe Steiner bezeichnet wurde – sollte er entlang des Finow- und Hohenzollernkanals eine Sicherungslinie nördlich Berlins aufbauen.</p>
+    <p>Doch am Nachmittag des 21. April 1945 änderte sich alles. Hitler beugt sich während der Lagebesprechung über seine Frontkarte. Plötzlich bleibt sein Blick an einem Namen hängen: Steiner. Für Hitler steht dieser Name noch immer für Angriffskraft, Entschlossenheit und militärische Zuverlässigkeit. Niemand wagt es ihm zu sagen, dass die Kampfgruppe Steiner zu diesem Zeitpunkt noch gar nicht vollständig aufgestellt ist. Niemand weiß mit Sicherheit, wo sich Steiner überhaupt befindet. Stattdessen entsteht innerhalb weniger Augenblicke ein folgenschwerer Entschluss: Ausgerechnet diese improvisierte Truppe soll Berlin retten. Hitler befiehlt Steiner, innerhalb von nur 24 Stunden aus dem Raum Oranienburg–Eberswalde nach Süden anzugreifen. Ziel ist es, die Spitzen von Schukows 1. Weißrussischer Front abzuschneiden und bis nach Berlin durchzustoßen.</p>
+    <p>Steiner ist fassungslos. Am Telefon weist er General Krebs sofort darauf hin, dass seine Truppen lediglich aus einem „lächerlichen, bunten Haufen" bestehen und für einen solchen Angriff weder personell noch materiell geeignet sind. Doch Krebs steht während des Telefonates unmittelbar neben Hitler. Der Befehl bleibt bestehen.</p>
+    <p>Am Vormittag des 22. April wartet Hitler auf die Vollzugsmeldung. Heer und Luftwaffe schieben sich gegenseitig die Verantwortung zu, während widersprüchliche Berichte im Führerbunker eintreffen. Erst als ein Major direkt von Steiners Gefechtsstand eintrifft, wird die Wahrheit bekannt: Nichts ist geschehen. Steiner ist nicht angetreten. Nicht aus Ungehorsam, sondern weil ihm schlicht die Mittel fehlen. Seine Einheiten sind über weite Räume verstreut, teilweise unbewaffnet oder haben den Angriffsbefehl nie erhalten. Eine geschlossene Angriffsarmee existiert nicht.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Der Zusammenbruch der Illusion</h2>
+    <p>Am Nachmittag des 22. April folgt die berühmte Lagebesprechung im Führerbunker. Alle wissen insgeheim, dass der Angriff von Steiner nicht stattfindet, aber niemand will der Überbringer dieser Nachricht sein. Als Hitler nach dem Stand des Angriffs fragt, müssen seine Generäle eingestehen, dass der Entsatzangriff niemals begonnen hat. In diesem Augenblick zerbricht endgültig die Illusion der Landkarte.</p>
+    <p>Für einen Moment herrscht Stille. Hitler schwieg. Sein Gesicht rötete sich. Dann verliert er völlig die Beherrschung. Er schreit, beschimpft Heer, SS und das deutsche Volk als Verräter und wirft seinen Generälen Lüge, Feigheit und Versagen vor. Schließlich bricht er erschöpft zusammen. Wenig später erklärt er mit gebrochener Stimme, der Krieg sei verloren. Er werde Berlin nicht verlassen und sich das Leben nehmen, sobald das Ende gekommen sei.</p>
+    <p>Man sollte meinen, dass mit diesem Moment die Realität endlich die Oberhand gewinnt. Doch genau das geschieht nicht. Der Mechanismus des Systems läuft weiter – fast wie von selbst. Generäle klammern sich an eine militärische Fiktion, um sich vor einem Mann zu rechtfertigen, der wenige Minuten zuvor selbst erklärt hat, dass der Krieg verloren ist.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Generäle verweigern den Gehorsam</h2>
+    <p>Auch nach Hitlers Nervenzusammenbruch hört der Druck aus dem Führerbunker nicht auf. Am 26. April fährt Generaloberst Heinrici selbst an die Front, um sich die sagenumwobene Armeegruppe Steiner anzusehen. Was er vorfindet, ist ernüchternd: An einem kleinen Brückenkopf südlich des Ruppiner Kanals stehen lediglich Teile einer Panzergrenadierdivision. Mehr ist von der angeblichen Angriffsarmee nicht zu sehen. Für den erfahrenen Frontoffizier ist sofort klar: Ein Durchbruch bis nach Berlin wäre reiner Selbstmord.</p>
+    <p>Am 28. April zieht Heinrici schließlich die Konsequenzen. Er ignoriert die Befehle aus dem Führerbunker und befiehlt den Rückzug nach Nordwesten, um seine Truppen vor der Einkesselung zu retten. Damit ist die militärische Befehlskette endgültig zerbrochen. Auch Steiner verweigert den Gehorsam. Statt den aussichtslosen Angriff auf Berlin zu führen, befiehlt er den Rückzug nach Westen, um möglichst viele seiner Soldaten vor der sowjetischen Gefangenschaft zu bewahren.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Eine letzte Entscheidung</h2>
+    <p>Die Geschichte der Armeegruppe Steiner ist nicht einfach die Geschichte einer verlorenen Schlacht. Es ist die Anatomie eines kompletten Systemkollapses. Es beginnt im Februar 1945 mit einem Etikettenschwindel – eine Papiertruppe wird Panzerarmee genannt. Weil diese Armee physisch aber gar nicht existiert, löst ihr Nicht-Antreten den finalen Zusammenbruch Hitlers aus. Steiners Weigerung war für Hitler das endgültige Signal, dass seine Autorität selbst über die SS gebrochen war.</p>
+    <p>Während einer Besprechung am 25. April forderte Generaloberst Heinrici Steiner auf, „um Ihres Führers willen" anzugreifen. Nach späteren Berichten soll Steiner Heinrici daraufhin wütend angeschrien haben: „Er ist auch Ihr Führer!" Trotz dieses Ausbruchs handelten beide später einvernehmlich gegen die unrealistischen Befehle, um ihre Soldaten zu retten.</p>
+    <p>Am Ende entschieden sich beide nicht für den Gehorsam, sondern für die Realität. Der berühmte „Angriff Steiner" endet nicht mit einem Angriff, sondern mit der Erkenntnis, dass es ihn nie geben konnte.</p>
+  </section>
+</main>
+
+<div class="video-cta">
+  <p class="label">Die vollständige Dokumentation</p>
+  <a href="https://www.youtube.com/watch?v=i81KMbb74Ak" target="_blank" rel="noopener">
+    <div class="thumb-wrap">
+      <img src="https://i.ytimg.com/vi/i81KMbb74Ak/hqdefault.jpg" alt="" loading="lazy">
+      <div class="play"><span>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 8L16 12L9 16V8Z" fill="currentColor"/></svg>
+      </span></div>
+    </div>
+    <div class="vtext">
+      <p class="vtitle">Berlin war nie das Ziel – Felix Steiner und der Untergang</p>
+      <p class="vsub">Auf YouTube ansehen →</p>
+    </div>
+  </a>
+</div>
+
+<a class="back-link" href="index.html">&#8592; Alle Artikel</a>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="../impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="../datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas = document.getElementById('terrain-canvas');
+  var hero = document.querySelector('.hero');
+  if(!canvas || typeof THREE === 'undefined') return;
+
+  var renderer;
+  try{
+    renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  }catch(e){ return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 2.3, 5.2);
+  camera.lookAt(0, -0.9, -1);
+
+  var geo = new THREE.PlaneGeometry(18, 13, 56, 40);
+  var mat = new THREE.MeshBasicMaterial({color:0xA1C74F, wireframe:true, transparent:true, opacity:0.24});
+  var terrain = new THREE.Mesh(geo, mat);
+  terrain.rotation.x = -Math.PI/2.3;
+  terrain.position.set(0, -1.9, -2);
+  scene.add(terrain);
+
+  function terrainHeight(x, y, t){
+    var h = 0;
+    h += Math.sin(x*0.28 + 1.7 + Math.sin(t*0.05)*0.7) * Math.cos(y*0.22 + 0.4 + Math.cos(t*0.04)*0.6) * 0.95;
+    h += Math.sin(x*0.52 - y*0.33 + 3.1 + t*0.08) * 0.42;
+    h += Math.cos(x*0.83 + y*0.66 - 1.2 + Math.sin(t*0.065)*0.9) * 0.22;
+    h += Math.sin(x*1.5 + y*1.2 + 4.0 + t*0.1) * 0.09;
+    return h;
+  }
+
+  function resize(){
+    var w = hero.clientWidth, h = hero.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var clock = new THREE.Clock();
+  var posAttr = geo.attributes.position;
+
+  function animate(){
+    var t = reduceMotion ? 0 : clock.getElapsedTime();
+    for(var i=0;i<posAttr.count;i++){
+      var x = posAttr.getX(i), y = posAttr.getY(i);
+      posAttr.setZ(i, terrainHeight(x, y, t));
+    }
+    posAttr.needsUpdate = true;
+    renderer.render(scene, camera);
+    if(!reduceMotion){
+      requestAnimationFrame(animate);
+    }
+  }
+  animate();
+})();
+
+(function(){
+  if(typeof gsap === 'undefined') return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  gsap.set('.hero-inner > *', {opacity:0, y:16});
+  gsap.to('.hero-inner > *', {opacity:1, y:0, duration:0.9, ease:'power2.out', stagger:0.12, delay:0.1});
+
+  if(reduceMotion){
+    document.querySelectorAll('.chapter').forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+    return;
+  }
+
+  if(typeof ScrollTrigger !== 'undefined'){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('.chapter').forEach(function(chapter){
+      gsap.to(chapter, {
+        opacity:1, y:0, duration:0.7, ease:'power2.out',
+        scrollTrigger:{trigger:chapter, start:'top 85%'}
+      });
+    });
+    gsap.fromTo('.video-cta a', {opacity:0, y:24}, {
+      opacity:1, y:0, duration:0.6, ease:'power2.out',
+      scrollTrigger:{trigger:'.video-cta', start:'top 90%'}
+    });
+  }
+})();
+</script>
+</body>
+</html>
