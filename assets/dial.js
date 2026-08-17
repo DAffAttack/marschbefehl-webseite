@@ -355,12 +355,27 @@
   // Die frühere Sorge (0.84 kollidierte angeblich auf 375px mit "Kontakt"/
   // "Karte") hat sich bei dieser sauberen Nachmessung NICHT bestätigt --
   // Labels mussten deshalb nicht verschoben werden.
-  var KNOPF_DREH_RADIUS_ANTEIL = 0.863;
+  // FÜNFTE Korrektur (2026-08-17, neunte Runde): 0.863 war noch zu klein, weil
+  // dieser Wert an der SICHTBAREN Radbreite gemessen wurde, die Prüfung unten
+  // aber die untransformierte Wrap-Box benutzt. .dial-knob-stage hat
+  // rotateX(9deg) bei perspective:900px und rendert das Rad dadurch ca. 2,35%
+  // breiter als die Wrap-Box (282.9px sichtbar vs. 276.4px Wrap, auf der
+  // Vorschau-Seite nachgemessen). Aufschlag: 0.863 * (282.9/276.4) = 0.8835.
+  var KNOPF_DREH_RADIUS_ANTEIL = 0.8835;
   // Klick-Kreis (Bestätigen) auf Nutzer-Wunsch nochmal halbiert: 0.16 -> 0.08.
   var KNOPF_KLICK_RADIUS_ANTEIL = 0.08;
+  // Waagerechter Mittelpunkt-Anteil: NICHT 0.5, sondern 0.48 -- identisch mit
+  // transform-origin:48% 50% von .dial-knob-rotor (index.html). Das ist der
+  // kalibrierte echte Mittelpunkt des Rades (das Foto ist asymmetrisch, weil
+  // der Zeiger nach einer Seite übersteht). Mit 0.5 lag die Prüfzone 5,7px zu
+  // weit rechts, wodurch an der linken Radhälfte ein toter Rand entstand
+  // (per elementFromPoint auf der Vorschau-Seite nachgewiesen: bei 135/180/225/
+  // 270 Grad traf man am Radrand .dial-knob-rotor statt das Dreh-Feld).
+  // Muss synchron mit left:48% der .dial-hit-circle-Regel bleiben.
+  var KNOPF_MITTE_X_ANTEIL = 0.48;
   function istInnerhalbKreis(clientX, clientY, radiusAnteil){
     var rect = knobWrap.getBoundingClientRect();
-    var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    var cx = rect.left + rect.width*KNOPF_MITTE_X_ANTEIL, cy = rect.top + rect.height/2;
     var dx = clientX - cx, dy = clientY - cy;
     var radius = (Math.min(rect.width, rect.height) / 2) * radiusAnteil;
     return Math.hypot(dx, dy) <= radius;

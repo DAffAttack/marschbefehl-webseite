@@ -238,11 +238,27 @@
      mehr ein Sicherheitsabstand-Kompromiss wie die vorherige 0.66. Die
      komplette grüne Fläche ist damit drehbar, das hat gegenüber einem
      möglichen Ring-Schildchen-Kontakt Vorrang (siehe dial.js-Kommentar an
-     KNOPF_DREH_RADIUS_ANTEIL für die volle Herleitung). */
+     KNOPF_DREH_RADIUS_ANTEIL für die volle Herleitung).
+     FÜNFTE Korrektur (2026-08-17, neunte Runde, per elementFromPoint-Messung
+     auf der Vorschau-Seite gefunden): 0.863 mit Mittelpunkt 50%/50% reichte
+     noch NICHT -- an der linken Radhälfte blieben die äußeren ~12px tot
+     (elementFromPoint lieferte dort .dial-knob-rotor statt dieses Feld, und
+     da beide Geschwister sind, erreichte pointerdown den Listener gar nicht).
+     Zwei unabhängige Ursachen:
+     1) MITTELPUNKT: Der Knopf dreht sich um transform-origin:48% 50% des
+        .dial-knob-rotor (kalibrierter echter Rad-Mittelpunkt, weil der Zeiger
+        asymmetrisch übersteht). Dieses Feld saß aber bei 50% -> 5,7px zu weit
+        rechts. Deshalb hier jetzt ebenfalls left:48%, damit Dreh-Feld und
+        tatsächliche Rotationsachse denselben Mittelpunkt haben.
+     2) GRÖSSE: .dial-knob-stage hat rotateX(9deg) bei perspective:900px, das
+        rendert das Rad ca. 2,35% BREITER als die untransformierte Wrap-Box
+        (gemessen 282.9px sichtbar vs. 276.4px Wrap). Dieses Feld liegt außerhalb
+        der 3D-Transformation, braucht also denselben Aufschlag:
+        0.863 * (282.9/276.4) = 0.8835. */
   .dial-hit-circle{
     position:absolute;
-    top:50%; left:50%;
-    width:86.3%; height:86.3%;
+    top:50%; left:48%;
+    width:88.35%; height:88.35%;
     transform:translate(-50%,-50%);
     clip-path:circle(50%);
     cursor:grab;
