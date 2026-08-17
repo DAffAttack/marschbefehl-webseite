@@ -294,7 +294,10 @@
 
   function screenThetaFromEvent(e){
     var rect = knobWrap.getBoundingClientRect();
-    var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    // Gleicher Mittelpunkt wie istInnerhalbKreis() und wie die tatsächliche
+    // Rotationsachse (.dial-knob-rotor transform-origin:48% 50%) -- sonst
+    // liefe der Ziehwinkel um einen anderen Punkt als die sichtbare Drehung.
+    var cx = rect.left + rect.width*KNOPF_MITTE_X_ANTEIL, cy = rect.top + rect.height/2;
     var dx = e.clientX - cx, dy = e.clientY - cy;
     return Math.atan2(dx, -dy);
   }
@@ -384,6 +387,18 @@
   function onPointerDown(e){
     if(e.button !== undefined && e.button !== 0) return;
     if(!istInnerhalbKreis(e.clientX, e.clientY, KNOPF_DREH_RADIUS_ANTEIL)) return;
+    // WICHTIG (Bugfix 2026-08-17, zehnte Runde): Ohne preventDefault startet der
+    // Browser beim Ziehen sein natives Drag-and-Drop ("Grafik verschieben").
+    // Das feuert dragstart UND nimmt uns dabei die Pointer-Capture wieder weg
+    // (im Ereignis-Log nachgewiesen: gotpointercapture -> dragstart ->
+    // lostpointercapture), wodurch keine pointermove-Events mehr ankommen und
+    // die Drehung mitten in der Geste tot ist. Trat typischerweise erst ab der
+    // ZWEITEN Ziehbewegung auf, weil der Browser den Startpunkt dann als
+    // Fortsetzung einer bestehenden Auswahl/Grafik-Geste behandelt.
+    // preventDefault hier ist unkritisch: der Fokus wird zwei Zeilen tiefer
+    // ohnehin selbst gesetzt, und Scrollen ist auf dem Knopf durch
+    // touch-action:none ohnehin bewusst abgeschaltet.
+    e.preventDefault();
     dragging = true;
     dragMoved = false;
     settling = false;
@@ -432,6 +447,15 @@
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointercancel', onPointerUp);
+  // Zweiter Riegel gegen das native Drag-and-Drop (siehe Kommentar in
+  // onPointerDown). preventDefault dort verhindert es in allen getesteten
+  // Fällen bereits, aber ein dragstart kann je nach Browser/Eingabegerät auch
+  // aus einer schon bestehenden Textauswahl heraus ausgelöst werden -- dann
+  // greift dieser Handler. Bewusst auf beiden Elementen, weil dragstart vom
+  // Knopf-Bild ebenso wie vom Klick-Feld ausgehen kann.
+  function blockNativeDrag(e){ e.preventDefault(); }
+  hitCircle.addEventListener('dragstart', blockNativeDrag);
+  knobWrap.addEventListener('dragstart', blockNativeDrag);
 
   /* ---------- Tastatur ---------- */
   knobWrap.addEventListener('keydown', function(e){

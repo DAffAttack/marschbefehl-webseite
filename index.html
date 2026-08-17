@@ -262,6 +262,13 @@
     transform:translate(-50%,-50%);
     clip-path:circle(50%);
     cursor:grab;
+    /* Dritter Riegel gegen das native "Grafik verschieben" beim Ziehen
+       (Bugfix 2026-08-17, zehnte Runde -- Hauptriegel ist preventDefault in
+       onPointerDown, siehe dial.js). Verhindert außerdem, dass beim Ziehen
+       versehentlich Text markiert wird. */
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-user-drag:none;
   }
   .dial-canvas-wrap.is-dragging .dial-hit-circle{ cursor:grabbing; }
   .dial-canvas-wrap.is-dragging{cursor:grabbing;}
