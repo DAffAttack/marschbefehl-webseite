@@ -108,44 +108,50 @@
     return audioCtx;
   }
 
-  var audioWeckLaeuft = false;
-  /* Liefert den Ton-Kanal NUR zurueck, wenn sofort abgespielt werden kann.
-     Hintergrund (Bugfix 2026-08-17, Nutzer-Meldung "die Geraeusche kommen
-     beim ersten Mal nach dem Refresh nicht, erst beim zweiten Mal"):
-     Browser starten den Ton-Kanal aus Werbeschutz-Gruenden im Ruhezustand;
-     er darf erst nach einer echten Nutzergeste aufwachen. Bisher stand in
-     allen drei Sound-Funktionen nur `ctx.resume();` ohne auf das Ergebnis zu
-     warten -- resume() ist aber ASYNCHRON. Beim allerersten Klick war der
-     Kanal deshalb noch nicht wach, `ctx.currentTime` stand faktisch still,
-     und der Ton wurde auf einen bereits vergangenen Zeitpunkt gelegt: er
-     verpuffte lautlos. Ab dem zweiten Mal lief der Kanal und alles klang.
-     Loesung: Ist der Kanal noch im Ruhezustand, wird er aufgeweckt und der
-     Sound danach EINMALIG nachgeholt, statt ihn ins Leere zu schicken.
-     Die Wiederhol-Sperre verhindert dabei sowohl Endlosschleifen (falls der
-     Kanal trotz resume nicht aufwacht) als auch einen Schwall nachgeholter
-     Toene, wenn waehrend des Aufweckens mehrfach geklickt wurde. */
-  function audioBereit(nachholen){
+  /* Ton-Kanal moeglichst frueh aufwecken (2026-08-17).
+
+     Problem, das damit geloest wird: Browser starten den Ton-Kanal aus
+     Werbeschutz-Gruenden im Ruhezustand; er darf erst nach einer echten
+     Nutzergeste aufwachen, und dieses Aufwecken ist ASYNCHRON. Wurde der
+     erste Ton im selben Wimpernschlag wie die erste Geste abgespielt, war
+     der Kanal noch nicht wach und der Ton verpuffte lautlos -- daher die
+     Nutzer-Meldung "beim ersten Mal kommt kein Ton, erst beim zweiten Mal".
+
+     WICHTIG, warum es so und nicht anders geloest ist: Ein erster Versuch
+     hatte das Abspielen BLOCKIERT, solange der Kanal schlief, und den Ton
+     danach nachgeholt. Das war zu riskant -- griff das Nachholen aus
+     irgendeinem Grund nicht (aeltere Browser geben bei resume() kein
+     Promise zurueck, Fingerprinting-Schutz mancher Browser greift in Web
+     Audio ein), kam GAR KEIN Ton mehr. Genau das ist beim Nutzer passiert.
+
+     Diese Fassung kann nicht schlechter sein als der Ursprungszustand: Das
+     Abspielen wird nie blockiert. Stattdessen wird der Kanal schon bei der
+     allerersten Geste IRGENDWO auf der Seite geweckt -- in der Capture-
+     Phase, also noch vor allen eigenen Handlern. Da die Dreh-Geraeusche
+     erst bei pointermove/pointerup folgen, ist der Kanal bis dahin wach. */
+  function audioFreischalten(){
     var ctx = ensureAudio();
-    if(!ctx) return null;
-    if(ctx.state === 'suspended'){
-      if(!audioWeckLaeuft){
-        audioWeckLaeuft = true;
-        try{
-          ctx.resume().then(function(){
-            audioWeckLaeuft = false;
-            if(ctx.state === 'running' && typeof nachholen === 'function') nachholen();
-          }).catch(function(){ audioWeckLaeuft = false; });
-        }catch(e){ audioWeckLaeuft = false; }
-      }
-      return null;
+    if(ctx && ctx.state === 'suspended'){
+      try{ ctx.resume(); }catch(e){}
     }
-    return ctx;
+    document.removeEventListener('pointerdown', audioFreischalten, true);
+    document.removeEventListener('touchstart', audioFreischalten, true);
+    document.removeEventListener('mousedown', audioFreischalten, true);
+    document.removeEventListener('keydown', audioFreischalten, true);
   }
+  document.addEventListener('pointerdown', audioFreischalten, true);
+  document.addEventListener('touchstart', audioFreischalten, true);
+  document.addEventListener('mousedown', audioFreischalten, true);
+  document.addEventListener('keydown', audioFreischalten, true);
 
   // Sound A: kurzer, heller Rast-Klick beim Weiterdrehen auf die nächste Position.
   function playDetentClick(){
-    var ctx = audioBereit(playDetentClick);
+    var ctx = ensureAudio();
     if(!ctx) return;
+    // Abspielen wird NIE blockiert (siehe audioFreischalten oben). Der
+    // resume-Versuch hier bleibt als zweites Netz stehen, falls die erste
+    // Geste den Kanal noch nicht geweckt haben sollte.
+    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
     var now = ctx.currentTime;
     var len = Math.floor(ctx.sampleRate*0.035);
     var buffer = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -172,8 +178,12 @@
   // rein Noise-basiert (kein Sinuston/Piepser), hörbar voller/tiefer als der
   // helle Rast-Klick, mit tiefem "Thunk"-Nachschlag für das Gefühl von Gewicht.
   function playConfirmSound(){
-    var ctx = audioBereit(playConfirmSound);
+    var ctx = ensureAudio();
     if(!ctx) return;
+    // Abspielen wird NIE blockiert (siehe audioFreischalten oben). Der
+    // resume-Versuch hier bleibt als zweites Netz stehen, falls die erste
+    // Geste den Kanal noch nicht geweckt haben sollte.
+    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
     var now = ctx.currentTime;
 
     function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
@@ -233,8 +243,12 @@
   // Richtungen (an/aus) -- ein Kippschalter macht in beide Richtungen
   // denselben Anschlag.
   function playToggleClick(){
-    var ctx = audioBereit(playToggleClick);
+    var ctx = ensureAudio();
     if(!ctx) return;
+    // Abspielen wird NIE blockiert (siehe audioFreischalten oben). Der
+    // resume-Versuch hier bleibt als zweites Netz stehen, falls die erste
+    // Geste den Kanal noch nicht geweckt haben sollte.
+    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
     var now = ctx.currentTime;
 
     function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
