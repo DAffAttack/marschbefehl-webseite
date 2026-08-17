@@ -1,0 +1,10 @@
+
+# Local Netlify folder
+.netlify
+
+# Node dependencies (installiert via npm install, nicht versioniert)
+node_modules
+
+# Lokale Umgebungsvariablen (z.B. FUEHRUNGEN_ADMIN_PASSWORD zum lokalen Testen) — NIE committen
+.env
+.env.*

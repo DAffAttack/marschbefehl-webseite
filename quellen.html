@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quellen &amp; Literatur – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Kuratierte Buchempfehlungen zu den Themen der Dokumentationen: Ostfront, Seelower Höhen, Waffen-SS und mehr.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:980px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 36px);
+    margin:0 0 12px;
+  }
+  main > p.intro{
+    font-size:16px;
+    color:var(--muted);
+    max-width:620px;
+    line-height:1.6;
+    margin:0 0 10px;
+  }
+  .disclosure{
+    font-size:12.5px;
+    color:var(--muted);
+    max-width:620px;
+    line-height:1.6;
+    margin:0 0 48px;
+  }
+  .disclosure a{color:var(--green-dark); text-decoration:none;}
+  .disclosure a:hover{text-decoration:underline;}
+
+  .lit-group{margin-bottom:56px;}
+  .lit-group-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:22px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .lit-group-head .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    font-size:12px;
+    font-weight:700;
+    color:var(--green-dark);
+    margin:0 0 6px;
+  }
+  .lit-group-head h2{font-size:20px; margin:0;}
+  .lit-group-head .group-link{
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    text-decoration:none;
+    white-space:nowrap;
+    padding-bottom:4px;
+  }
+  .lit-group-head .group-link:hover{color:var(--green-dark);}
+  .lit-group-head .group-link span{display:inline-block; transition:transform 180ms ease;}
+  .lit-group-head .group-link:hover span{transform:translateX(4px);}
+
+  .book-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:16px;
+  }
+  .book-card{
+    display:flex;
+    gap:14px;
+    padding:16px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:3px solid var(--green);
+    border-radius:14px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform 180ms ease, box-shadow 180ms ease;
+    opacity:0;
+    transform:translateY(18px);
+  }
+  .book-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 14px 30px rgba(27,27,27,0.1);
+  }
+  .book-card .cover{
+    flex:none;
+    width:56px;
+    height:84px;
+    object-fit:cover;
+    border-radius:4px;
+    box-shadow:0 3px 8px rgba(27,27,27,0.2);
+  }
+  .book-card .info{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .book-card .tag{
+    display:block;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-size:10px;
+    font-weight:700;
+    color:var(--green-dark);
+    margin:0 0 5px;
+  }
+  .book-card .btitle{display:block; font-weight:600; font-size:14.5px; line-height:1.3; margin:0 0 4px;}
+  .book-card .bauthor{display:block; font-size:12.5px; color:var(--muted); line-height:1.4;}
+  .book-card .barrow{
+    margin-top:auto;
+    padding-top:8px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink);
+  }
+
+  .empty-note{
+    font-size:14px;
+    color:var(--muted);
+    font-style:italic;
+  }
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+    margin-top:24px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <h1>Quellen &amp; Literatur</h1>
+  <p class="intro">Eine kuratierte Auswahl an Büchern zu den Themen der Dokumentationen – nach Video sortiert, für alle, die tiefer einsteigen wollen.</p>
+  <p class="disclosure">Die Links führen zu Amazon und sind Affiliate-Links („Werbung"): Käufe darüber unterstützen den Kanal ohne Mehrkosten. Details siehe <a href="/datenschutz.html">Datenschutzerklärung</a>.</p>
+
+  <section class="lit-group">
+    <div class="lit-group-head">
+      <div>
+        <p class="eyebrow">Ostfront · April 1945</p>
+        <h2>Armeegruppe Steiner</h2>
+      </div>
+      <a class="group-link" href="/artikel/armeegruppe-steiner.html">Artikel lesen <span aria-hidden="true">&#8594;</span></a>
+    </div>
+    <div class="book-grid">
+
+      <a class="book-card" href="https://www.amazon.de/dp/3869332212?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/61jhreVl8xL._SY342_.jpg" alt="Buchcover: Der Kampf um die Seelower Höhen">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Der Kampf um die Seelower Höhen</span>
+          <span class="bauthor">Karl Stich</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/380623793X?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/61alO2kr94L._SY342_.jpg" alt="Buchcover: Die Waffen-SS: Hitlers überschätzte Prätorianer">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Die Waffen-SS: Hitlers überschätzte Prätorianer</span>
+          <span class="bauthor">Klaus-Jürgen Bremm</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/3944951018?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/51DBuARttVL._SY342_.jpg" alt="Buchcover: Die Armee der Geächteten">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Die Armee der Geächteten</span>
+          <span class="bauthor">Felix Steiner (Memoiren)</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/3534267699?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/81uhLa3wKpL._SY342_.jpg" alt="Buchcover: Notizen aus dem Vernichtungskrieg">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Notizen aus dem Vernichtungskrieg</span>
+          <span class="bauthor">Johannes Hürter</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/3958411118?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/71rSIcYm3VL._SY342_.jpg" alt="Buchcover: Marschall Schukow">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Marschall Schukow</span>
+          <span class="bauthor">Philipp Ewers</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/3813209741?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/71WMYct6ZeL._SY342_.jpg" alt="Buchcover: Seelow und der Kessel von Halbe 1945">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Seelow und der Kessel von Halbe 1945</span>
+          <span class="bauthor">Lakowski &amp; Stich</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/3869332638?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/61iJgFSXnDL._SY342_.jpg" alt="Buchcover: Der Kessel von Halbe">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">„Der Kessel von Halbe"</span>
+          <span class="bauthor">Herrmann &amp; Klar</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="lit-group">
+    <div class="lit-group-head">
+      <div>
+        <p class="eyebrow">Schlesien · Februar 1945</p>
+        <h2>Operation Dyhernfurth</h2>
+      </div>
+      <a class="group-link" href="/artikel/dyhernfurth-1945.html">Artikel lesen <span aria-hidden="true">&#8594;</span></a>
+    </div>
+    <div class="book-grid">
+
+      <a class="book-card" href="https://www.amazon.de/dp/3964034878?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/71jyybV2PTL._SY342_.jpg" alt="Buchcover: Es begann an der Weichsel">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Es begann an der Weichsel</span>
+          <span class="bauthor">Jürgen Thorwald</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+      <a class="book-card" href="https://www.amazon.de/dp/3835331698?tag=histograf-21" target="_blank" rel="noopener sponsored">
+        <img class="cover" src="https://m.media-amazon.com/images/I/91x3HsFmj6L._SY342_.jpg" alt="Buchcover: Kampfstoff-Forschung im Nationalsozialismus">
+        <span class="info">
+          <span class="tag">Werbung</span>
+          <span class="btitle">Kampfstoff-Forschung im Nationalsozialismus</span>
+          <span class="bauthor">Florian Schmaltz</span>
+          <span class="barrow">Bei Amazon ansehen &#8594;</span>
+        </span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="lit-group">
+    <div class="lit-group-head">
+      <div>
+        <p class="eyebrow">Oderfront · März 1945</p>
+        <h2>Die Schattenmine</h2>
+      </div>
+      <a class="group-link" href="/artikel/schattenmine.html">Artikel lesen <span aria-hidden="true">&#8594;</span></a>
+    </div>
+    <p class="empty-note">Für dieses Video sind noch keine Buchempfehlungen hinterlegt.</p>
+  </section>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  if(typeof gsap === 'undefined') return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion){
+    document.querySelectorAll('.book-card').forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+    return;
+  }
+  if(typeof ScrollTrigger !== 'undefined'){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('.book-card').forEach(function(card, i){
+      gsap.to(card, {
+        opacity:1, y:0, duration:0.5, ease:'power2.out', delay:(i%4)*0.04,
+        scrollTrigger:{trigger:card, start:'top 94%'}
+      });
+    });
+  }
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

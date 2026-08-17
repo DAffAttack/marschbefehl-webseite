@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Führungen – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Geführte Touren zu den Schauplätzen der Schlacht um die Seelower Höhen am Oderbruch – Angebote ansehen, Termin wählen und direkt online buchen.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:1040px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 36px);
+    margin:0 0 12px;
+  }
+  main > p.intro{
+    font-size:16px;
+    color:var(--muted);
+    max-width:600px;
+    line-height:1.6;
+    margin:0 0 40px;
+  }
+
+  /* ---------- Ablauf-Schritte ---------- */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+    margin-bottom:52px;
+  }
+  .step{
+    padding:20px 18px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+  }
+  .step .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--green);
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .step h2{font-size:14.5px; margin:0 0 6px;}
+  .step p{font-size:13px; color:var(--muted); line-height:1.55; margin:0;}
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .section-head h2{font-size:21px; margin:0;}
+  .section-head .count{font-size:13px; color:var(--muted);}
+
+  /* ---------- Zustände: Laden / Fehler / Leer ---------- */
+  .state-note{
+    padding:28px 24px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14.5px;
+    line-height:1.6;
+  }
+  .state-note.is-error{ border-color:#e3b9b0; background:#fdf5f3; color:#8a3f2f; }
+
+  /* ---------- Führungs-Karten ---------- */
+  .fuehrung-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+    gap:22px;
+    margin-bottom:20px;
+  }
+  .fuehrung-card{
+    display:flex;
+    flex-direction:column;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    text-decoration:none;
+    color:inherit;
+    transition:transform 220ms ease, box-shadow 220ms ease;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .fuehrung-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 16px 34px rgba(27,27,27,0.1);
+  }
+  .fuehrung-card .thumb{
+    position:relative;
+    aspect-ratio:4/3;
+    background:var(--ink-soft);
+    overflow:hidden;
+  }
+  .fuehrung-card .thumb img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform 420ms ease;
+  }
+  .fuehrung-card:hover .thumb img{ transform:scale(1.05); }
+  .fuehrung-card .thumb .price-tag{
+    position:absolute;
+    right:12px; bottom:12px;
+    background:rgba(27,27,27,0.82);
+    backdrop-filter:blur(4px);
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:999px;
+  }
+  .fuehrung-card .thumb .price-tag span{ font-weight:500; color:#d8d8d3; margin-left:3px; }
+  .fuehrung-card .body{
+    padding:20px 22px 24px;
+    display:flex;
+    flex-direction:column;
+    flex:1;
+  }
+  .fuehrung-card h3{
+    font-size:18px;
+    margin:0 0 8px;
+    line-height:1.3;
+  }
+  .fuehrung-card p{
+    font-size:14px;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 0 16px;
+    flex:1;
+  }
+  .fuehrung-card .cta{
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--green-dark);
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .fuehrung-card .cta svg{ width:14px; height:14px; transition:transform 160ms ease; }
+  .fuehrung-card:hover .cta svg{ transform:translateX(3px); }
+
+  .note-storno{
+    margin-top:36px;
+    padding:16px 18px;
+    background:rgba(161,199,79,0.09);
+    border:1px solid rgba(161,199,79,0.35);
+    border-radius:12px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+
+  .cta-box{
+    margin-top:52px;
+    padding:32px;
+    background:var(--ink);
+    color:#fff;
+    border-radius:16px;
+    text-align:center;
+  }
+  .cta-box h2{font-size:19px; margin:0 0 10px;}
+  .cta-box p{font-size:14px; color:#c7c7c2; line-height:1.6; max-width:440px; margin:0 auto 22px;}
+  .cta-box a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    background:var(--green);
+    padding:13px 24px;
+    border-radius:10px;
+    text-decoration:none;
+    transition:transform 160ms ease, background 160ms ease;
+  }
+  .cta-box a:hover{background:var(--green-dark); transform:translateY(-2px);}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+    margin-top:56px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+
+  @media (max-width:640px){
+    .steps{ grid-template-columns:1fr; }
+    .fuehrung-grid{ grid-template-columns:1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .fuehrung-card, .fuehrung-card .thumb img, .fuehrung-card .cta svg{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <h1>Führungen vor Ort</h1>
+  <p class="intro">Geführte Touren zu den Schauplätzen der Schlacht um die Seelower Höhen am Oderbruch – vor Ort, dort wo Geschichte stattgefunden hat.</p>
+
+  <div class="steps">
+    <div class="step">
+      <span class="num">1</span>
+      <h2>Führung wählen</h2>
+      <p>Jede Tour hat einen eigenen Schwerpunkt – Beschreibung und Termine gibt es auf der Detailseite.</p>
+    </div>
+    <div class="step">
+      <span class="num">2</span>
+      <h2>Termin & Angaben</h2>
+      <p>Name, E-Mail und Personenzahl genügen — mehr wird nicht benötigt.</p>
+    </div>
+    <div class="step">
+      <span class="num">3</span>
+      <h2>Sofort bestätigt</h2>
+      <p>Die Buchung ist direkt gültig, kein weiterer Freigabeschritt nötig.</p>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>Angebotene Führungen</h2>
+    <span class="count" id="fuehrung-count"></span>
+  </div>
+
+  <div id="fuehrung-list-wrap">
+    <div class="state-note" id="fuehrung-state">Führungen werden geladen …</div>
+  </div>
+
+  <p class="note-storno">Alle Buchungen sind derzeit kostenlos anzufragen — eine automatische Bestätigungsmail gibt es noch nicht, die Buchung ist aber sofort gültig und im System hinterlegt. Eine Stornierung ist derzeit nur über <a href="/kontakt.html" style="color:var(--green-dark); font-weight:600;">Kontakt</a> möglich.</p>
+
+  <div class="cta-box">
+    <h2>Fragen zu einer Führung?</h2>
+    <p>Für alles rund um Ablauf, Treffpunkt oder Sonderwünsche einfach eine Nachricht schicken.</p>
+    <a href="/kontakt.html">Kontakt aufnehmen <span aria-hidden="true">&#8594;</span></a>
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hasGsap = typeof gsap !== 'undefined';
+
+  function formatPreis(preis){
+    return preis.toLocaleString('de-DE', {minimumFractionDigits: preis % 1 === 0 ? 0 : 2, maximumFractionDigits:2});
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  var listWrap = document.getElementById('fuehrung-list-wrap');
+  var countEl = document.getElementById('fuehrung-count');
+
+  function renderState(text, isError){
+    listWrap.innerHTML = '';
+    var note = document.createElement('div');
+    note.className = 'state-note' + (isError ? ' is-error' : '');
+    note.textContent = text;
+    listWrap.appendChild(note);
+  }
+
+  function buildCard(f){
+    var a = document.createElement('a');
+    a.className = 'fuehrung-card';
+    a.href = '/fuehrung.html?id=' + encodeURIComponent(f.id);
+
+    var bildSrc = f.bildUebersichtId ? '/.netlify/functions/fuehrungen-bild?id=' + encodeURIComponent(f.bildUebersichtId) : '';
+
+    a.innerHTML =
+      '<div class="thumb">' +
+        (bildSrc ? '<img src="' + bildSrc + '" alt="" loading="lazy">' : '') +
+        '<span class="price-tag">' + formatPreis(f.preisProPerson) + ' &euro;<span>/ Person</span></span>' +
+      '</div>' +
+      '<div class="body">' +
+        '<h3>' + escapeHtml(f.titel) + '</h3>' +
+        '<p>' + escapeHtml(f.kurzbeschreibung) + '</p>' +
+        '<span class="cta">Details &amp; Termine ansehen <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+      '</div>';
+
+    return a;
+  }
+
+  function ladeFuehrungen(){
+    fetch('/.netlify/functions/fuehrungen-oeffentlich')
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(!data.ok){
+          renderState(data.error || 'Führungen konnten nicht geladen werden.', true);
+          countEl.textContent = '';
+          return;
+        }
+        var fuehrungen = data.fuehrungen || [];
+        countEl.textContent = fuehrungen.length > 0 ? (fuehrungen.length + (fuehrungen.length === 1 ? ' Führung' : ' Führungen')) : '';
+
+        if(fuehrungen.length === 0){
+          renderState('Aktuell sind keine Führungen eingetragen — schau bald wieder vorbei oder melde dich per Kontaktformular.', false);
+          return;
+        }
+
+        listWrap.innerHTML = '';
+        var grid = document.createElement('div');
+        grid.className = 'fuehrung-grid';
+        var cards = fuehrungen.map(buildCard);
+        cards.forEach(function(c){ grid.appendChild(c); });
+        listWrap.appendChild(grid);
+
+        if(hasGsap && !reduceMotion){
+          gsap.to(cards, {opacity:1, y:0, duration:0.6, ease:'power2.out', stagger:0.08});
+        } else {
+          cards.forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+        }
+      })
+      .catch(function(){
+        renderState('Führungen konnten nicht geladen werden — bitte Seite neu laden.', true);
+      });
+  }
+
+  ladeFuehrungen();
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Führung – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Details, Treffpunkt und buchbare Termine zu einer geführten Tour zu den Schauplätzen der Schlacht um die Seelower Höhen.">
+<meta name="robots" content="noindex, follow">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:800px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:32px 24px 80px;
+  }
+
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--muted);
+    text-decoration:none;
+    margin-bottom:22px;
+  }
+  .back-link:hover{ color:var(--ink); }
+  .back-link svg{ width:14px; height:14px; }
+
+  #detail-state{
+    padding:28px 24px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14.5px;
+    line-height:1.6;
+  }
+  #detail-state.is-error{ border-color:#e3b9b0; background:#fdf5f3; color:#8a3f2f; }
+
+  #detail-content{ display:none; }
+  #detail-content.is-visible{ display:block; }
+
+  h1{
+    font-size:clamp(26px, 4.4vw, 38px);
+    margin:0 0 12px;
+    line-height:1.15;
+  }
+  .price-line{
+    display:inline-flex;
+    align-items:baseline;
+    gap:6px;
+    font-size:18px;
+    font-weight:700;
+    color:var(--green-dark);
+    margin-bottom:26px;
+  }
+  .price-line span{ font-size:13px; font-weight:600; color:var(--muted); }
+
+  .hero-image{
+    width:100%;
+    aspect-ratio:16/9;
+    border-radius:16px;
+    overflow:hidden;
+    background:var(--ink-soft);
+    margin-bottom:32px;
+  }
+  .hero-image img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .lang-text{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin-bottom:36px;
+  }
+  .lang-text p{ margin:0 0 18px; }
+  .lang-text p:last-child{ margin-bottom:0; }
+
+  .ort-block{ margin-bottom:48px; }
+  .ort-block h2{ font-size:15px; margin:0 0 4px; }
+  .ort-block .ort-text{ font-size:14px; color:var(--muted); margin:0 0 14px; }
+  .ort-map{
+    width:100%;
+    height:280px;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .ort-map iframe{ width:100%; height:100%; border:0; display:block; }
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .section-head h2{font-size:21px; margin:0;}
+  .section-head .count{font-size:13px; color:var(--muted);}
+
+  .state-note{
+    padding:28px 24px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14.5px;
+    line-height:1.6;
+  }
+  .state-note.is-error{ border-color:#e3b9b0; background:#fdf5f3; color:#8a3f2f; }
+
+  /* ---------- Terminliste (wiederverwendet aus dem bisherigen Buchungssystem) ---------- */
+  .termin-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-bottom:20px;
+  }
+  .termin-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 24px;
+    transition:transform 200ms ease, box-shadow 200ms ease;
+  }
+  .termin-card:hover{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(27,27,27,0.08); }
+  .termin-card.is-full{ opacity:0.72; }
+  .termin-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .termin-when .date{ font-size:18px; font-weight:700; margin:0 0 3px; }
+  .termin-when .time{ font-size:13.5px; color:var(--muted); }
+  .termin-price{
+    font-size:20px;
+    font-weight:700;
+    color:var(--green-dark);
+    white-space:nowrap;
+  }
+  .termin-price span{ font-size:12px; font-weight:600; color:var(--muted); margin-left:4px; }
+
+  .termin-capacity{ margin-top:14px; }
+  .capacity-bar{
+    height:6px;
+    border-radius:4px;
+    background:var(--line);
+    overflow:hidden;
+    margin-bottom:7px;
+  }
+  .capacity-bar .fill{
+    height:100%;
+    background:var(--green);
+    border-radius:4px;
+  }
+  .termin-card.is-full .capacity-bar .fill{ background:var(--muted); }
+  .capacity-label{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .badge-full{
+    display:inline-flex;
+    align-items:center;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:#8a3f2f;
+    background:#fdf1ee;
+    padding:3px 9px;
+    border-radius:999px;
+  }
+
+  .termin-actions{ margin-top:16px; }
+  .btn-book{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:11px 20px;
+    background:var(--green);
+    color:var(--ink);
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform 160ms ease, background 160ms ease;
+  }
+  .btn-book:hover{ background:var(--green-dark); transform:translateY(-2px); }
+  .btn-book:disabled{ background:var(--line); color:var(--muted); cursor:not-allowed; transform:none; }
+  .btn-cancel-form{
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    color:var(--muted);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:8px 4px;
+  }
+  .btn-cancel-form:hover{ color:var(--ink); }
+
+  .booking-panel{
+    height:0;
+    overflow:hidden;
+  }
+  .booking-panel-inner{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+  .booking-form{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .booking-form .full{ grid-column:1 / -1; }
+  .booking-form label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .booking-form input{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .booking-form input:focus{ outline:none; border-color:var(--green-dark); }
+  .booking-form-actions{
+    grid-column:1 / -1;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:4px;
+    flex-wrap:wrap;
+  }
+  .booking-error{
+    grid-column:1 / -1;
+    font-size:13px;
+    color:#8a3f2f;
+    background:#fdf1ee;
+    border:1px solid #e3b9b0;
+    border-radius:8px;
+    padding:9px 12px;
+    display:none;
+  }
+  .booking-error.is-visible{ display:block; }
+
+  .booking-success{
+    display:none;
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+  .booking-success.is-visible{ display:block; }
+  .booking-success .ok-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .booking-success .ok-icon{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--green);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    flex:none;
+  }
+  .booking-success .ok-icon svg{ width:14px; height:14px; }
+  .booking-success h3{ font-size:15.5px; margin:0; }
+  .booking-success p{ font-size:13.5px; color:var(--muted); line-height:1.6; margin:0; }
+
+  .note-storno{
+    margin-top:36px;
+    padding:16px 18px;
+    background:rgba(161,199,79,0.09);
+    border:1px solid rgba(161,199,79,0.35);
+    border-radius:12px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+
+  .cta-box{
+    margin-top:52px;
+    padding:32px;
+    background:var(--ink);
+    color:#fff;
+    border-radius:16px;
+    text-align:center;
+  }
+  .cta-box h2{font-size:19px; margin:0 0 10px;}
+  .cta-box p{font-size:14px; color:#c7c7c2; line-height:1.6; max-width:440px; margin:0 auto 22px;}
+  .cta-box a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    background:var(--green);
+    padding:13px 24px;
+    border-radius:10px;
+    text-decoration:none;
+    transition:transform 160ms ease, background 160ms ease;
+  }
+  .cta-box a:hover{background:var(--green-dark); transform:translateY(-2px);}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+    margin-top:56px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+
+  @media (max-width:640px){
+    .booking-form{ grid-template-columns:1fr; }
+    .termin-price{ font-size:18px; }
+    .ort-map{ height:220px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .termin-card, .btn-book{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <a class="back-link" href="/fuehrungen.html">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Alle Führungen
+  </a>
+
+  <div id="detail-state">Führung wird geladen …</div>
+
+  <div id="detail-content">
+    <h1 id="f-titel"></h1>
+    <div class="price-line" id="f-preis"></div>
+
+    <div class="hero-image" id="f-hero-image"></div>
+
+    <div class="lang-text" id="f-langbeschreibung"></div>
+
+    <div class="ort-block" id="f-ort-block">
+      <h2>Treffpunkt</h2>
+      <p class="ort-text" id="f-ort-text"></p>
+      <div class="ort-map" id="f-ort-map"></div>
+    </div>
+
+    <div class="section-head">
+      <h2>Buchbare Termine</h2>
+      <span class="count" id="termin-count"></span>
+    </div>
+
+    <div id="termin-list-wrap">
+      <div class="state-note" id="termin-state">Termine werden geladen …</div>
+    </div>
+
+    <p class="note-storno">Diese Buchung ist derzeit kostenlos anzufragen — eine automatische Bestätigungsmail gibt es noch nicht, die Buchung ist aber sofort gültig und im System hinterlegt. Eine Stornierung ist derzeit nur über <a href="/kontakt.html" style="color:var(--green-dark); font-weight:600;">Kontakt</a> möglich.</p>
+
+    <div class="cta-box">
+      <h2>Fragen zu dieser Führung?</h2>
+      <p>Für alles rund um Ablauf, Treffpunkt oder Sonderwünsche einfach eine Nachricht schicken.</p>
+      <a href="/kontakt.html">Kontakt aufnehmen <span aria-hidden="true">&#8594;</span></a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hasGsap = typeof gsap !== 'undefined';
+
+  var MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  var TAGE = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+  function formatDatum(datumIso, uhrzeit){
+    var d = new Date(datumIso + 'T' + uhrzeit + ':00');
+    if(isNaN(d.getTime())) return datumIso;
+    return TAGE[d.getDay()] + ', ' + d.getDate() + '. ' + MONATE[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function formatPreis(preis){
+    return preis.toLocaleString('de-DE', {minimumFractionDigits: preis % 1 === 0 ? 0 : 2, maximumFractionDigits:2});
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  var detailState = document.getElementById('detail-state');
+  var detailContent = document.getElementById('detail-content');
+  var listWrap = document.getElementById('termin-list-wrap');
+  var countEl = document.getElementById('termin-count');
+
+  function renderTerminState(text, isError){
+    listWrap.innerHTML = '';
+    var note = document.createElement('div');
+    note.className = 'state-note' + (isError ? ' is-error' : '');
+    note.textContent = text;
+    listWrap.appendChild(note);
+  }
+
+  function openPanel(panel){
+    if(hasGsap && !reduceMotion){
+      gsap.killTweensOf(panel);
+      gsap.to(panel, {height:'auto', duration:0.32, ease:'power2.out'});
+    }else{
+      panel.style.height = 'auto';
+    }
+  }
+  function closePanel(panel){
+    if(hasGsap && !reduceMotion){
+      gsap.killTweensOf(panel);
+      gsap.to(panel, {height:0, duration:0.24, ease:'power2.in'});
+    }else{
+      panel.style.height = 0;
+    }
+  }
+
+  function buildTerminCard(t){
+    var card = document.createElement('div');
+    card.className = 'termin-card' + (t.ausgebucht ? ' is-full' : '');
+
+    var pct = t.maxPersonen > 0 ? Math.min(100, Math.round((t.maxPersonen - t.freiePlaetze) / t.maxPersonen * 100)) : 0;
+
+    card.innerHTML =
+      '<div class="termin-top">' +
+        '<div class="termin-when">' +
+          '<p class="date">' + escapeHtml(formatDatum(t.datumIso, t.uhrzeit)) + '</p>' +
+          '<p class="time">' + escapeHtml(t.uhrzeit) + ' Uhr</p>' +
+        '</div>' +
+        '<div class="termin-price">' + formatPreis(t.preisProPerson) + ' &euro;<span>pro Person</span></div>' +
+      '</div>' +
+      '<div class="termin-capacity">' +
+        '<div class="capacity-bar"><div class="fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="capacity-label">' +
+          (t.ausgebucht
+            ? '<span class="badge-full">Ausgebucht</span>'
+            : '<span>' + t.freiePlaetze + ' von ' + t.maxPersonen + ' Plätzen frei</span>') +
+        '</div>' +
+      '</div>' +
+      '<div class="termin-actions">' +
+        '<button type="button" class="btn-book"' + (t.ausgebucht ? ' disabled' : '') + '>' +
+          (t.ausgebucht ? 'Ausgebucht' : 'Jetzt buchen') +
+        '</button>' +
+      '</div>' +
+      '<div class="booking-panel" style="height:0;">' +
+        '<div class="booking-panel-inner">' +
+          '<form class="booking-form" novalidate>' +
+            '<div class="full"><label>Name</label><input type="text" name="name" required maxlength="120" autocomplete="name"></div>' +
+            '<div><label>E-Mail</label><input type="email" name="email" required maxlength="200" autocomplete="email"></div>' +
+            '<div><label>Personen</label><input type="number" name="personen" required min="1" max="' + t.freiePlaetze + '" value="1"></div>' +
+            '<div class="booking-error"></div>' +
+            '<div class="booking-form-actions">' +
+              '<button type="submit" class="btn-book">Verbindlich buchen</button>' +
+              '<button type="button" class="btn-cancel-form">Abbrechen</button>' +
+            '</div>' +
+          '</form>' +
+          '<div class="booking-success"></div>' +
+        '</div>' +
+      '</div>';
+
+    if(!t.ausgebucht){
+      var bookBtn = card.querySelector('.termin-actions .btn-book');
+      var panel = card.querySelector('.booking-panel');
+      var cancelBtn = card.querySelector('.btn-cancel-form');
+      var form = card.querySelector('.booking-form');
+      var errorEl = card.querySelector('.booking-error');
+      var successEl = card.querySelector('.booking-success');
+      var isOpen = false;
+
+      bookBtn.addEventListener('click', function(){
+        isOpen = !isOpen;
+        if(isOpen){ openPanel(panel); } else { closePanel(panel); }
+      });
+      cancelBtn.addEventListener('click', function(){
+        isOpen = false;
+        closePanel(panel);
+      });
+
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        errorEl.classList.remove('is-visible');
+        errorEl.textContent = '';
+
+        var name = form.elements.name.value.trim();
+        var email = form.elements.email.value.trim();
+        var personen = parseInt(form.elements.personen.value, 10);
+
+        if(!name){ errorEl.textContent = 'Bitte einen Namen angeben.'; errorEl.classList.add('is-visible'); return; }
+        if(!email){ errorEl.textContent = 'Bitte eine E-Mail-Adresse angeben.'; errorEl.classList.add('is-visible'); return; }
+        if(!personen || personen < 1){ errorEl.textContent = 'Bitte eine gültige Personenzahl angeben.'; errorEl.classList.add('is-visible'); return; }
+
+        var submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Wird gesendet …';
+
+        fetch('/.netlify/functions/buchung-erstellen', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({terminId:t.id, name:name, email:email, personen:personen})
+        })
+        .then(function(res){ return res.json().then(function(data){ return {status:res.status, data:data}; }); })
+        .then(function(r){
+          if(!r.data.ok){
+            errorEl.textContent = r.data.error || 'Die Buchung konnte nicht angelegt werden.';
+            errorEl.classList.add('is-visible');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Verbindlich buchen';
+            return;
+          }
+          form.style.display = 'none';
+          successEl.innerHTML =
+            '<div class="ok-row">' +
+              '<span class="ok-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+              '<h3>Buchung bestätigt</h3>' +
+            '</div>' +
+            '<p>' + personen + ' Platz/Plätze für ' + escapeHtml(formatDatum(t.datumIso, t.uhrzeit)) + ' um ' + escapeHtml(t.uhrzeit) + ' Uhr sind reserviert. Es gibt aktuell keine automatische Bestätigungsmail — bitte den Termin selbst notieren.</p>';
+          successEl.classList.add('is-visible');
+
+          var freiDanach = typeof r.data.freiePlaetzeDanach === 'number' ? r.data.freiePlaetzeDanach : Math.max(0, t.freiePlaetze - personen);
+          var neuPct = t.maxPersonen > 0 ? Math.min(100, Math.round((t.maxPersonen - freiDanach) / t.maxPersonen * 100)) : 0;
+          var fillEl = card.querySelector('.capacity-bar .fill');
+          var labelEl = card.querySelector('.capacity-label');
+          if(fillEl) fillEl.style.width = neuPct + '%';
+          if(labelEl){
+            labelEl.innerHTML = freiDanach <= 0
+              ? '<span class="badge-full">Ausgebucht</span>'
+              : '<span>' + freiDanach + ' von ' + t.maxPersonen + ' Plätzen frei</span>';
+          }
+          if(freiDanach <= 0){
+            card.classList.add('is-full');
+            bookBtn.disabled = true;
+            bookBtn.textContent = 'Ausgebucht';
+          }
+        })
+        .catch(function(){
+          errorEl.textContent = 'Verbindung fehlgeschlagen. Bitte später erneut versuchen.';
+          errorEl.classList.add('is-visible');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Verbindlich buchen';
+        });
+      });
+    }
+
+    return card;
+  }
+
+  function ladeTermine(fuehrungId){
+    fetch('/.netlify/functions/termine-oeffentlich?fuehrungId=' + encodeURIComponent(fuehrungId))
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(!data.ok){
+          renderTerminState(data.error || 'Termine konnten nicht geladen werden.', true);
+          countEl.textContent = '';
+          return;
+        }
+        var termine = data.termine || [];
+        countEl.textContent = termine.length > 0 ? (termine.length + (termine.length === 1 ? ' Termin' : ' Termine')) : '';
+
+        if(termine.length === 0){
+          renderTerminState('Für diese Führung sind aktuell keine Termine eingetragen — schau bald wieder vorbei oder melde dich per Kontaktformular.', false);
+          return;
+        }
+
+        listWrap.innerHTML = '';
+        var list = document.createElement('div');
+        list.className = 'termin-list';
+        termine.forEach(function(t){
+          list.appendChild(buildTerminCard(t));
+        });
+        listWrap.appendChild(list);
+      })
+      .catch(function(){
+        renderTerminState('Termine konnten nicht geladen werden — bitte Seite neu laden.', true);
+      });
+  }
+
+  function renderFuehrung(f){
+    document.title = f.titel + ' – Zeitreise Seelower Höhen';
+
+    document.getElementById('f-titel').textContent = f.titel;
+    document.getElementById('f-preis').innerHTML = formatPreis(f.preisProPerson) + ' &euro; <span>pro Person</span>';
+
+    var heroWrap = document.getElementById('f-hero-image');
+    if(f.bildDetailId){
+      heroWrap.innerHTML = '<img src="/.netlify/functions/fuehrungen-bild?id=' + encodeURIComponent(f.bildDetailId) + '" alt="' + escapeHtml(f.titel) + '">';
+    } else {
+      heroWrap.style.display = 'none';
+    }
+
+    var langWrap = document.getElementById('f-langbeschreibung');
+    var absaetze = (f.langbeschreibung || '').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+    if(absaetze.length === 0) absaetze = [f.langbeschreibung || ''];
+    langWrap.innerHTML = absaetze.map(function(p){ return '<p>' + escapeHtml(p).replace(/\n/g, '<br>') + '</p>'; }).join('');
+
+    var ortBlock = document.getElementById('f-ort-block');
+    if(f.ort){
+      document.getElementById('f-ort-text').textContent = f.ort;
+      document.getElementById('f-ort-map').innerHTML =
+        '<iframe src="https://www.google.com/maps?q=' + encodeURIComponent(f.ort) + '&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Treffpunkt: ' + escapeHtml(f.ort) + '"></iframe>';
+    } else {
+      ortBlock.style.display = 'none';
+    }
+
+    detailState.style.display = 'none';
+    detailContent.classList.add('is-visible');
+
+    if(hasGsap && !reduceMotion){
+      gsap.from(detailContent.children, {opacity:0, y:16, duration:0.5, ease:'power2.out', stagger:0.06});
+    }
+
+    ladeTermine(f.id);
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('id');
+
+  if(!id){
+    detailState.textContent = 'Keine Führung angegeben.';
+    detailState.classList.add('is-error');
+  } else {
+    fetch('/.netlify/functions/fuehrungen-oeffentlich?id=' + encodeURIComponent(id))
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(!data.ok || !data.fuehrung){
+          detailState.textContent = (data && data.error) || 'Diese Führung wurde nicht gefunden.';
+          detailState.classList.add('is-error');
+          return;
+        }
+        renderFuehrung(data.fuehrung);
+      })
+      .catch(function(){
+        detailState.textContent = 'Führung konnte nicht geladen werden — bitte Seite neu laden.';
+        detailState.classList.add('is-error');
+      });
+  }
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zeitreise Seelower Höhen</title>
 <meta name="description" content="Historische Dokumentationen zur Schlacht um die Seelower Höhen und zur Ostfront im Zweiten Weltkrieg.">
+<link rel="stylesheet" href="/assets/nav.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap">
+<script defer src="/assets/site-chrome.js"></script>
 <style>
   :root{
     --green:#A1C74F;
@@ -14,7 +19,7 @@
     --paper:#fafaf8;
     --line:#e6e5e0;
     --muted:#7a7a76;
-    --max:760px;
+    --max:920px;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
@@ -30,7 +35,7 @@
   .hero{
     background:var(--ink);
     color:#fff;
-    min-height:88vh;
+    min-height:calc(88vh - 66px);
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -106,174 +111,299 @@
     font-size:12px;
     font-weight:600;
     color:var(--muted);
-    margin:0 0 20px;
+    margin:0 0 8px;
     text-align:center;
   }
-  .links{
+  main > h2{
+    font-size:clamp(22px, 3.4vw, 28px);
+    text-align:center;
+    margin:0 0 40px;
+  }
+
+  /* ---------- Drehschalter ---------- */
+  .dial-hint{
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    margin:-24px 0 34px;
+  }
+  .dial-section{margin-bottom:8px;}
+  .dial-panel{
+    position:relative;
+    background:
+      radial-gradient(ellipse 130% 85% at 16% -12%, rgba(255,255,255,0.055), transparent 55%),
+      radial-gradient(ellipse 115% 75% at 88% 116%, rgba(0,0,0,0.4), transparent 62%),
+      radial-gradient(circle at 74% 10%, rgba(255,255,255,0.03), transparent 42%),
+      radial-gradient(circle at 22% 82%, rgba(255,255,255,0.025), transparent 38%),
+      linear-gradient(152deg, #242420 0%, #1c1c19 32%, #201f1a 54%, #19190f 78%, #15150d 100%);
+    border-radius:20px;
+    padding:clamp(32px, 5vw, 52px) 20px clamp(30px, 5vw, 44px);
     display:flex;
     flex-direction:column;
-    gap:12px;
-    margin-bottom:56px;
-  }
-  .link-card{
-    display:flex;
     align-items:center;
-    gap:16px;
-    padding:18px 22px;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:14px;
-    text-decoration:none;
-    color:var(--ink);
-    transition:transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    gap:22px;
+    box-shadow:0 24px 60px rgba(27,27,27,0.16);
   }
-  .link-card:hover{
-    transform:translateY(-3px);
-    box-shadow:0 12px 28px rgba(27,27,27,0.08);
-    border-color:transparent;
+  /* Feiner Rauschgrund -- macht aus der flachen Farbe eine ungleichmäßige,
+     genutzte Metalloberfläche statt Einheitsfläche. */
+  .dial-panel::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    border-radius:inherit;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.45'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:170px 170px;
+    opacity:0.5;
+    mix-blend-mode:overlay;
+    pointer-events:none;
   }
-  .link-card .icon{
-    flex:none;
-    width:40px;
-    height:40px;
-    border-radius:10px;
+  /* Verstreute Kratzer -- kurze, unregelmäßig platzierte Riefen statt
+     durchgehender Streifen, damit es wie abgenutztes Blech statt Muster wirkt. */
+  .dial-panel::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    border-radius:inherit;
+    background:
+      linear-gradient(112deg, transparent 42%, rgba(255,255,255,0.5) 49%, rgba(255,255,255,0.18) 53%, transparent 60%) no-repeat 6% 12% / 130px 5px,
+      linear-gradient(96deg, transparent 40%, rgba(255,255,255,0.4) 48%, transparent 58%) no-repeat 88% 8% / 90px 4px,
+      linear-gradient(128deg, transparent 44%, rgba(0,0,0,0.32) 50%, transparent 58%) no-repeat 14% 34% / 70px 3px,
+      linear-gradient(101deg, transparent 42%, rgba(255,255,255,0.32) 49%, transparent 58%) no-repeat 78% 40% / 110px 4px,
+      linear-gradient(118deg, transparent 44%, rgba(255,255,255,0.28) 50%, transparent 58%) no-repeat 8% 62% / 95px 3px,
+      linear-gradient(94deg, transparent 42%, rgba(0,0,0,0.28) 49%, transparent 58%) no-repeat 92% 60% / 80px 3px,
+      linear-gradient(133deg, transparent 44%, rgba(255,255,255,0.4) 50%, transparent 58%) no-repeat 40% 4% / 100px 4px,
+      linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.22) 50%, transparent 60%) no-repeat 30% 92% / 85px 3px,
+      linear-gradient(90deg, transparent 44%, rgba(0,0,0,0.24) 50%, transparent 58%) no-repeat 62% 88% / 65px 3px,
+      linear-gradient(120deg, transparent 43%, rgba(255,255,255,0.3) 50%, transparent 59%) no-repeat 55% 20% / 75px 3px;
+    mix-blend-mode:overlay;
+    opacity:0.8;
+    pointer-events:none;
+  }
+  .dial-panel > .dial-readout,
+  .dial-panel > .dial-visual,
+  .dial-panel > .dial-controls,
+  .dial-panel > .dial-links{
+    position:relative;
+    z-index:1;
+  }
+  .dial-readout{
+    background:#0e0e0c;
+    border:1px solid #333129;
+    border-radius:8px;
+    padding:8px 22px;
+    min-width:200px;
+    text-align:center;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.6);
+  }
+  .dial-readout-label{
+    font-family:'Oswald', -apple-system, sans-serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--green);
+    text-shadow:0 0 12px rgba(161,199,79,0.55);
+  }
+  .dial-visual{
+    position:relative;
+    width:100%;
     display:flex;
     align-items:center;
     justify-content:center;
-    background:var(--ink);
-    color:#fff;
+    padding:clamp(56px, 11vw, 74px) clamp(70px, 15vw, 96px);
   }
-  .link-card .icon svg{width:20px; height:20px;}
-  .link-card .icon-youtube{background:#FF0000;}
-  .link-card .icon-facebook{background:#1877F2;}
-  .link-card .icon-telegram{background:#26A5E4;}
-  .link-card .icon-paypal{background:#003087;}
-  .link-card .text{flex:1;}
-  .link-card .title{font-weight:600; font-size:16px;}
-  .link-card .sub{font-size:13px; color:var(--muted); margin-top:2px;}
-  .link-card .arrow{color:var(--muted); transition:transform 180ms ease;}
-  .link-card:hover .arrow{transform:translateX(4px); color:var(--ink);}
+  .dial-canvas-wrap{
+    position:relative;
+    width:clamp(190px, 34vw, 280px);
+    height:clamp(190px, 34vw, 280px);
+    cursor:grab;
+    touch-action:none;
+    perspective:900px;
+    outline:none;
+  }
+  .dial-canvas-wrap.is-dragging{cursor:grabbing;}
+  .dial-canvas-wrap.kbd-focus{
+    outline:2px solid #f2e8cf;
+    outline-offset:10px;
+    border-radius:50%;
+  }
+  .dial-knob-stage{
+    position:relative;
+    width:100%;
+    height:100%;
+    transform-style:preserve-3d;
+    transform:rotateX(9deg);
+    transition:transform 220ms ease;
+  }
+  .dial-canvas-wrap:hover .dial-knob-stage,
+  .dial-canvas-wrap.kbd-focus .dial-knob-stage{
+    transform:rotateX(9deg) translateY(-4px);
+  }
+  .dial-knob-rotor{
+    position:absolute;
+    inset:0;
+    transform-origin:48% 50%;
+  }
+  .dial-knob-img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    filter:drop-shadow(0 22px 28px rgba(0,0,0,0.55)) drop-shadow(0 2px 5px rgba(0,0,0,0.45));
+    user-select:none;
+    -webkit-user-drag:none;
+    pointer-events:none;
+    z-index:2;
+  }
+  /* Licht liegt HINTER dem Knopf-Foto (niedrigerer z-index als .dial-knob-img),
+     damit es wie eine Lampe UNTER dem grünen Teil wirkt -- nur der Schein, der
+     über den Bildrand hinausreicht, ist sichtbar, nicht über das Foto gemalt. */
+  .dial-light-cone{
+    z-index:1;
+    position:absolute;
+    top:50%;
+    left:72%;
+    width:75%;
+    height:22%;
+    min-width:90px;
+    transform:translate(0,-50%);
+    transform-origin:0% 50%;
+    background:radial-gradient(ellipse 100% 60% at 0% 50%, rgba(242,232,207,0.95), rgba(242,232,207,0.4) 42%, rgba(242,232,207,0) 76%);
+    filter:blur(3px);
+    opacity:0;
+    pointer-events:none;
+    mix-blend-mode:screen;
+    transition:opacity 450ms ease;
+  }
+  .dial-light-cone::before{
+    content:"";
+    position:absolute;
+    left:-5px;
+    top:50%;
+    width:16px;
+    height:16px;
+    transform:translate(0,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,250,235,0.95), rgba(242,232,207,0.5) 55%, transparent 76%);
+    filter:blur(1px);
+  }
+  .dial-light-cone.is-lit{opacity:0.9;}
 
-  .link-card.primary{
+  .dial-labels{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .dial-label{
+    position:absolute;
+    top:50%;
+    left:50%;
+    min-width:60px;
+    max-width:104px;
+    padding:8px 10px 7px;
+    text-align:center;
+    border-radius:3px;
+    border:1px solid #3d3c2f;
+    background:
+      radial-gradient(circle 2.4px at 6px 6px, #86836e 0 55%, rgba(0,0,0,0.55) 62% 76%, transparent 80%) top left / 15px 15px no-repeat,
+      radial-gradient(circle 2.4px at 6px 6px, #86836e 0 55%, rgba(0,0,0,0.55) 62% 76%, transparent 80%) top right / 15px 15px no-repeat,
+      radial-gradient(circle 2.4px at 6px 6px, #86836e 0 55%, rgba(0,0,0,0.55) 62% 76%, transparent 80%) bottom left / 15px 15px no-repeat,
+      radial-gradient(circle 2.4px at 6px 6px, #86836e 0 55%, rgba(0,0,0,0.55) 62% 76%, transparent 80%) bottom right / 15px 15px no-repeat,
+      linear-gradient(155deg, #26261d, #16160f 65%);
+    box-shadow:0 1px 0 rgba(255,255,255,0.05), 0 4px 9px rgba(0,0,0,0.4), inset 0 1px 2px rgba(0,0,0,0.55);
+    transition:box-shadow 200ms ease;
+  }
+  .dial-label-text{
+    display:block;
+    font-family:'Oswald', -apple-system, sans-serif;
+    font-weight:600;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    line-height:1.25;
+    color:#726f5e;
+    text-shadow:-1px -1px 1px rgba(0,0,0,0.85), 1px 1px 1px rgba(255,255,255,0.18);
+  }
+  .dial-label.is-active{
+    box-shadow:0 1px 0 rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.45), inset 0 1px 2px rgba(0,0,0,0.55), 0 0 0 1px rgba(161,199,79,0.4);
+  }
+  .dial-label.is-active .dial-label-text{
+    color:#bdcd94;
+    text-shadow:-1px -1px 1px rgba(0,0,0,0.85), 1px 1px 1px rgba(255,255,255,0.22), 0 0 8px rgba(161,199,79,0.35);
+  }
+
+  .dial-controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  /* Lichtschalter -- echter Kippschalter aus zwei freigestellten Fotos
+     (Chrom-Hebel mit rundem geriffeltem Metallring), analog zum Hauptschalter-
+     Foto-Ansatz. Kein CSS-Nachbau, kein sichtbarer Sockel -- die beiden Fotos
+     zeigen bereits den Ring flächenbündig aus einer Metallplatte ragend, hier
+     wird nur zwischen "Hebel oben" (an) und "Hebel unten" (aus) gewechselt. */
+  /* Schlichter Licht-Button -- zurück auf die einfache Urspungsfassung ohne
+     Foto-Kippschalter, im selben Pill-Stil wie .dial-link darunter. */
+  .dial-toggle{
+    font-family:'Oswald', -apple-system, sans-serif;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#a9a89c;
+    background:none;
+    border:1px solid #3a392f;
+    border-radius:999px;
+    padding:8px 20px;
+    cursor:pointer;
+    outline:none;
+    transition:background 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+  .dial-toggle:hover{color:#c7c6ba; border-color:#4a4938;}
+  .dial-toggle:focus-visible{outline:2px solid #f2e8cf; outline-offset:3px;}
+  .dial-toggle.is-lit{background:var(--green); border-color:var(--green); color:var(--ink);}
+
+  .dial-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+  .dial-link{
+    font-size:13px;
+    font-weight:600;
+    color:#e7e6df;
+    text-decoration:none;
+    padding:8px 16px;
+    border:1px solid #3a392f;
+    border-radius:999px;
+    transition:background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  }
+  .dial-link:hover{
     background:var(--green);
     border-color:var(--green);
-  }
-  .link-card.primary .icon:not([class*="icon-"]){background:var(--ink);}
-  .link-card.primary .sub{color:rgba(27,27,27,0.65);}
-  .link-card.primary .arrow{color:rgba(27,27,27,0.6);}
-  .link-card.primary:hover .arrow{color:var(--ink);}
-
-  .link-card.support{
-    background:#fff;
-    border-color:var(--ink);
-  }
-
-  button.link-card{
-    font-family:inherit;
-    font-size:inherit;
-    width:100%;
-    text-align:left;
-    cursor:pointer;
-  }
-
-  .captcha-panel{
-    margin-top:-2px;
-    margin-bottom:12px;
-    padding:16px 18px;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:14px;
-  }
-  .captcha-question{
-    margin:0 0 10px;
-    font-size:14px;
-    font-weight:600;
-  }
-  .captcha-row{
-    display:flex;
-    gap:10px;
-  }
-  .captcha-row input{
-    flex:1;
-    font-family:inherit;
-    font-size:15px;
-    padding:10px 12px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    background:var(--paper);
     color:var(--ink);
-  }
-  .captcha-row input:focus{
-    outline:none;
-    border-color:var(--green-dark);
-  }
-  .captcha-row button{
-    font-family:inherit;
-    font-size:14px;
-    font-weight:600;
-    padding:10px 18px;
-    background:var(--green);
-    color:var(--ink);
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-  }
-  .captcha-row button:hover{background:var(--green-dark);}
-  .captcha-error{
-    margin:10px 0 0;
-    font-size:13px;
-    color:#c0392b;
-  }
-  .bank-details p{
-    margin:0 0 6px;
-    font-size:14px;
-    line-height:1.5;
-  }
-  .bank-details p:last-child{margin-bottom:0;}
-
-  .contact-form{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-bottom:64px;
-  }
-  .contact-form input,
-  .contact-form textarea{
-    font-family:inherit;
-    font-size:15px;
-    padding:14px 16px;
-    border:1px solid var(--line);
-    border-radius:10px;
-    background:#fff;
-    color:var(--ink);
-    resize:vertical;
-    transition:border-color 150ms ease;
-  }
-  .contact-form input:focus,
-  .contact-form textarea:focus{
-    outline:none;
-    border-color:var(--green-dark);
-  }
-  .contact-form button{
-    align-self:flex-start;
-    font-family:inherit;
-    font-size:15px;
-    font-weight:600;
-    padding:14px 26px;
-    background:var(--green);
-    color:var(--ink);
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    transition:transform 160ms ease, background 160ms ease;
-  }
-  .contact-form button:hover{
-    background:var(--green-dark);
     transform:translateY(-2px);
   }
-  .contact-form .sent-note{
-    font-size:13px;
-    color:var(--muted);
+
+  /* Fallback: prefers-reduced-motion oder Bild lädt nicht -> volle, statische Liste */
+  .dial-fallback-active .dial-readout,
+  .dial-fallback-active .dial-visual{display:none;}
+  .dial-fallback-active .dial-panel{padding:26px 20px;}
+  .dial-fallback-active .dial-links{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:12px;
+  }
+  .dial-fallback-active .dial-link{
+    border-radius:12px;
+    text-align:center;
+    padding:16px 14px;
+    font-size:14px;
   }
 
   footer{
@@ -282,6 +412,7 @@
     text-align:center;
     padding:36px 24px;
     font-size:13px;
+    margin-top:56px;
   }
   footer .foot-links{
     margin-top:10px;
@@ -292,70 +423,16 @@
   }
   footer a{opacity:0.85; text-decoration:none;}
   footer a:hover{opacity:1; text-decoration:underline;}
-
-  .video-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-    gap:20px;
-    margin-bottom:56px;
-  }
-  .video-card{
-    display:flex;
-    flex-direction:column;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:14px;
-    overflow:hidden;
-    text-decoration:none;
-    color:var(--ink);
-    transition:transform 180ms ease, box-shadow 180ms ease;
-  }
-  .video-card:hover{
-    transform:translateY(-3px);
-    box-shadow:0 12px 28px rgba(27,27,27,0.08);
-  }
-  .video-card .thumb{
-    width:100%;
-    aspect-ratio:16/9;
-    object-fit:cover;
-    background:var(--ink-soft);
-    display:block;
-  }
-  .video-card .vtext{padding:16px;}
-  .video-card .vtitle{font-weight:600; font-size:15px; line-height:1.35; margin:0 0 8px;}
-  .video-card .vdesc{font-size:13px; color:var(--muted); line-height:1.5; margin:0;}
-  .video-status{
-    grid-column:1/-1;
-    text-align:center;
-    font-size:13px;
-    color:var(--muted);
-    padding:24px 0;
-  }
-  .view-all{
-    display:block;
-    text-align:center;
-    font-size:14px;
-    font-weight:600;
-    color:var(--ink);
-    text-decoration:none;
-    margin:-32px 0 56px;
-  }
-  .view-all + .view-all{margin-top:-40px;}
-  .view-all:hover{color:var(--green-dark);}
-  .view-all .arrow{display:inline-block; transition:transform 180ms ease;}
-  .view-all:hover .arrow{transform:translateX(4px);}
-
-  @media (max-width:480px){
-    .link-card{padding:16px;}
-  }
 </style>
 </head>
 <body>
 
+<header id="site-header"></header>
+
 <section class="hero">
   <canvas id="terrain-canvas" aria-hidden="true"></canvas>
   <div class="hero-inner">
-    <img class="logo" src="assets/logo-hero.png" alt="Zeitreise Seelower Höhen Logo">
+    <img class="logo" src="/assets/logo-hero.png" alt="Zeitreise Seelower Höhen Logo">
     <h1>Zeitreise Seelower Höhen</h1>
     <p>Geschichte hautnah – Dokumentationen zur Schlacht um die Seelower Höhen und zur Ostfront im Zweiten Weltkrieg, erzählt anhand von Zeitzeugen, Quellen und Feldrecherche.</p>
     <div class="scroll-cue" aria-hidden="true">
@@ -365,114 +442,62 @@
 </section>
 
 <main>
-  <p class="section-label">Unterstützen &amp; Verbinden</p>
-  <div class="links">
+  <p class="section-label">Auf einen Blick</p>
+  <h2>Wo möchtest du weiterlesen?</h2>
+  <p class="dial-hint">Am Schalter drehen und einrasten lassen – zum Bestätigen noch einmal klicken.</p>
 
-    <a class="link-card" href="https://www.youtube.com/c/ZeitreiseSeelowerH%C3%B6hen" target="_blank" rel="noopener">
-      <span class="icon icon-youtube" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M9 8L16 12L9 16V8Z" fill="currentColor"/></svg>
-      </span>
-      <span class="text">
-        <span class="title">YouTube-Kanal abonnieren</span>
-        <span class="sub">Neue Dokumentationen nicht verpassen</span>
-      </span>
-      <span class="arrow" aria-hidden="true">&#8594;</span>
-    </a>
+  <section class="dial-section" aria-label="Themenbereiche der Seite">
+    <div class="dial-panel">
+      <div class="dial-readout" aria-hidden="true">
+        <span class="dial-readout-label" id="dialReadoutLabel">Videos</span>
+      </div>
 
-    <a class="link-card primary" href="https://www.youtube.com/channel/UCS66v6xykvKupyUme3wpMwA/join" target="_blank" rel="noopener">
-      <span class="icon icon-youtube" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M12 4L14.4 9.6L20.5 10.3L16 14.3L17.3 20.3L12 17.1L6.7 20.3L8 14.3L3.5 10.3L9.6 9.6L12 4Z" fill="currentColor"/></svg>
-      </span>
-      <span class="text">
-        <span class="title">YouTube-Mitglied werden</span>
-        <span class="sub">Das Projekt direkt fördern &amp; unterstützen</span>
-      </span>
-      <span class="arrow" aria-hidden="true">&#8594;</span>
-    </a>
+      <div class="dial-visual">
+        <div class="dial-labels" id="dialLabels" aria-hidden="true"></div>
 
-    <a class="link-card" href="https://www.facebook.com/histograf.de" target="_blank" rel="noopener">
-      <span class="icon icon-facebook" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 21V13.5H17L17.4 10.5H14.5V8.7C14.5 7.85 14.7 7.3 15.9 7.3H17.5V4.6C17.2 4.56 16.2 4.47 15.05 4.47C12.63 4.47 10.97 5.95 10.97 8.66V10.5H8.3V13.5H10.97V21H14.5Z" fill="currentColor"/></svg>
-      </span>
-      <span class="text">
-        <span class="title">Facebook-Seite folgen</span>
-        <span class="sub">Updates &amp; Diskussion in der Community</span>
-      </span>
-      <span class="arrow" aria-hidden="true">&#8594;</span>
-    </a>
-
-    <a class="link-card" href="https://t.me/histograf" target="_blank" rel="noopener">
-      <span class="icon icon-telegram" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12L20 5L17 20L12 16.5L9.5 19L9 14.5L18 7L7.5 13L4 12Z" fill="currentColor"/></svg>
-      </span>
-      <span class="text">
-        <span class="title">Telegram-Kanal beitreten</span>
-        <span class="sub">Direkt informiert, ohne Algorithmus</span>
-      </span>
-      <span class="arrow" aria-hidden="true">&#8594;</span>
-    </a>
-
-    <a class="link-card support" href="https://paypal.me/EHollandYT" target="_blank" rel="noopener">
-      <span class="icon icon-paypal" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M8.5 19L10.3 6.5H14.4C16.6 6.5 18 7.7 17.7 9.7C17.4 12 15.6 13.3 13.2 13.3H11.3L10.7 17.2H8.5V19Z" fill="currentColor" opacity="0.55"/><path d="M9.8 17.2L11.5 5.5H15.6C17.8 5.5 19.2 6.7 18.9 8.7C18.6 11 16.8 12.3 14.4 12.3H12.5L11.9 16.2H9.7L9.8 17.2Z" fill="currentColor"/></svg>
-      </span>
-      <span class="text">
-        <span class="title">Projekt unterstützen</span>
-        <span class="sub">Einmalig via PayPal</span>
-      </span>
-      <span class="arrow" aria-hidden="true">&#8594;</span>
-    </a>
-
-    <button type="button" class="link-card support" id="bank-request-btn">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 10L12 5L20 10V11H4V10Z" fill="currentColor"/><path d="M5 12H7V18H5V12Z" fill="currentColor"/><path d="M11 12H13V18H11V12Z" fill="currentColor"/><path d="M17 12H19V18H17V12Z" fill="currentColor"/><path d="M4 19H20V21H4V19Z" fill="currentColor"/></svg>
-      </span>
-      <span class="text">
-        <span class="title">Bankverbindung anfragen</span>
-        <span class="sub">Für Unterstützung per Überweisung</span>
-      </span>
-      <span class="arrow" aria-hidden="true">&#8594;</span>
-    </button>
-
-    <div class="captcha-panel" id="captcha-panel" hidden>
-      <div id="captcha-challenge">
-        <p class="captcha-question" id="captcha-question"></p>
-        <div class="captcha-row">
-          <input type="text" id="captcha-answer" inputmode="numeric" placeholder="Antwort">
-          <button type="button" id="captcha-submit">Bestätigen</button>
+        <div class="dial-canvas-wrap"
+             id="dialKnob"
+             tabindex="0"
+             role="slider"
+             aria-label="Themenbereich wählen. Mit Pfeiltasten drehen, mit Eingabe bestätigen."
+             aria-valuemin="0"
+             aria-valuemax="7"
+             aria-valuenow="0"
+             aria-valuetext="Videos">
+          <div class="dial-knob-stage">
+            <div class="dial-knob-rotor" id="dialRotor">
+              <img class="dial-knob-img" id="dialKnobImg" src="/assets/drehschalter/knob-front-cutout-v1.png" alt="" aria-hidden="true" draggable="false">
+              <span class="dial-light-cone" id="dialLightCone" aria-hidden="true"></span>
+            </div>
+          </div>
         </div>
-        <p class="captcha-error" id="captcha-error" hidden>Falsche Antwort, versuch's nochmal.</p>
       </div>
-      <div id="captcha-result" class="bank-details" hidden>
-        <p><strong>Kontoinhaber:</strong> Enrico Holland</p>
-        <p><strong>IBAN:</strong> DE26500240242823093632</p>
-        <p><strong>Bank:</strong> C24</p>
+
+      <div class="dial-controls">
+        <button type="button" class="dial-toggle" id="dialLightBtn" aria-pressed="false" aria-label="Beleuchtung des Zeigers umschalten">
+          Licht
+        </button>
       </div>
+
+      <nav class="dial-links" aria-label="Alle Themenbereiche direkt anwählen">
+        <a class="dial-link" href="/videos.html">Videos</a>
+        <a class="dial-link" href="/artikel/index.html">Artikel</a>
+        <a class="dial-link" href="/karte.html">Karte</a>
+        <a class="dial-link" href="/fuehrungen.html">Führungen</a>
+        <a class="dial-link" href="/quellen.html">Literatur</a>
+        <a class="dial-link" href="/unterstuetzen.html">Unterstützen</a>
+        <a class="dial-link" href="/kontakt.html">Kontakt</a>
+        <a class="dial-link" href="/kooperationen.html">Kooperationen</a>
+      </nav>
     </div>
-
-  </div>
-
-  <p class="section-label">Neueste Videos</p>
-  <div class="video-grid" id="video-grid">
-    <p class="video-status">Videos werden geladen …</p>
-  </div>
-  <a class="view-all" href="https://www.youtube.com/channel/UCS66v6xykvKupyUme3wpMwA/videos" target="_blank" rel="noopener">Alle Videos auf YouTube ansehen <span class="arrow" aria-hidden="true">&#8594;</span></a>
-  <a class="view-all" href="artikel/index.html">Hintergrund-Artikel lesen <span class="arrow" aria-hidden="true">&#8594;</span></a>
-  <a class="view-all" href="karte.html">Schauplätze auf der Karte <span class="arrow" aria-hidden="true">&#8594;</span></a>
-
-  <p class="section-label">Kontakt</p>
-  <form class="contact-form" id="contact-form">
-    <input type="text" id="cf-name" placeholder="Dein Name" required>
-    <textarea id="cf-message" rows="5" placeholder="Deine Nachricht oder Anfrage" required></textarea>
-    <button type="submit">Nachricht senden</button>
-  </form>
+  </section>
 </main>
 
 <footer>
   <div>&copy; 2026 Zeitreise Seelower Höhen</div>
   <div class="foot-links">
-    <a href="impressum.html">Impressum</a>
-    <a href="datenschutz.html">Datenschutz</a>
+    <a href="/impressum.html">Impressum</a>
+    <a href="/datenschutz.html">Datenschutz</a>
   </div>
 </footer>
 
@@ -585,154 +610,14 @@
 (function(){
   if(typeof gsap === 'undefined') return;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduceMotion) return;
-
+  if(reduceMotion){
+    return;
+  }
   gsap.set('.hero-inner > *', {opacity:0, y:16});
   gsap.to('.hero-inner > *', {opacity:1, y:0, duration:0.9, ease:'power2.out', stagger:0.12, delay:0.1});
-
-  if(typeof ScrollTrigger !== 'undefined'){
-    gsap.registerPlugin(ScrollTrigger);
-    gsap.utils.toArray('.link-card').forEach(function(card){
-      gsap.fromTo(card, {opacity:0, y:24}, {
-        opacity:1, y:0, duration:0.6, ease:'power2.out',
-        scrollTrigger:{trigger:card, start:'top 90%'}
-      });
-    });
-  }
-})();
-
-(function(){
-  var YT_API_KEY = 'AIzaSyDdcH0hDhnXCB8ESPcTEasdWsNy-N-ce-0'; // Google Cloud Console -> YouTube Data API v3 -> API-Schlüssel (mit HTTP-Referrer-Einschränkung auf diese Domain)
-  var YT_CHANNEL_ID = 'UCS66v6xykvKupyUme3wpMwA';
-  var MAX_VIDEOS = 6;
-  var grid = document.getElementById('video-grid');
-  if(!grid) return;
-
-  function truncate(text, max){
-    text = (text || '').replace(/\s+/g, ' ').trim();
-    if(text.length <= max) return text;
-    var cut = text.slice(0, max);
-    cut = cut.slice(0, cut.lastIndexOf(' '));
-    return cut + '…';
-  }
-
-  function escapeHtml(str){
-    var div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
-  }
-
-  function renderVideos(items){
-    if(!items || !items.length){
-      grid.innerHTML = '<p class="video-status">Aktuell keine Videos gefunden.</p>';
-      return;
-    }
-    grid.innerHTML = items.map(function(item){
-      var s = item.snippet;
-      var videoId = s.resourceId && s.resourceId.videoId;
-      if(!videoId) return '';
-      var thumb = (s.thumbnails && (s.thumbnails.medium || s.thumbnails.default) || {}).url || '';
-      return '<a class="video-card" href="https://www.youtube.com/watch?v=' + encodeURIComponent(videoId) + '" target="_blank" rel="noopener">'
-        + '<img class="thumb" src="' + escapeHtml(thumb) + '" alt="" loading="lazy">'
-        + '<span class="vtext">'
-        + '<span class="vtitle">' + escapeHtml(s.title) + '</span>'
-        + '<span class="vdesc">' + escapeHtml(truncate(s.description, 110)) + '</span>'
-        + '</span></a>';
-    }).join('');
-  }
-
-  function loadVideos(){
-    if(!YT_API_KEY || YT_API_KEY === 'DEIN_YOUTUBE_API_KEY'){
-      grid.innerHTML = '<p class="video-status">Video-Vorschau noch nicht konfiguriert.</p>';
-      return;
-    }
-    fetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var uploadsId = data.items && data.items[0] && data.items[0].contentDetails.relatedPlaylists.uploads;
-        if(!uploadsId) throw new Error('no uploads playlist');
-        return fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=' + MAX_VIDEOS + '&playlistId=' + uploadsId + '&key=' + YT_API_KEY);
-      })
-      .then(function(r){ return r.json(); })
-      .then(function(data){ renderVideos(data.items); })
-      .catch(function(){
-        grid.innerHTML = '<p class="video-status">Videos konnten nicht geladen werden.</p>';
-      });
-  }
-
-  loadVideos();
-})();
-
-(function(){
-  var btn = document.getElementById('bank-request-btn');
-  var panel = document.getElementById('captcha-panel');
-  var challenge = document.getElementById('captcha-challenge');
-  var result = document.getElementById('captcha-result');
-  var question = document.getElementById('captcha-question');
-  var answerInput = document.getElementById('captcha-answer');
-  var submitBtn = document.getElementById('captcha-submit');
-  var errorMsg = document.getElementById('captcha-error');
-  if(!btn || !panel) return;
-
-  var a, b, sum;
-
-  function newChallenge(){
-    a = Math.floor(Math.random() * 8) + 2;
-    b = Math.floor(Math.random() * 8) + 2;
-    sum = a + b;
-    question.textContent = 'Kurze Sicherheitsfrage: Was ist ' + a + ' + ' + b + '?';
-    answerInput.value = '';
-    errorMsg.hidden = true;
-    challenge.hidden = false;
-    result.hidden = true;
-  }
-
-  btn.addEventListener('click', function(){
-    var isHidden = panel.hasAttribute('hidden');
-    if(isHidden){
-      newChallenge();
-      panel.hidden = false;
-      answerInput.focus();
-    }else{
-      panel.hidden = true;
-    }
-  });
-
-  function checkAnswer(){
-    if(parseInt(answerInput.value, 10) === sum){
-      challenge.hidden = true;
-      result.hidden = false;
-    }else{
-      errorMsg.hidden = false;
-      newChallenge();
-    }
-  }
-
-  submitBtn.addEventListener('click', checkAnswer);
-  answerInput.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      checkAnswer();
-    }
-  });
-})();
-
-(function(){
-  var form = document.getElementById('contact-form');
-  if(!form) return;
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    var name = document.getElementById('cf-name').value.trim();
-    var message = document.getElementById('cf-message').value.trim();
-    var subject = 'Kontaktanfrage von ' + (name || 'der Webseite');
-    var body = message + '\n\n— ' + (name || 'Unbekannt');
-    var mailto = 'mailto:mail.zsh@proton.me'
-      + '?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
-    window.location.href = mailto;
-  });
 })();
 </script>
+<script src="/assets/dial.js"></script>
 <script data-goatcounter="https://marschbefehl.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 </body>

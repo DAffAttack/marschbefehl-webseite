@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unterstützen – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Zeitreise Seelower Höhen unterstützen: YouTube abonnieren oder Mitglied werden, auf Facebook und Telegram folgen, oder das Projekt direkt fördern.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:700px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 36px);
+    margin:0 0 12px;
+  }
+  main > p.intro{
+    font-size:16px;
+    color:var(--muted);
+    max-width:520px;
+    line-height:1.6;
+    margin:0 0 40px;
+  }
+
+  .links{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .link-card{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:18px 22px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .link-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(27,27,27,0.08);
+    border-color:transparent;
+  }
+  .link-card .icon{
+    flex:none;
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--ink);
+    color:#fff;
+  }
+  .link-card .icon svg{width:20px; height:20px;}
+  .link-card .icon-youtube{background:#FF0000;}
+  .link-card .icon-facebook{background:#1877F2;}
+  .link-card .icon-telegram{background:#26A5E4;}
+  .link-card .icon-paypal{background:#003087;}
+  .link-card .text{flex:1;}
+  .link-card .title{font-weight:600; font-size:16px;}
+  .link-card .sub{font-size:13px; color:var(--muted); margin-top:2px;}
+  .link-card .arrow{color:var(--muted); transition:transform 180ms ease;}
+  .link-card:hover .arrow{transform:translateX(4px); color:var(--ink);}
+
+  .link-card.primary{
+    background:var(--green);
+    border-color:var(--green);
+  }
+  .link-card.primary .icon:not([class*="icon-"]){background:var(--ink);}
+  .link-card.primary .sub{color:rgba(27,27,27,0.65);}
+  .link-card.primary .arrow{color:rgba(27,27,27,0.6);}
+  .link-card.primary:hover .arrow{color:var(--ink);}
+
+  .link-card.support{
+    background:#fff;
+    border-color:var(--ink);
+  }
+
+  button.link-card{
+    font-family:inherit;
+    font-size:inherit;
+    width:100%;
+    text-align:left;
+    cursor:pointer;
+  }
+
+  .captcha-panel{
+    margin-top:-2px;
+    padding:16px 18px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    opacity:1;
+    transform:none;
+  }
+  .captcha-question{
+    margin:0 0 10px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .captcha-row{
+    display:flex;
+    gap:10px;
+  }
+  .captcha-row input{
+    flex:1;
+    font-family:inherit;
+    font-size:15px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .captcha-row input:focus{
+    outline:none;
+    border-color:var(--green-dark);
+  }
+  .captcha-row button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:10px 18px;
+    background:var(--green);
+    color:var(--ink);
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .captcha-row button:hover{background:var(--green-dark);}
+  .captcha-error{
+    margin:10px 0 0;
+    font-size:13px;
+    color:#c0392b;
+  }
+  .bank-details p{
+    margin:0 0 6px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .bank-details p:last-child{margin-bottom:0;}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+    margin-top:56px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+
+  @media (max-width:480px){
+    .link-card{padding:16px;}
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <h1>Unterstützen &amp; Verbinden</h1>
+  <p class="intro">Jede Form der Unterstützung hilft dabei, weiter recherchieren und produzieren zu können – vom kostenlosen Abo bis zur direkten Förderung.</p>
+
+  <div class="links">
+
+    <a class="link-card" href="https://www.youtube.com/c/ZeitreiseSeelowerH%C3%B6hen" target="_blank" rel="noopener">
+      <span class="icon icon-youtube" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 8L16 12L9 16V8Z" fill="currentColor"/></svg>
+      </span>
+      <span class="text">
+        <span class="title">YouTube-Kanal abonnieren</span>
+        <span class="sub">Neue Dokumentationen nicht verpassen</span>
+      </span>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+    </a>
+
+    <a class="link-card primary" href="https://www.youtube.com/channel/UCS66v6xykvKupyUme3wpMwA/join" target="_blank" rel="noopener">
+      <span class="icon icon-youtube" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 4L14.4 9.6L20.5 10.3L16 14.3L17.3 20.3L12 17.1L6.7 20.3L8 14.3L3.5 10.3L9.6 9.6L12 4Z" fill="currentColor"/></svg>
+      </span>
+      <span class="text">
+        <span class="title">YouTube-Mitglied werden</span>
+        <span class="sub">Das Projekt direkt fördern &amp; unterstützen</span>
+      </span>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+    </a>
+
+    <a class="link-card" href="https://www.facebook.com/histograf.de" target="_blank" rel="noopener">
+      <span class="icon icon-facebook" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 21V13.5H17L17.4 10.5H14.5V8.7C14.5 7.85 14.7 7.3 15.9 7.3H17.5V4.6C17.2 4.56 16.2 4.47 15.05 4.47C12.63 4.47 10.97 5.95 10.97 8.66V10.5H8.3V13.5H10.97V21H14.5Z" fill="currentColor"/></svg>
+      </span>
+      <span class="text">
+        <span class="title">Facebook-Seite folgen</span>
+        <span class="sub">Updates &amp; Diskussion in der Community</span>
+      </span>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+    </a>
+
+    <a class="link-card" href="https://t.me/histograf" target="_blank" rel="noopener">
+      <span class="icon icon-telegram" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12L20 5L17 20L12 16.5L9.5 19L9 14.5L18 7L7.5 13L4 12Z" fill="currentColor"/></svg>
+      </span>
+      <span class="text">
+        <span class="title">Telegram-Kanal beitreten</span>
+        <span class="sub">Direkt informiert, ohne Algorithmus</span>
+      </span>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+    </a>
+
+    <a class="link-card support" href="https://paypal.me/EHollandYT" target="_blank" rel="noopener">
+      <span class="icon icon-paypal" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8.5 19L10.3 6.5H14.4C16.6 6.5 18 7.7 17.7 9.7C17.4 12 15.6 13.3 13.2 13.3H11.3L10.7 17.2H8.5V19Z" fill="currentColor" opacity="0.55"/><path d="M9.8 17.2L11.5 5.5H15.6C17.8 5.5 19.2 6.7 18.9 8.7C18.6 11 16.8 12.3 14.4 12.3H12.5L11.9 16.2H9.7L9.8 17.2Z" fill="currentColor"/></svg>
+      </span>
+      <span class="text">
+        <span class="title">Projekt unterstützen</span>
+        <span class="sub">Einmalig via PayPal</span>
+      </span>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+    </a>
+
+    <button type="button" class="link-card support" id="bank-request-btn">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 10L12 5L20 10V11H4V10Z" fill="currentColor"/><path d="M5 12H7V18H5V12Z" fill="currentColor"/><path d="M11 12H13V18H11V12Z" fill="currentColor"/><path d="M17 12H19V18H17V12Z" fill="currentColor"/><path d="M4 19H20V21H4V21Z" fill="currentColor"/></svg>
+      </span>
+      <span class="text">
+        <span class="title">Bankverbindung anfragen</span>
+        <span class="sub">Für Unterstützung per Überweisung</span>
+      </span>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+    </button>
+
+    <div class="captcha-panel" id="captcha-panel" hidden>
+      <div id="captcha-challenge">
+        <p class="captcha-question" id="captcha-question"></p>
+        <div class="captcha-row">
+          <input type="text" id="captcha-answer" inputmode="numeric" placeholder="Antwort">
+          <button type="button" id="captcha-submit">Bestätigen</button>
+        </div>
+        <p class="captcha-error" id="captcha-error" hidden>Falsche Antwort, versuch's nochmal.</p>
+      </div>
+      <div id="captcha-result" class="bank-details" hidden>
+        <p><strong>Kontoinhaber:</strong> Enrico Holland</p>
+        <p><strong>IBAN:</strong> DE26500240242823093632</p>
+        <p><strong>Bank:</strong> C24</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  if(typeof gsap === 'undefined') return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion){
+    document.querySelectorAll('.link-card').forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+    return;
+  }
+  if(typeof ScrollTrigger !== 'undefined'){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('.link-card').forEach(function(card, i){
+      gsap.to(card, {
+        opacity:1, y:0, duration:0.55, ease:'power2.out', delay:i*0.03,
+        scrollTrigger:{trigger:card, start:'top 92%'}
+      });
+    });
+  }
+})();
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('bank-request-btn');
+  var panel = document.getElementById('captcha-panel');
+  var challenge = document.getElementById('captcha-challenge');
+  var result = document.getElementById('captcha-result');
+  var question = document.getElementById('captcha-question');
+  var answerInput = document.getElementById('captcha-answer');
+  var submitBtn = document.getElementById('captcha-submit');
+  var errorMsg = document.getElementById('captcha-error');
+  if(!btn || !panel) return;
+
+  var a, b, sum;
+
+  function newChallenge(){
+    a = Math.floor(Math.random() * 8) + 2;
+    b = Math.floor(Math.random() * 8) + 2;
+    sum = a + b;
+    question.textContent = 'Kurze Sicherheitsfrage: Was ist ' + a + ' + ' + b + '?';
+    answerInput.value = '';
+    errorMsg.hidden = true;
+    challenge.hidden = false;
+    result.hidden = true;
+  }
+
+  btn.addEventListener('click', function(){
+    var isHidden = panel.hasAttribute('hidden');
+    if(isHidden){
+      newChallenge();
+      panel.hidden = false;
+      answerInput.focus();
+    }else{
+      panel.hidden = true;
+    }
+  });
+
+  function checkAnswer(){
+    if(parseInt(answerInput.value, 10) === sum){
+      challenge.hidden = true;
+      result.hidden = false;
+    }else{
+      errorMsg.hidden = false;
+      newChallenge();
+    }
+  }
+
+  submitBtn.addEventListener('click', checkAnswer);
+  answerInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

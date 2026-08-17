@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Videos – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Alle Dokumentationen von Zeitreise Seelower Höhen zur Ostfront im Zweiten Weltkrieg – die neuesten Uploads direkt vom YouTube-Kanal.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:1080px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 36px);
+    margin:0 0 12px;
+  }
+  main > p.intro{
+    font-size:16px;
+    color:var(--muted);
+    max-width:560px;
+    line-height:1.6;
+    margin:0 0 20px;
+  }
+  .yt-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    text-decoration:none;
+    margin-bottom:40px;
+  }
+  .yt-link:hover{color:var(--green-dark);}
+  .yt-link span{transition:transform 180ms ease;}
+  .yt-link:hover span{transform:translateX(4px);}
+
+  .video-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:22px;
+    margin-bottom:40px;
+  }
+  .video-card{
+    display:flex;
+    flex-direction:column;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform 180ms ease, box-shadow 180ms ease;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .video-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 16px 32px rgba(27,27,27,0.1);
+  }
+  .video-card .thumb-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:var(--ink-soft);
+    overflow:hidden;
+  }
+  .video-card .thumb{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .video-card .play{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(27,27,27,0);
+    transition:background 180ms ease;
+  }
+  .video-card:hover .play{background:rgba(27,27,27,0.12);}
+  .video-card .play span{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transform:scale(0.85);
+    transition:opacity 180ms ease, transform 180ms ease;
+  }
+  .video-card:hover .play span{opacity:1; transform:scale(1);}
+  .video-card .play svg{width:18px; height:18px; color:var(--ink);}
+  .video-card .vtext{padding:16px;}
+  .video-card .vtitle{font-weight:600; font-size:15px; line-height:1.35; margin:0 0 8px;}
+  .video-card .vdesc{font-size:13px; color:var(--muted); line-height:1.5; margin:0;}
+  .video-status{
+    grid-column:1/-1;
+    text-align:center;
+    font-size:14px;
+    color:var(--muted);
+    padding:32px 0;
+  }
+
+  .load-more-wrap{text-align:center; margin-bottom:24px;}
+  #load-more-btn{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:13px 26px;
+    background:#fff;
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  }
+  #load-more-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 26px rgba(27,27,27,0.08);
+    border-color:transparent;
+  }
+  #load-more-btn:disabled{opacity:0.5; cursor:default; transform:none; box-shadow:none;}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <h1>Videos</h1>
+  <p class="intro">Alle Dokumentationen zur Ostfront im Zweiten Weltkrieg – direkt vom YouTube-Kanal, neueste zuerst.</p>
+  <a class="yt-link" href="https://www.youtube.com/channel/UCS66v6xykvKupyUme3wpMwA/videos" target="_blank" rel="noopener">Kanal auf YouTube ansehen <span aria-hidden="true">&#8594;</span></a>
+
+  <div class="video-grid" id="video-grid">
+    <p class="video-status">Videos werden geladen …</p>
+  </div>
+  <div class="load-more-wrap" id="load-more-wrap" hidden>
+    <button type="button" id="load-more-btn">Weitere Videos laden</button>
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  var YT_API_KEY = 'AIzaSyDdcH0hDhnXCB8ESPcTEasdWsNy-N-ce-0'; // Google Cloud Console -> YouTube Data API v3 -> API-Schlüssel (mit HTTP-Referrer-Einschränkung auf diese Domain)
+  var YT_CHANNEL_ID = 'UCS66v6xykvKupyUme3wpMwA';
+  var PAGE_SIZE = 12;
+  var grid = document.getElementById('video-grid');
+  var loadMoreWrap = document.getElementById('load-more-wrap');
+  var loadMoreBtn = document.getElementById('load-more-btn');
+  if(!grid) return;
+
+  var uploadsPlaylistId = null;
+  var nextPageToken = null;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function truncate(text, max){
+    text = (text || '').replace(/\s+/g, ' ').trim();
+    if(text.length <= max) return text;
+    var cut = text.slice(0, max);
+    cut = cut.slice(0, cut.lastIndexOf(' '));
+    return cut + '…';
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  function animateIn(cards){
+    if(reduceMotion || typeof gsap === 'undefined'){
+      cards.forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+      return;
+    }
+    gsap.to(cards, {opacity:1, y:0, duration:0.5, ease:'power2.out', stagger:0.05});
+  }
+
+  function appendVideos(items){
+    if(!items || !items.length) return;
+    var frag = document.createDocumentFragment();
+    var newCards = [];
+    items.forEach(function(item){
+      var s = item.snippet;
+      var videoId = s.resourceId && s.resourceId.videoId;
+      if(!videoId) return;
+      var thumb = (s.thumbnails && (s.thumbnails.high || s.thumbnails.medium || s.thumbnails.default) || {}).url || '';
+      var a = document.createElement('a');
+      a.className = 'video-card';
+      a.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(videoId);
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML =
+        '<span class="thumb-wrap">' +
+          '<img class="thumb" src="' + escapeHtml(thumb) + '" alt="" loading="lazy">' +
+          '<span class="play"><span><svg viewBox="0 0 24 24" fill="none"><path d="M9 8L16 12L9 16V8Z" fill="currentColor"/></svg></span></span>' +
+        '</span>' +
+        '<span class="vtext">' +
+          '<span class="vtitle">' + escapeHtml(s.title) + '</span>' +
+          '<span class="vdesc">' + escapeHtml(truncate(s.description, 130)) + '</span>' +
+        '</span>';
+      frag.appendChild(a);
+      newCards.push(a);
+    });
+    grid.appendChild(frag);
+    animateIn(newCards);
+  }
+
+  function fetchPage(){
+    var url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=' + PAGE_SIZE
+      + '&playlistId=' + uploadsPlaylistId + '&key=' + YT_API_KEY
+      + (nextPageToken ? '&pageToken=' + nextPageToken : '');
+    loadMoreBtn.disabled = true;
+    loadMoreBtn.textContent = 'Lädt …';
+    return fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        appendVideos(data.items);
+        nextPageToken = data.nextPageToken || null;
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.textContent = 'Weitere Videos laden';
+        loadMoreWrap.hidden = !nextPageToken;
+      })
+      .catch(function(){
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.textContent = 'Weitere Videos laden';
+      });
+  }
+
+  function init(){
+    if(!YT_API_KEY || YT_API_KEY === 'DEIN_YOUTUBE_API_KEY'){
+      grid.innerHTML = '<p class="video-status">Video-Vorschau noch nicht konfiguriert.</p>';
+      return;
+    }
+    fetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        uploadsPlaylistId = data.items && data.items[0] && data.items[0].contentDetails.relatedPlaylists.uploads;
+        if(!uploadsPlaylistId) throw new Error('no uploads playlist');
+        grid.innerHTML = '';
+        return fetchPage();
+      })
+      .catch(function(){
+        grid.innerHTML = '<p class="video-status">Videos konnten nicht geladen werden.</p>';
+      });
+  }
+
+  loadMoreBtn.addEventListener('click', fetchPage);
+  init();
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontakt – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Fragen, Anfragen oder Anregungen zu den Dokumentationen von Zeitreise Seelower Höhen – hier direkt Kontakt aufnehmen.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:600px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 36px);
+    margin:0 0 12px;
+  }
+  main > p.intro{
+    font-size:16px;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 0 40px;
+  }
+
+  .contact-form{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .contact-form input,
+  .contact-form textarea{
+    font-family:inherit;
+    font-size:15px;
+    padding:14px 16px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fff;
+    color:var(--ink);
+    resize:vertical;
+    transition:border-color 150ms ease;
+  }
+  .contact-form input:focus,
+  .contact-form textarea:focus{
+    outline:none;
+    border-color:var(--green-dark);
+  }
+  .contact-form button{
+    align-self:flex-start;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    padding:14px 26px;
+    background:var(--green);
+    color:var(--ink);
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    transition:transform 160ms ease, background 160ms ease;
+  }
+  .contact-form button:hover{
+    background:var(--green-dark);
+    transform:translateY(-2px);
+  }
+  .contact-form .sent-note{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .alt-contact{
+    margin-top:40px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+    font-size:14px;
+    color:var(--muted);
+    line-height:1.6;
+  }
+  .alt-contact a{color:var(--green-dark); text-decoration:none; font-weight:600;}
+  .alt-contact a:hover{text-decoration:underline;}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+    margin-top:56px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <h1>Kontakt</h1>
+  <p class="intro">Fragen zu einer Dokumentation, Hinweise, Kooperationsanfragen oder einfach nur Feedback – eine Nachricht genügt.</p>
+
+  <form class="contact-form" id="contact-form">
+    <input type="text" id="cf-name" placeholder="Dein Name" required>
+    <textarea id="cf-message" rows="6" placeholder="Deine Nachricht oder Anfrage" required></textarea>
+    <button type="submit">Nachricht senden</button>
+    <p class="sent-note">Öffnet dein E-Mail-Programm mit einer vorausgefüllten Nachricht.</p>
+  </form>
+
+  <p class="alt-contact">Lieber direkt per Mail? <a href="mailto:mail.zsh@proton.me">mail.zsh@proton.me</a></p>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+(function(){
+  if(typeof gsap === 'undefined') return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var form = document.querySelector('.contact-form');
+  if(reduceMotion){
+    if(form){ form.style.opacity = 1; form.style.transform = 'none'; }
+    return;
+  }
+  gsap.to('.contact-form', {opacity:1, y:0, duration:0.6, ease:'power2.out', delay:0.1});
+})();
+</script>
+<script>
+(function(){
+  var form = document.getElementById('contact-form');
+  if(!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('cf-name').value.trim();
+    var message = document.getElementById('cf-message').value.trim();
+    var subject = 'Kontaktanfrage von ' + (name || 'der Webseite');
+    var body = message + '\n\n— ' + (name || 'Unbekannt');
+    var mailto = 'mailto:mail.zsh@proton.me'
+      + '?subject=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(body);
+    window.location.href = mailto;
+  });
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
