@@ -365,8 +365,22 @@
   // breiter als die Wrap-Box (282.9px sichtbar vs. 276.4px Wrap, auf der
   // Vorschau-Seite nachgemessen). Aufschlag: 0.863 * (282.9/276.4) = 0.8835.
   var KNOPF_DREH_RADIUS_ANTEIL = 0.8835;
-  // Klick-Kreis (Bestätigen) auf Nutzer-Wunsch nochmal halbiert: 0.16 -> 0.08.
-  var KNOPF_KLICK_RADIUS_ANTEIL = 0.08;
+  // Klick-Kreis (Bestätigen). Historie: war mal 0.32, wurde auf Nutzerwunsch
+  // zweimal halbiert (0.32 -> 0.16 -> 0.08), weil beim Drehen versehentlich
+  // navigiert wurde. Damit war er aber DEUTLICH kleiner als die sichtbare
+  // schwarze Kappe: Nutzer-Meldung 2026-08-17 "wenn ich auf den Schalter
+  // klicke, reagiert er nicht immer" -- man musste die Kappenmitte fast
+  // punktgenau treffen (11px Klickradius bei ~39px sichtbarer Kappe).
+  // Neue Vorgabe des Nutzers: "Die Klickfläche soll die Fläche über dem
+  // schwarzen Teil des Knopfes sein. Großzügig um den schwarzen Bereich."
+  // Kappe per Pixelmessung am Foto bestimmt (radiale Helligkeitskante gegen
+  // den olivgrünen Ring, Median über 68 Strahlen): Radius 13,87% der
+  // Bildbreite. Als Anteil (relativ zur halben Wrap-Breite, inkl. des
+  // 1.0235-Perspektivfaktors wie beim Dreh-Radius): 0.1387*2*1.0235 = 0.284.
+  // Darauf bewusst ~12% Zugabe für das "großzügig" -> 0.32. Liegt weiterhin
+  // klar innerhalb des Zahnrads (Dreh-Radius 0.8835), Drehen am Ring bleibt
+  // also unverändert ohne Navigationsgefahr.
+  var KNOPF_KLICK_RADIUS_ANTEIL = 0.32;
   // Waagerechter Mittelpunkt-Anteil: NICHT 0.5, sondern 0.48 -- identisch mit
   // transform-origin:48% 50% von .dial-knob-rotor (index.html). Das ist der
   // kalibrierte echte Mittelpunkt des Rades (das Foto ist asymmetrisch, weil
@@ -414,7 +428,13 @@
   function onPointerMove(e){
     if(!dragging) return;
     var dist = Math.hypot(e.clientX-dragStartX, e.clientY-dragStartY);
-    if(dist > 5) dragMoved = true;
+    // Schwelle 2026-08-17 von 5 auf 8px angehoben: 5px überschreitet schon ein
+    // leicht wackeliger Mausklick oder ein Finger-Tap, wodurch die Geste als
+    // Drehung statt als Tap gewertet wurde und das Bestätigen ausblieb
+    // ("reagiert nicht immer"). Gedreht wird trotzdem ab dem ersten Pixel --
+    // diese Schwelle entscheidet NUR darüber, ob es zusätzlich als Tap zählt,
+    // und eine unbeabsichtigte Drehung von unter 8px ist ohnehin belanglos.
+    if(dist > 8) dragMoved = true;
     var theta = screenThetaFromEvent(e);
     var delta = shortestDiff(theta, lastPointerTheta);
     lastPointerTheta = theta;
@@ -426,7 +446,10 @@
     if(!dragging) return;
     dragging = false;
     knobWrap.classList.remove('is-dragging');
-    var wasQuickTap = !dragMoved && (Date.now() - pointerDownTime) < 400
+    // Zeitgrenze 2026-08-17 von 400 auf 700ms angehoben -- ein bewusster,
+    // etwas längerer Druck auf die Kappe ist immer noch ein Bestätigen und
+    // kein "Greifen zum Drehen"; 400ms war für ruhige Klicks/Taps zu knapp.
+    var wasQuickTap = !dragMoved && (Date.now() - pointerDownTime) < 700
       && istInnerhalbKreis(dragStartX, dragStartY, KNOPF_KLICK_RADIUS_ANTEIL);
     var rawIndex = Math.round(currentTheta/STEP);
     settleTarget = rawIndex*STEP;
