@@ -423,6 +423,41 @@
     justify-content:center;
     z-index:2;
   }
+  /* Auf schmalen Bildschirmen zurück in den normalen Fluss UNTER den Knopf
+     (2026-08-17, Nutzer-Meldung "auf dem Handy liegt der Licht-Button über
+     dem Führungen-Schildchen"). Die feste Position 91%/87% stammt aus einer
+     Desktop-Ansicht; dort ist reichlich Platz. Auf Mobile rücken Ring und
+     Schildchen so eng zusammen, dass zwischen "FÜHRUNGEN" und dem Button nur
+     noch ~5px blieben -- je nach Gerät/Schriftrendering überlappen sie dann
+     tatsächlich. Statt an der Prozentposition herumzuschieben (was bei der
+     nächsten Bildschirmgröße wieder kippt) wird der Button hier komplett aus
+     dem Kreis-Koordinatensystem herausgenommen -- dieselbe Lehre wie schon
+     bei der ersten Platzierung: radial angeordnete Zusatzelemente kollidieren
+     zwangsläufig, weil die Schildchen in Pixeln fix sind, der Knopf aber
+     mitskaliert. */
+  @media (max-width:700px){
+    /* Etwas Luft nach unten, damit die untere Ecke nicht am Panelrand klebt. */
+    .dial-visual{ padding-bottom:64px; }
+    .dial-controls{
+      /* Untere RECHTE ECKE statt mittig unten.
+         Vorgeschichte (drei Fehlversuche, damit sie niemand wiederholt):
+         1. position:static -> .dial-visual zentriert seine Kinder, der Button
+            landete auf halber Höhe neben dem Rad, Kollision mit "Karte".
+         2. bottom:0 mittig -> genau dort sitzt das unterste Ring-Schildchen
+            ("Literatur"), Kollision.
+         3. Fester padding-bottom-Wert, um darunter Platz zu schaffen -> passte
+            bei 375px, kollidierte bei 430px wieder: die Schildchen skalieren
+            mit der Fensterbreite, ein fester Pixelwert nicht.
+         Der Ring ist KREISFÖRMIG, das Elternelement RECHTECKIG -- die Ecken
+         sind deshalb bei jeder Größe frei. Das ist der einzige Ort, der ohne
+         Nachrechnen dauerhaft kollisionsfrei bleibt. */
+      left:auto;
+      right:0;
+      top:auto;
+      bottom:0;
+      transform:none;
+    }
+  }
   /* Lichtschalter -- echter Kippschalter aus zwei freigestellten Fotos
      (Chrom-Hebel mit rundem geriffeltem Metallring), analog zum Hauptschalter-
      Foto-Ansatz. Kein CSS-Nachbau, kein sichtbarer Sockel -- die beiden Fotos
