@@ -337,7 +337,25 @@
   // Breakpoint noch sicher Abstand hält). Muss synchron mit der CSS-Regel
   // .dial-hit-circle{width/height} in index.html bleiben (dort width%
   // entspricht direkt diesem Anteil-Wert).
-  var KNOPF_DREH_RADIUS_ANTEIL = 0.66;
+  // VIERTE Korrektur (2026-08-17, achte Runde): Auf expliziten Nutzerwunsch
+  // ist 0.66 kein akzeptabler Kompromiss mehr -- der Dreh-Kreis soll GENAU
+  // an der sichtbaren Außenkante der grünen Zahnrad-Scheibe liegen (inkl.
+  // der äußeren Zahnrad-Buckel), die komplette grüne Fläche muss greifbar
+  // sein. Per Pillow/NumPy sauber nachgemessen (Alphakanal von
+  // knob-front-cutout-v1.png, radiale Max-Distanz pro Winkel-Grad, der
+  // schmale Zeiger-Ausreißer bei 0°/360° explizit ausgeschlossen, da er
+  // nicht Teil der GRÜNEN Scheibe ist): die Zahnrad-Buckel reichen bis
+  // ca. 43.2% der Bildbreite vom Zentrum (0.4317 * 1024px = 442px).
+  // Das entspricht einem Anteil-Wert von 2*0.4317 = 0.863 (Anteil ist relativ
+  // zur HALBEN Element-Breite definiert, siehe istInnerhalbKreis unten).
+  // Kollisionsrisiko mit den Ring-Schildchen hätte hier bewusst NICHT mehr
+  // Vorrang vor der vollen grünen Drehfläche -- per Debug-Overlay an allen
+  // drei Breakpoints (375/650/813px) nachgeprüft: bei 0.863 bleibt trotzdem
+  // überall ein sichtbarer Abstand zu den Schildchen, keine Überlappung.
+  // Die frühere Sorge (0.84 kollidierte angeblich auf 375px mit "Kontakt"/
+  // "Karte") hat sich bei dieser sauberen Nachmessung NICHT bestätigt --
+  // Labels mussten deshalb nicht verschoben werden.
+  var KNOPF_DREH_RADIUS_ANTEIL = 0.863;
   // Klick-Kreis (Bestätigen) auf Nutzer-Wunsch nochmal halbiert: 0.16 -> 0.08.
   var KNOPF_KLICK_RADIUS_ANTEIL = 0.08;
   function istInnerhalbKreis(clientX, clientY, radiusAnteil){

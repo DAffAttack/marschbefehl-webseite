@@ -183,7 +183,6 @@
   }
   .dial-panel > .dial-readout,
   .dial-panel > .dial-visual,
-  .dial-panel > .dial-controls,
   .dial-panel > .dial-links{
     position:relative;
     z-index:1;
@@ -230,18 +229,20 @@
      ab) -- Bestätigen per Klick bleibt separat auf die kleine schwarze
      Kappe beschränkt (siehe KNOPF_KLICK_RADIUS_ANTEIL in dial.js, rein
      als JS-Distanzprüfung, kein eigenes DOM-Element nötig).
-     Größe (66% Durchmesser = 33% clip-path-Radius) entspricht dem
-     Dreh-Radius-Anteil 0.66 aus dial.js (KNOPF_DREH_RADIUS_ANTEIL) -- beide
-     Werte müssen synchron bleiben, wenn einer geändert wird. Empirisch an
-     allen Breakpoints (375/650/813px) geprüft: deckt die komplette
-     Zahnrad-Scheibe ab, bleibt aber überall klar von den schräg stehenden
-     Ring-Schildchen entfernt (Nutzer-Korrektur 2026-08-17, siebte Runde --
-     vorherige 0.5 deckte nur die innere Hälfte der Scheibe ab, ließ den
-     äußeren Zahnrad-Ring nicht mehr drehbar). */
+     Größe entspricht dem Dreh-Radius-Anteil KNOPF_DREH_RADIUS_ANTEIL aus
+     dial.js -- beide Werte müssen synchron bleiben, wenn einer geändert wird.
+     VIERTE Korrektur (2026-08-17, achte Runde, expliziter Nutzerwunsch): der
+     Dreh-Kreis liegt jetzt bündig an der gemessenen Außenkante der grünen
+     Zahnrad-Scheibe (per Pillow/NumPy-Alphakanal-Messung: Zahnrad-Buckel
+     reichen bis 43.2% der Bildbreite vom Zentrum -> Anteil 0.863), NICHT
+     mehr ein Sicherheitsabstand-Kompromiss wie die vorherige 0.66. Die
+     komplette grüne Fläche ist damit drehbar, das hat gegenüber einem
+     möglichen Ring-Schildchen-Kontakt Vorrang (siehe dial.js-Kommentar an
+     KNOPF_DREH_RADIUS_ANTEIL für die volle Herleitung). */
   .dial-hit-circle{
     position:absolute;
     top:50%; left:50%;
-    width:66%; height:66%;
+    width:86.3%; height:86.3%;
     transform:translate(-50%,-50%);
     clip-path:circle(50%);
     cursor:grab;
@@ -370,10 +371,24 @@
     text-shadow:-1px -1px 1px rgba(0,0,0,0.85), 1px 1px 1px rgba(255,255,255,0.22), 0 0 8px rgba(161,199,79,0.35);
   }
 
+  /* Licht-Button bewusst NICHT Teil des radialen Ring-Label-Systems (siehe
+     werner_notizen.md "Layout-Falle bei radial angeordneten Zusatzelementen")
+     -- normale absolute Positionierung, aber relativ zu .dial-visual (dem
+     Knopf+Label-Ring-Bereich), NICHT relativ zum ganzen .dial-panel. Grund:
+     die Pill-Link-Liste unter dem Knopf hat eine stark variable Höhe (bricht
+     bei schmalen Breakpoints in mehr Zeilen um) -- eine Position relativ zur
+     GESAMTEN Panel-Höhe würde auf Mobile mit der Pill-Liste kollidieren.
+     .dial-visual hat dagegen eine mit dem Knopf/Label-Ring konsistent
+     mitskalierende Höhe, unabhängig von der Pill-Liste darunter. */
   .dial-controls{
+    position:absolute;
+    left:91%;
+    top:87%;
+    transform:translate(-50%,-50%);
     display:flex;
     align-items:center;
     justify-content:center;
+    z-index:2;
   }
   /* Lichtschalter -- echter Kippschalter aus zwei freigestellten Fotos
      (Chrom-Hebel mit rundem geriffeltem Metallring), analog zum Hauptschalter-
@@ -507,12 +522,12 @@
           </div>
           <div class="dial-hit-circle" id="dialHitCircle" aria-hidden="true"></div>
         </div>
-      </div>
 
-      <div class="dial-controls">
-        <button type="button" class="dial-toggle" id="dialLightBtn" aria-pressed="false" aria-label="Beleuchtung des Zeigers umschalten">
-          Licht
-        </button>
+        <div class="dial-controls">
+          <button type="button" class="dial-toggle" id="dialLightBtn" aria-pressed="false" aria-label="Beleuchtung des Zeigers umschalten">
+            Licht
+          </button>
+        </div>
       </div>
 
       <nav class="dial-links" aria-label="Alle Themenbereiche direkt anwählen">
