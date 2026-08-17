@@ -304,8 +304,24 @@
     return d;
   }
 
+  // knobWrap ist ein eckiges Element (für die kreisrunde Drehgeste braucht es
+  // ein Quadrat als Referenzrahmen), der sichtbare Knopf darin ist aber rund
+  // und kleiner als das Quadrat. Ohne diese Prüfung reagieren Klicks in den
+  // Ecken des Quadrats (dort, wo die schräg stehenden Ring-Schildchen sitzen,
+  // z.B. Kooperationen/Artikel/Unterstützen/Führungen) fälschlich auf den
+  // Knopf, obwohl dort optisch nur leerer Raum bzw. ein Schildchen zu sehen
+  // ist -- vom Nutzer am 2026-08-17 gemeldet und hierdurch behoben.
+  function istInnerhalbDesRundenKnopfs(e){
+    var rect = knobWrap.getBoundingClientRect();
+    var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    var dx = e.clientX - cx, dy = e.clientY - cy;
+    var radius = Math.min(rect.width, rect.height) / 2;
+    return Math.hypot(dx, dy) <= radius;
+  }
+
   function onPointerDown(e){
     if(e.button !== undefined && e.button !== 0) return;
+    if(!istInnerhalbDesRundenKnopfs(e)) return;
     dragging = true;
     dragMoved = false;
     settling = false;
