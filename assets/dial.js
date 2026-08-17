@@ -134,10 +134,51 @@
     if(ctx && ctx.state === 'suspended'){
       try{ ctx.resume(); }catch(e){}
     }
+    // Tonweg "anwaermen": Ein unhoerbarer Ein-Sample-Puffer bringt den
+    // Audio-Graphen zum Laufen. Ohne das verschluckt manche Umgebung den
+    // allerersten echten Ton, weil die Tonausgabe erst nach ein paar
+    // Millisekunden wirklich anlaeuft.
+    if(ctx){
+      try{
+        var stille = ctx.createBuffer(1, 1, ctx.sampleRate);
+        var q = ctx.createBufferSource();
+        q.buffer = stille;
+        q.connect(ctx.destination);
+        q.start(0);
+      }catch(e){}
+    }
     document.removeEventListener('pointerdown', audioFreischalten, true);
     document.removeEventListener('touchstart', audioFreischalten, true);
     document.removeEventListener('mousedown', audioFreischalten, true);
     document.removeEventListener('keydown', audioFreischalten, true);
+  }
+
+  /* Liefert den Ton-Kanal und stoesst bei Bedarf das Aufwecken an --
+     BLOCKIERT das Abspielen aber NIE (Lehre aus dem Fehlversuch weiter
+     oben: eine Fassung, die den Ton zurueckhaelt, kann schlechter sein als
+     gar kein Fix). Schlief der Kanal, wird derselbe Sound nach dem
+     Aufwachen EINMAL nachgeholt. Doppelte Toene entstehen dadurch nicht:
+     War der Kanal wirklich schlafend, blieb der unmittelbare Versuch
+     ohnehin lautlos; war er wach, gibt es gar kein Nachholen. */
+  var audioNachholLaeuft = false;
+  function tonKanal(nachholen){
+    var ctx = ensureAudio();
+    if(!ctx) return null;
+    if(ctx.state === 'suspended' && !audioNachholLaeuft){
+      audioNachholLaeuft = true;
+      var fertig = function(){
+        audioNachholLaeuft = false;
+        if(ctx.state === 'running' && typeof nachholen === 'function') nachholen();
+      };
+      try{
+        var p = ctx.resume();
+        // Aeltere Browser geben hier kein Promise zurueck -- dann per
+        // kurzer Verzoegerung nachfassen statt auf .then zu vertrauen.
+        if(p && typeof p.then === 'function') p.then(fertig, function(){ audioNachholLaeuft = false; });
+        else setTimeout(fertig, 80);
+      }catch(e){ audioNachholLaeuft = false; }
+    }
+    return ctx;
   }
   document.addEventListener('pointerdown', audioFreischalten, true);
   document.addEventListener('touchstart', audioFreischalten, true);
@@ -146,13 +187,13 @@
 
   // Sound A: kurzer, heller Rast-Klick beim Weiterdrehen auf die nächste Position.
   function playDetentClick(){
-    var ctx = ensureAudio();
+    var ctx = tonKanal(playDetentClick);
     if(!ctx) return;
-    // Abspielen wird NIE blockiert (siehe audioFreischalten oben). Der
-    // resume-Versuch hier bleibt als zweites Netz stehen, falls die erste
-    // Geste den Kanal noch nicht geweckt haben sollte.
-    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
-    var now = ctx.currentTime;
+    // Kleiner Vorlauf statt exakt "jetzt": Wird der Ton auf den aktuellen
+    // Zeitpunkt gelegt, faellt er weg, wenn die Tonausgabe erst ein paar
+    // Millisekunden spaeter wirklich anlaeuft. 30ms sind unhoerbar, machen
+    // das Einplanen aber zuverlaessig.
+    var now = ctx.currentTime + 0.03;
     var len = Math.floor(ctx.sampleRate*0.035);
     var buffer = ctx.createBuffer(1, len, ctx.sampleRate);
     var data = buffer.getChannelData(0);
@@ -178,13 +219,13 @@
   // rein Noise-basiert (kein Sinuston/Piepser), hörbar voller/tiefer als der
   // helle Rast-Klick, mit tiefem "Thunk"-Nachschlag für das Gefühl von Gewicht.
   function playConfirmSound(){
-    var ctx = ensureAudio();
+    var ctx = tonKanal(playConfirmSound);
     if(!ctx) return;
-    // Abspielen wird NIE blockiert (siehe audioFreischalten oben). Der
-    // resume-Versuch hier bleibt als zweites Netz stehen, falls die erste
-    // Geste den Kanal noch nicht geweckt haben sollte.
-    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
-    var now = ctx.currentTime;
+    // Kleiner Vorlauf statt exakt "jetzt": Wird der Ton auf den aktuellen
+    // Zeitpunkt gelegt, faellt er weg, wenn die Tonausgabe erst ein paar
+    // Millisekunden spaeter wirklich anlaeuft. 30ms sind unhoerbar, machen
+    // das Einplanen aber zuverlaessig.
+    var now = ctx.currentTime + 0.03;
 
     function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
       var len = Math.max(4, Math.floor(ctx.sampleRate*dur));
@@ -243,13 +284,13 @@
   // Richtungen (an/aus) -- ein Kippschalter macht in beide Richtungen
   // denselben Anschlag.
   function playToggleClick(){
-    var ctx = ensureAudio();
+    var ctx = tonKanal(playToggleClick);
     if(!ctx) return;
-    // Abspielen wird NIE blockiert (siehe audioFreischalten oben). Der
-    // resume-Versuch hier bleibt als zweites Netz stehen, falls die erste
-    // Geste den Kanal noch nicht geweckt haben sollte.
-    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
-    var now = ctx.currentTime;
+    // Kleiner Vorlauf statt exakt "jetzt": Wird der Ton auf den aktuellen
+    // Zeitpunkt gelegt, faellt er weg, wenn die Tonausgabe erst ein paar
+    // Millisekunden spaeter wirklich anlaeuft. 30ms sind unhoerbar, machen
+    // das Einplanen aber zuverlaessig.
+    var now = ctx.currentTime + 0.03;
 
     function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
       var len = Math.max(4, Math.floor(ctx.sampleRate*dur));
