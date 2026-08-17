@@ -496,7 +496,30 @@
        ändern (kürzen oder auf Mobile ganz ausblenden -- die vollständige
        Linkliste steht ohnehin direkt darunter). */
     main{ padding-left:16px; padding-right:16px; }
-    .dial-panel{ padding-left:8px; padding-right:8px; }
+    /* RANDLOS über die volle Bildschirmbreite (2026-08-17, Nutzerwunsch mit
+       Verweis auf YouTube: "die Videos sind auch auf 100% der Breite").
+       Der Vergleich trägt: Bei YouTube läuft der PLAYER randlos, während
+       Titel und Kommentare darunter Ränder behalten -- genau diese Rollen-
+       verteilung gilt hier auch. Das dunkle Feld ist ein visueller Block,
+       kein Fließtext.
+       Umsetzung über negative Ränder in Höhe der main-Polsterung, statt
+       main selbst polsterungsfrei zu machen -- der Hinweistext darüber und
+       die Linkliste behalten so ihre Ränder.
+       Zur früheren Sorge wegen der Wisch-Gesten am Bildschirmrand: Die gilt
+       für BEDIENBARE Elemente am Rand. Der Drehknopf sitzt mittig, an den
+       Rand kommt nur Hintergrund -- der Einwand greift hier also nicht.
+       Die abgerundeten Ecken entfallen dabei: Bei randlosen Blöcken sähen
+       sie aus wie ein Fehler, weil an der Bildschirmkante nichts mehr ist,
+       wovon sie sich absetzen könnten. */
+    .dial-section{
+      margin-left:-16px;
+      margin-right:-16px;
+    }
+    .dial-panel{
+      padding-left:8px;
+      padding-right:8px;
+      border-radius:0;
+    }
   }
   /* Lichtschalter -- echter Kippschalter aus zwei freigestellten Fotos
      (Chrom-Hebel mit rundem geriffeltem Metallring), analog zum Hauptschalter-
