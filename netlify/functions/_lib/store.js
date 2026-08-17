@@ -39,12 +39,30 @@ function emptyState() {
   return { fuehrungen: [], termine: [], buchungen: [] };
 }
 
+// Fallback für Umgebungen, in denen Netlify die Blobs-Zugangsdaten nicht automatisch
+// injiziert (beobachtet 2026-08-17 auf dem "vorschau"-Branch-Deploy:
+// MissingBlobsEnvironmentError trotz korrekt in der Handler-Funktion aufgerufenem
+// getStore()). Netlifys eigene Fehlermeldung empfiehlt genau diesen manuellen Weg:
+// siteID + token explizit mitgeben statt auf Auto-Konfiguration zu vertrauen.
+// SITE_ID wird von Netlify automatisch bereitgestellt, NETLIFY_BLOBS_TOKEN ist ein
+// vom Nutzer selbst angelegtes Personal Access Token (Umgebungsvariable, kein
+// Klartext im Code). Ohne gesetztes Token bleibt das Verhalten unverändert
+// (automatische Konfiguration wird weiter versucht).
+function blobsConfig() {
+  if (process.env.NETLIFY_BLOBS_TOKEN) {
+    return { siteID: process.env.SITE_ID, token: process.env.NETLIFY_BLOBS_TOKEN };
+  }
+  return undefined;
+}
+
 function getFuehrungenStore() {
-  return getStore(STORE_NAME);
+  const cfg = blobsConfig();
+  return cfg ? getStore({ name: STORE_NAME, ...cfg }) : getStore(STORE_NAME);
 }
 
 function getBilderStore() {
-  return getStore(IMAGE_STORE_NAME);
+  const cfg = blobsConfig();
+  return cfg ? getStore({ name: IMAGE_STORE_NAME, ...cfg }) : getStore(IMAGE_STORE_NAME);
 }
 
 /**
