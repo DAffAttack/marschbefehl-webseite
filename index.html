@@ -241,6 +241,13 @@
   .dial-canvas-wrap.kbd-focus .dial-knob-stage{
     transform:rotateX(9deg) translateY(-4px);
   }
+  /* Drück-Effekt beim Bestätigen: der Knopf sackt kurz sichtbar nach unten,
+     bevor die Seite wechselt -- Nutzer-Wunsch 2026-08-17, gibt eine klare
+     haptische Rückmeldung "das war jetzt ein echter Klick". */
+  .dial-canvas-wrap.is-confirmed .dial-knob-stage{
+    transform:rotateX(9deg) translateY(5px);
+    transition:transform 140ms ease-out;
+  }
   .dial-knob-rotor{
     position:absolute;
     inset:0;

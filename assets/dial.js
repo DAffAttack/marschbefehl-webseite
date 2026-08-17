@@ -311,11 +311,16 @@
   // z.B. Kooperationen/Artikel/Unterstützen/Führungen) fälschlich auf den
   // Knopf, obwohl dort optisch nur leerer Raum bzw. ein Schildchen zu sehen
   // ist -- vom Nutzer am 2026-08-17 gemeldet und hierdurch behoben.
+  // Nutzer-Präzisierung: der klickbare Bereich soll nur die schwarze Kappe in
+  // der Mitte sein, nicht die ganze olivgrüne Zahnrad-Scheibe -- die Kappe
+  // misst im Ausgangsfoto ca. 32% des vollen Knopf-Radius (Bildvermessung:
+  // Kappen-Durchmesser ~330px von 1024px Gesamtbreite).
+  var KNOPF_KLICKRADIUS_ANTEIL = 0.32;
   function istInnerhalbDesRundenKnopfs(e){
     var rect = knobWrap.getBoundingClientRect();
     var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
     var dx = e.clientX - cx, dy = e.clientY - cy;
-    var radius = Math.min(rect.width, rect.height) / 2;
+    var radius = (Math.min(rect.width, rect.height) / 2) * KNOPF_KLICKRADIUS_ANTEIL;
     return Math.hypot(dx, dy) <= radius;
   }
 
@@ -397,10 +402,12 @@
     // deaktiviertes WebAudio), muss die Seite trotzdem wechseln.
     try{ playConfirmSound(); } catch(err){ /* Sound ist rein kosmetisch */ }
     knobWrap.classList.add('is-confirmed');
-    // kurze Pause, damit der Bestätigungs-Sound spürbar anklingen kann, bevor die Seite wechselt
+    // Pause, damit der Bestätigungs-Sound UND der Drück-Effekt (Knopf sackt
+    // sichtbar nach unten, siehe .dial-canvas-wrap.is-confirmed in index.html)
+    // beide spürbar ankommen, bevor die Seite wechselt.
     window.setTimeout(function(){
       window.location.href = topic.href;
-    }, 130);
+    }, 190);
   }
 
   /* ---------- Beleuchtungs-Knopf ---------- */
