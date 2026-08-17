@@ -319,7 +319,12 @@
   // BESTÄTIGEN per Tap/Klick (ohne Ziehen) darf dagegen nur auf der kleinen
   // schwarzen Kappe in der Mitte auslösen (halbierter Radius, 0.16 statt der
   // Kappen-eigenen 0.32, siehe vorherige Korrektur).
-  var KNOPF_DREH_RADIUS_ANTEIL = 1.0;
+  // Nachmessung am echten Foto (knob-front-cutout-v1.png, Alpha-Kanal): das
+  // eckige Container-Quadrat ist deutlich größer als das sichtbare Zahnrad
+  // (viel grauer Leerraum drumherum), 1.0 (voller Container-Radius) reichte
+  // dadurch noch bis in die Ring-Schildchen hinein. Auf Nutzer-Wunsch
+  // (2026-08-17, zweite Korrektur) um 50% verkleinert: 1.0 -> 0.5.
+  var KNOPF_DREH_RADIUS_ANTEIL = 0.5;
   var KNOPF_KLICK_RADIUS_ANTEIL = 0.16;
   function istInnerhalbKreis(clientX, clientY, radiusAnteil){
     var rect = knobWrap.getBoundingClientRect();
