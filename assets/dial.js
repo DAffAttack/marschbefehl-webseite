@@ -28,13 +28,14 @@
 
   var section = document.querySelector('.dial-section');
   var knobWrap = document.getElementById('dialKnob');
+  var hitCircle = document.getElementById('dialHitCircle');
   var rotor = document.getElementById('dialRotor');
   var knobImg = document.getElementById('dialKnobImg');
   var lightCone = document.getElementById('dialLightCone');
   var labelsHost = document.getElementById('dialLabels');
   var readoutLabel = document.getElementById('dialReadoutLabel');
   var lightBtn = document.getElementById('dialLightBtn');
-  if(!section || !knobWrap || !rotor || !labelsHost || !readoutLabel) return;
+  if(!section || !knobWrap || !hitCircle || !rotor || !labelsHost || !readoutLabel) return;
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -377,7 +378,12 @@
     }
   }
 
-  knobWrap.addEventListener('pointerdown', onPointerDown);
+  // Der Listener sitzt jetzt auf dem echten, per clip-path rund
+  // zugeschnittenen Klick-Feld statt auf dem eckigen knobWrap -- so kann der
+  // Browser Hover/Klick von sich aus schon auf den Kreis begrenzen (siehe
+  // .dial-hit-circle in index.html), statt dass nur unsichtbare JS-Mathematik
+  // dafür sorgt.
+  hitCircle.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointercancel', onPointerUp);

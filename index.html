@@ -218,16 +218,35 @@
     position:relative;
     width:clamp(190px, 34vw, 280px);
     height:clamp(190px, 34vw, 280px);
-    cursor:grab;
     touch-action:none;
     perspective:900px;
     outline:none;
   }
+  /* Eigenes, unsichtbares rundes "Klick-Feld" statt das ganze eckige
+     dial-canvas-wrap klickbar zu machen -- so schneidet clip-path NICHT das
+     sichtbare Zahnrad-Bild mit ab (das bleibt ein Kind-Element außerhalb
+     dieses Felds), sondern nur die Maus-Erkennungsfläche selbst. Größe (50%
+     Durchmesser = 25% clip-path-Radius) entspricht dem Dreh-Radius-Anteil
+     0.5 aus dial.js (KNOPF_DREH_RADIUS_ANTEIL) -- beide Werte müssen
+     synchron bleiben, wenn einer geändert wird. */
+  .dial-hit-circle{
+    position:absolute;
+    top:50%; left:50%;
+    width:50%; height:50%;
+    transform:translate(-50%,-50%);
+    clip-path:circle(50%);
+    cursor:grab;
+  }
+  .dial-canvas-wrap.is-dragging .dial-hit-circle{ cursor:grabbing; }
   .dial-canvas-wrap.is-dragging{cursor:grabbing;}
-  .dial-canvas-wrap.kbd-focus{
+  /* Fokus-Ring sitzt jetzt direkt auf dem kleinen Klick-Feld, nicht mehr auf
+     dem ganzen Quadrat -- damit stimmt die sichtbare Markierung mit dem
+     tatsächlich klickbaren Bereich überein (vorher: Ring um die ganze
+     Scheibe, obwohl außerhalb des kleinen Kreises längst nichts mehr
+     passierte -- Nutzer-Rückmeldung 2026-08-17). */
+  .dial-canvas-wrap.kbd-focus .dial-hit-circle{
     outline:2px solid #f2e8cf;
-    outline-offset:10px;
-    border-radius:50%;
+    outline-offset:4px;
   }
   .dial-knob-stage{
     position:relative;
@@ -477,6 +496,7 @@
               <span class="dial-light-cone" id="dialLightCone" aria-hidden="true"></span>
             </div>
           </div>
+          <div class="dial-hit-circle" id="dialHitCircle" aria-hidden="true"></div>
         </div>
       </div>
 
