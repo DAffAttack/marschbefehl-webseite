@@ -35,7 +35,12 @@
   .hero{
     background:var(--ink);
     color:#fff;
-    min-height:calc(88vh - 66px);
+    /* War 88vh -- praktisch der gesamte Bildschirm, bevor der Drehschalter
+       darunter (die eigentliche Navigation der Seite) ueberhaupt sichtbar
+       war. Auf 60vh verkleinert (2026-08-17, Nutzer-Feedback), damit der
+       Schalter schon ins Bild hineinragt und der erste Eindruck weiterhin
+       "das geht hier weiter" statt "Ende der Seite" vermittelt. */
+    min-height:calc(60vh - 66px);
     display:flex;
     flex-direction:column;
     align-items:center;
