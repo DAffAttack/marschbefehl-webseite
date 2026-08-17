@@ -225,14 +225,23 @@
   /* Eigenes, unsichtbares rundes "Klick-Feld" statt das ganze eckige
      dial-canvas-wrap klickbar zu machen -- so schneidet clip-path NICHT das
      sichtbare Zahnrad-Bild mit ab (das bleibt ein Kind-Element außerhalb
-     dieses Felds), sondern nur die Maus-Erkennungsfläche selbst. Größe (50%
-     Durchmesser = 25% clip-path-Radius) entspricht dem Dreh-Radius-Anteil
-     0.5 aus dial.js (KNOPF_DREH_RADIUS_ANTEIL) -- beide Werte müssen
-     synchron bleiben, wenn einer geändert wird. */
+     dieses Felds), sondern nur die Maus-Erkennungsfläche selbst. Dies ist
+     das DREH-Feld (großzügig, deckt die komplette sichtbare Zahnrad-Scheibe
+     ab) -- Bestätigen per Klick bleibt separat auf die kleine schwarze
+     Kappe beschränkt (siehe KNOPF_KLICK_RADIUS_ANTEIL in dial.js, rein
+     als JS-Distanzprüfung, kein eigenes DOM-Element nötig).
+     Größe (66% Durchmesser = 33% clip-path-Radius) entspricht dem
+     Dreh-Radius-Anteil 0.66 aus dial.js (KNOPF_DREH_RADIUS_ANTEIL) -- beide
+     Werte müssen synchron bleiben, wenn einer geändert wird. Empirisch an
+     allen Breakpoints (375/650/813px) geprüft: deckt die komplette
+     Zahnrad-Scheibe ab, bleibt aber überall klar von den schräg stehenden
+     Ring-Schildchen entfernt (Nutzer-Korrektur 2026-08-17, siebte Runde --
+     vorherige 0.5 deckte nur die innere Hälfte der Scheibe ab, ließ den
+     äußeren Zahnrad-Ring nicht mehr drehbar). */
   .dial-hit-circle{
     position:absolute;
     top:50%; left:50%;
-    width:50%; height:50%;
+    width:66%; height:66%;
     transform:translate(-50%,-50%);
     clip-path:circle(50%);
     cursor:grab;

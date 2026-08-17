@@ -325,7 +325,19 @@
   // (viel grauer Leerraum drumherum), 1.0 (voller Container-Radius) reichte
   // dadurch noch bis in die Ring-Schildchen hinein. Auf Nutzer-Wunsch
   // (2026-08-17, zweite Korrektur) um 50% verkleinert: 1.0 -> 0.5.
-  var KNOPF_DREH_RADIUS_ANTEIL = 0.5;
+  // DRITTE Korrektur (2026-08-17, siebte Runde): 0.5 war zu vorsichtig --
+  // deckte nur die innere Hälfte der sichtbaren Zahnrad-Scheibe ab, der
+  // äußere Zahnrad-Ring ließ sich dadurch nicht mehr per Drag drehen
+  // (Nutzer-Meldung: "man kann nur noch über den kleinen inneren schwarzen
+  // Teil drehen"). Empirisch an drei Breakpoints (375/650/813px CSS-Breite)
+  // per Debug-Overlay durchgetestet: 0.66 deckt die komplette Scheibe ab
+  // UND bleibt an allen getesteten Breiten klar von den Ring-Schildchen
+  // entfernt (die Schildchen-Größe ist in px fix, wird bei kleinerem Knopf
+  // relativ zur Scheibe größer -- 0.66 ist der Wert, der auch am kleinsten
+  // Breakpoint noch sicher Abstand hält). Muss synchron mit der CSS-Regel
+  // .dial-hit-circle{width/height} in index.html bleiben (dort width%
+  // entspricht direkt diesem Anteil-Wert).
+  var KNOPF_DREH_RADIUS_ANTEIL = 0.66;
   // Klick-Kreis (Bestätigen) auf Nutzer-Wunsch nochmal halbiert: 0.16 -> 0.08.
   var KNOPF_KLICK_RADIUS_ANTEIL = 0.08;
   function istInnerhalbKreis(clientX, clientY, radiusAnteil){
