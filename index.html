@@ -35,18 +35,24 @@
   .hero{
     background:var(--ink);
     color:#fff;
-    /* War 88vh -- praktisch der gesamte Bildschirm, bevor der Drehschalter
-       darunter (die eigentliche Navigation der Seite) ueberhaupt sichtbar
-       war. Auf 60vh verkleinert (2026-08-17, Nutzer-Feedback), damit der
-       Schalter schon ins Bild hineinragt und der erste Eindruck weiterhin
-       "das geht hier weiter" statt "Ende der Seite" vermittelt. */
-    min-height:calc(60vh - 66px);
+    /* Ursprünglich 88vh -- praktisch der gesamte Bildschirm, bevor der
+       Drehschalter darunter (die eigentliche Navigation der Seite) überhaupt
+       sichtbar war. In zwei Schritten verkleinert (2026-08-17):
+       88vh -> 60vh -> 40vh.
+       WICHTIG für spätere Anpassungen: Ab einem gewissen Punkt bestimmt NICHT
+       mehr dieser Wert die Höhe, sondern der Inhalt selbst (Logo + Titel +
+       Untertitel + Polsterung). Bei 60vh war genau das erreicht -- weiteres
+       Herunterdrehen hätte gar nichts mehr bewirkt. Deshalb wurden zusätzlich
+       Logo (200->130px), Polsterung (48->28px) und der Untertitel gekürzt.
+       Wer hier künftig weiter verkleinern will: erst die natürliche
+       Inhaltshöhe messen, sonst dreht man an einem wirkungslosen Wert. */
+    min-height:calc(40vh - 66px);
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
     text-align:center;
-    padding:48px 24px;
+    padding:28px 24px;
     position:relative;
     overflow:hidden;
   }
@@ -74,9 +80,15 @@
     align-items:center;
   }
   .logo{
-    width:min(200px, 40vw);
+    /* Von 200px auf 130px verkleinert (2026-08-17, Nutzerwunsch "vom Header
+       könnte noch 1/3 weg"). Das Logo war mit 200px fast die Hälfte der
+       gesamten Kopfbereich-Höhe -- an der Prozent-Einstellung zu drehen hätte
+       dagegen gar nichts mehr bewirkt, weil der Inhalt die Höhe längst selbst
+       bestimmte (gemessen: 448px Inhalt + 2x48px Polsterung = exakt die
+       damalige Höhe). */
+    width:min(130px, 30vw);
     height:auto;
-    margin-bottom:28px;
+    margin-bottom:20px;
     filter:drop-shadow(0 8px 24px rgba(0,0,0,0.35));
   }
   .hero h1{
@@ -110,14 +122,19 @@
     margin:0 auto;
     padding:72px 24px 40px;
   }
-  .section-label{
-    text-transform:uppercase;
-    letter-spacing:0.14em;
-    font-size:12px;
-    font-weight:600;
-    color:var(--muted);
-    margin:0 0 8px;
-    text-align:center;
+  /* Sichtbar entfernt, aber für Vorleseprogramme und Suchmaschinen erhalten:
+     Das Element wird auf 1x1 Pixel zusammengezogen und abgeschnitten, statt
+     mit display:none ausgeblendet -- display:none würde es auch aus der
+     Vorlesereihenfolge entfernen. */
+  .visually-hidden{
+    position:absolute;
+    width:1px; height:1px;
+    padding:0; margin:-1px;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+    border:0;
   }
   main > h2{
     font-size:clamp(22px, 3.4vw, 28px);
@@ -130,7 +147,11 @@
     text-align:center;
     font-size:13px;
     color:var(--muted);
-    margin:-24px 0 34px;
+    /* Der negative obere Abstand zog die Zeile früher an die sichtbare
+       Überschrift heran. Die ist jetzt unsichtbar (.visually-hidden), also
+       gäbe es nichts mehr, woran herangezogen werden müsste -- stattdessen
+       normaler Abstand nach oben. */
+    margin:0 0 26px;
   }
   .dial-section{margin-bottom:8px;}
   /* Panel-Grund ist jetzt eine echte Foto-Textur (abgenutztes Blech) statt
@@ -457,6 +478,25 @@
       bottom:0;
       transform:none;
     }
+    /* Mehr Bildfläche auf dem Handy (2026-08-17, Nutzerwunsch "rechts und
+       links ist verschenkter Platz").
+       Der Außenrand geht von 24px auf 16px -- NICHT weiter. 16px ist die
+       untere Grenze dessen, was noch bedienbar ist: Handys mit Wischgesten am
+       Bildschirmrand lösen sonst versehentlich "Zurück" aus, statt den Inhalt
+       zu treffen. Zusätzlich sinkt die seitliche Polsterung des dunklen Feldes
+       von 20px auf 8px.
+       WICHTIG, was dieser Gewinn NICHT bewirkt: Der Drehknopf selbst wird
+       dadurch nicht größer -- begrenzend sind auf dem Handy nicht der Knopf,
+       sondern die RING-SCHILDCHEN. Die langen Wörter "KOOPERATIONEN" und
+       "UNTERSTÜTZEN" spannen bereits über die volle Panelbreite (gemessen bei
+       375px: 0px bzw. 2px Rest zum Rand -- vor dieser Änderung ragten sie
+       sogar knapp darüber hinaus). Der gewonnene Platz kommt also den
+       Schildchen zugute, die ihn auch gebraucht haben. Wer den Knopf auf dem
+       Handy wirklich größer haben will, muss zuerst etwas an den Schildchen
+       ändern (kürzen oder auf Mobile ganz ausblenden -- die vollständige
+       Linkliste steht ohnehin direkt darunter). */
+    main{ padding-left:16px; padding-right:16px; }
+    .dial-panel{ padding-left:8px; padding-right:8px; }
   }
   /* Lichtschalter -- echter Kippschalter aus zwei freigestellten Fotos
      (Chrom-Hebel mit rundem geriffeltem Metallring), analog zum Hauptschalter-
@@ -574,7 +614,11 @@
   <div class="hero-inner">
     <img class="logo" src="/assets/logo-hero.png" alt="Zeitreise Seelower Höhen Logo">
     <h1>Zeitreise Seelower Höhen</h1>
-    <p>Geschichte hautnah – Dokumentationen zur Schlacht um die Seelower Höhen und zur Ostfront im Zweiten Weltkrieg, erzählt anhand von Zeitzeugen, Quellen und Feldrecherche.</p>
+    <!-- Gekürzt am 2026-08-17 (drei Zeilen -> zwei). Weggefallen ist nur die
+         Werbefloskel "Geschichte hautnah"; alle Suchbegriffe, die zählen
+         (Seelower Höhen, Ostfront, Zweiter Weltkrieg, Zeitzeugen), sind
+         bewusst erhalten geblieben. -->
+    <p>Dokumentationen zur Schlacht um die Seelower Höhen und zur Ostfront im Zweiten Weltkrieg – nach Zeitzeugen, Quellen und Feldrecherche.</p>
     <div class="scroll-cue" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none"><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
@@ -582,8 +626,15 @@
 </section>
 
 <main>
-  <p class="section-label">Auf einen Blick</p>
-  <h2>Wo möchtest du weiterlesen?</h2>
+  <!-- "Auf einen Blick" und die sichtbare Überschrift sind am 2026-08-17 auf
+       Nutzerwunsch entfallen: Der Drehschalter ist das Highlight der Seite und
+       soll nicht hinter einem Vorspann stehen.
+       Die Überschrift bleibt als NUR-FÜR-VORLESEPROGRAMME-Text erhalten
+       (.visually-hidden) statt gelöscht zu werden -- so behält der Abschnitt
+       seine Gliederungsebene für Screenreader und Suchmaschinen, ohne Platz
+       einzunehmen. Ein ersatzloses Löschen hätte die Seite ohne jede h2
+       zurückgelassen. -->
+  <h2 class="visually-hidden">Wo möchtest du weiterlesen?</h2>
   <p class="dial-hint">Am Schalter drehen und einrasten lassen – zum Bestätigen noch einmal klicken.</p>
 
   <section class="dial-section" aria-label="Themenbereiche der Seite">
