@@ -358,6 +358,38 @@
   .buchung-row .who span{ color:var(--muted); font-weight:400; }
   .buchung-empty{ font-size:12.5px; color:var(--muted); padding:6px 0; }
 
+  /* Gesamtübersicht aller Buchungen -- eigenes Panel oben, damit man nicht
+     erst jeden Termin einzeln aufklappen muss. */
+  .uebersicht-summary{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .uebersicht-stat{ min-width:120px; }
+  .uebersicht-stat .zahl{ font-size:26px; font-weight:700; color:var(--ink); line-height:1.1; }
+  .uebersicht-stat .label{ font-size:12.5px; color:var(--muted); }
+  .uebersicht-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .uebersicht-table th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    font-weight:600;
+    padding:0 10px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  .uebersicht-table td{
+    padding:10px 10px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  .uebersicht-table tr:last-child td{ border-bottom:none; }
+  .uebersicht-table .fuehrung-name{ font-weight:600; color:var(--ink); }
+  .uebersicht-table .muted{ color:var(--muted); }
+  .uebersicht-table .btn-secondary{ font-size:12px; padding:5px 10px; }
+
   .state-note{
     padding:24px;
     background:#fff;
@@ -407,6 +439,14 @@
     <div class="top-row">
       <div></div>
       <button type="button" class="btn-logout" id="logout-btn">Abmelden</button>
+    </div>
+
+    <div class="panel">
+      <h2>Buchungsübersicht</h2>
+      <p class="panel-sub">Alle Buchungen über alle Führungen hinweg, auf einen Blick.</p>
+      <div id="buchungsuebersicht-wrap">
+        <div class="state-note">Wird geladen …</div>
+      </div>
     </div>
 
     <div class="panel">
@@ -496,6 +536,7 @@
   var loginError = document.getElementById('login-error');
   var logoutBtn = document.getElementById('logout-btn');
   var fuehrungenWrap = document.getElementById('fuehrungen-wrap');
+  var uebersichtWrap = document.getElementById('buchungsuebersicht-wrap');
 
   var MONATE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
@@ -987,6 +1028,72 @@
     return wrap;
   }
 
+  function renderBuchungsuebersicht(fuehrungen, termine, buchungen){
+    if(buchungen.length === 0){
+      uebersichtWrap.innerHTML = '<div class="state-note">Noch keine Buchungen vorhanden.</div>';
+      return;
+    }
+
+    var fuehrungById = {};
+    fuehrungen.forEach(function(f){ fuehrungById[f.id] = f; });
+    var terminById = {};
+    termine.forEach(function(t){ terminById[t.id] = t; });
+
+    var gesamtPersonen = buchungen.reduce(function(sum, b){ return sum + (b.personen || 0); }, 0);
+
+    // Neueste/nächste Termine zuerst -- so sieht man auf einen Blick, was
+    // bald ansteht. Buchungen zu einem nicht mehr auffindbaren Termin
+    // (z. B. gerade gelöscht) rutschen sicherheitshalber ans Ende statt
+    // die Sortierung zum Absturz zu bringen.
+    var zeilen = buchungen.map(function(b){
+      var t = terminById[b.terminId];
+      var f = t ? fuehrungById[t.fuehrungId] : null;
+      return {
+        buchung: b,
+        termin: t || null,
+        fuehrung: f || null,
+        sortKey: t ? new Date(t.datumIso + 'T' + t.uhrzeit).getTime() : Infinity
+      };
+    }).sort(function(a, b){ return a.sortKey - b.sortKey; });
+
+    var html =
+      '<div class="uebersicht-summary">' +
+        '<div class="uebersicht-stat"><div class="zahl">' + buchungen.length + '</div><div class="label">Buchung' + (buchungen.length === 1 ? '' : 'en') + '</div></div>' +
+        '<div class="uebersicht-stat"><div class="zahl">' + gesamtPersonen + '</div><div class="label">Personen gesamt</div></div>' +
+      '</div>' +
+      '<table class="uebersicht-table"><thead><tr>' +
+        '<th>Führung</th><th>Termin</th><th>Name</th><th>E-Mail</th><th>Personen</th><th></th>' +
+      '</tr></thead><tbody>' +
+      zeilen.map(function(z){
+        var b = z.buchung;
+        return '<tr data-buchung-id="' + b.id + '">' +
+          '<td class="fuehrung-name">' + (z.fuehrung ? escapeHtml(z.fuehrung.titel) : '<span class="muted">unbekannt</span>') + '</td>' +
+          '<td>' + (z.termin ? formatDatum(z.termin.datumIso, z.termin.uhrzeit) : '<span class="muted">Termin gelöscht</span>') + '</td>' +
+          '<td>' + escapeHtml(b.name) + '</td>' +
+          '<td>' + escapeHtml(b.email) + '</td>' +
+          '<td>' + b.personen + '</td>' +
+          '<td><button type="button" class="btn-secondary btn-cancel-buchung-uebersicht">Stornieren</button></td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table>';
+
+    uebersichtWrap.innerHTML = html;
+
+    uebersichtWrap.querySelectorAll('.btn-cancel-buchung-uebersicht').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var row = btn.closest('tr');
+        var buchungId = row.getAttribute('data-buchung-id');
+        if(!confirm('Diese Buchung wirklich stornieren? Der Platz wird wieder freigegeben.')) return;
+        btn.disabled = true;
+        api('cancel-buchung', {buchungId:buchungId}).then(function(r){
+          if(r.status === 401){ goToLogin(); return; }
+          if(!r.data.ok){ alert(r.data.error || 'Stornierung fehlgeschlagen.'); btn.disabled = false; return; }
+          ladeFuehrungen();
+        });
+      });
+    });
+  }
+
   function ladeFuehrungen(){
     api('list').then(function(r){
       if(r.status === 401){ goToLogin(); return; }
@@ -997,6 +1104,8 @@
       var fuehrungen = r.data.fuehrungen || [];
       var termine = r.data.termine || [];
       var buchungen = r.data.buchungen || [];
+
+      renderBuchungsuebersicht(fuehrungen, termine, buchungen);
 
       if(fuehrungen.length === 0){
         fuehrungenWrap.innerHTML = '<div class="state-note">Noch keine Führungen angelegt — oben zuerst eine Führung anlegen.</div>';
