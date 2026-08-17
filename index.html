@@ -246,8 +246,27 @@
   }
   .dial-canvas-wrap{
     position:relative;
-    width:clamp(190px, 34vw, 280px);
-    height:clamp(190px, 34vw, 280px);
+    /* Mindestwert am 2026-08-17 von 190px auf 210px angehoben, nachdem das
+       Panel auf dem Handy randlos wurde und dadurch seitlich Platz frei kam.
+       Zum Verständnis der Regel: Auf Handybreiten greift NICHT der 34vw-Teil
+       (bei 375px waeren das nur 128px), sondern immer der Mindestwert. Das
+       Rad war auf dem Handy also nie an die Breite angepasst, es lief stets
+       auf dem Notfallwert -- genau deshalb wirkte es dort so klein.
+
+       WARUM NICHT MEHR ALS 210px (nachgerechnet, nicht geschaetzt):
+       Die Schildchen muessen gleichzeitig zwei Bedingungen erfuellen -- sie
+       duerfen weder ueber den Panelrand ragen noch auf dem Zahnrad liegen.
+       Bei 375px Bildschirmbreite ergibt das fuer die WAAGERECHTEN Schildchen
+       ("Karte"/"Kontakt") eine Obergrenze des Ringradius von ca. 141px, und
+       die DIAGONALEN ("Kooperationen") brauchen mindestens
+       0.4317*Raddurchmesser + 51px. Beides zusammen loest sich zu einem
+       maximalen Raddurchmesser von rund 210px auf.
+       Ein Versuch mit 240px sah in der Messung gut aus (kein Ueberstand),
+       legte die Schildchen aber sichtbar AUF das Zahnrad -- deshalb prueft
+       layoutLabels() in dial.js jetzt zusaetzlich den Innenabstand und nicht
+       nur den Rand. */
+    width:clamp(210px, 34vw, 280px);
+    height:clamp(210px, 34vw, 280px);
     touch-action:none;
     perspective:900px;
     outline:none;
@@ -457,8 +476,10 @@
      zwangsläufig, weil die Schildchen in Pixeln fix sind, der Knopf aber
      mitskaliert. */
   @media (max-width:700px){
-    /* Etwas Luft nach unten, damit die untere Ecke nicht am Panelrand klebt. */
-    .dial-visual{ padding-bottom:64px; }
+    /* Seitliche Polsterung reduziert (2026-08-17): Sie begrenzte die Radbreite
+       auf 219px, obwohl im Panel mehr Platz war. Unten bleibt Luft, damit die
+       untere Ecke (Licht-Button) nicht am Panelrand klebt. */
+    .dial-visual{ padding:40px 32px 64px; }
     .dial-controls{
       /* Untere RECHTE ECKE statt mittig unten.
          Vorgeschichte (drei Fehlversuche, damit sie niemand wiederholt):
@@ -833,7 +854,11 @@
   gsap.to('.hero-inner > *', {opacity:1, y:0, duration:0.9, ease:'power2.out', stagger:0.12, delay:0.1});
 })();
 </script>
-<script src="/assets/dial.js"></script>
+<!-- Versionsnummer im Dateinamen-Anhang: zwingt Browser (und das
+     Vorschau-Werkzeug, das Skripte hartnäckig zwischenspeichert) dazu, nach
+     einer Änderung wirklich die neue Fassung zu laden statt der alten.
+     Bei jeder inhaltlichen Änderung an dial.js hochzählen. -->
+<script src="/assets/dial.js?v=2026-08-17c"></script>
 <script data-goatcounter="https://marschbefehl.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 </body>

@@ -42,7 +42,45 @@
   /* ---------- Feste Beschriftungen im Ring positionieren ---------- */
   function layoutLabels(){
     var rect = knobWrap.getBoundingClientRect();
+    // Ring-Radius = Radradius + Wunschabstand, ABER nach oben begrenzt durch
+    // den tatsaechlich vorhandenen Platz (2026-08-17).
+    // Hintergrund: Der Wunschabstand allein fuehrte je nach Bildschirmbreite
+    // entweder zu unnoetig kleinem Rad oder dazu, dass die seitlichen
+    // Schildchen ("Karte", "Kontakt") ueber den Panelrand hinausragten. Feste
+    // Zahlenwerte pro Breakpoint zu raten hat sich als Sackgasse erwiesen --
+    // bei der naechsten Layoutaenderung stimmen sie wieder nicht.
+    // Deshalb rechnet der Ring jetzt selbst: Er misst das breiteste Schildchen
+    // und den verfuegbaren Platz und nimmt den kleineren der beiden Radien.
+    // Dadurch passt es sich automatisch an jede Bildschirmbreite UND an
+    // geaenderte Beschriftungstexte an.
     var r = rect.width/2 + Math.max(38, rect.width*0.19);
+
+    var host = labelsHost.getBoundingClientRect();
+    var plaetzchen = labelsHost.querySelectorAll('.dial-label');
+    if(host.width > 0 && plaetzchen.length){
+      // Sichtbare Zahnradkante (nicht die Elementkante -- das Foto hat Rand).
+      var zahnradR = rect.width*0.4317;
+      var maxR = Infinity, minR = 0;
+      plaetzchen.forEach(function(el, i){
+        var theta = i*STEP;
+        var sin = Math.abs(Math.sin(theta)), cos = Math.abs(Math.cos(theta));
+        var halbB = el.offsetWidth/2, halbH = el.offsetHeight/2;
+        // (1) Nach aussen: Das Schildchen darf nicht ueber den Rand ragen.
+        //     Waagerechter Ausschlag ist sin(theta)*r plus halbe Breite.
+        if(sin > 0.01){
+          maxR = Math.min(maxR, (host.width/2 - 8 - halbB)/sin);
+        }
+        // (2) Nach innen: Das Schildchen darf nicht auf dem Zahnrad liegen.
+        //     Radiale Ausdehnung eines gedrehten Rechtecks, konservativ
+        //     genaehert ueber die Projektion seiner Halbachsen.
+        minR = Math.max(minR, zahnradR + 6 + halbB*sin + halbH*cos);
+      });
+      // Beide Grenzen zusammen bestimmen den moeglichen Bereich. Liegt der
+      // Wunschradius darueber, wird gedeckelt; passt gar nichts mehr, hat die
+      // Aussen-Grenze Vorrang (lieber eng am Rad als ueber den Bildrand).
+      if(r > maxR) r = maxR;
+      if(r < minR) r = Math.min(minR, maxR);
+    }
     labelsHost.querySelectorAll('.dial-label').forEach(function(el, i){
       var theta = i*STEP;
       var x = Math.sin(theta)*r;
