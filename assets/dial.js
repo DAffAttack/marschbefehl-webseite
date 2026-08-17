@@ -311,24 +311,27 @@
   // z.B. Kooperationen/Artikel/Unterstützen/Führungen) fälschlich auf den
   // Knopf, obwohl dort optisch nur leerer Raum bzw. ein Schildchen zu sehen
   // ist -- vom Nutzer am 2026-08-17 gemeldet und hierdurch behoben.
-  // Nutzer-Präzisierung: der klickbare Bereich soll nur die schwarze Kappe in
-  // der Mitte sein, nicht die ganze olivgrüne Zahnrad-Scheibe -- die Kappe
-  // misst im Ausgangsfoto ca. 32% des vollen Knopf-Radius (Bildvermessung:
-  // Kappen-Durchmesser ~330px von 1024px Gesamtbreite). Auf Nutzer-Wunsch
-  // (2026-08-17) nochmal um 50% verkleinert -- Durchmesser UND Radius
-  // halbiert (0.32 -> 0.16).
-  var KNOPF_KLICKRADIUS_ANTEIL = 0.16;
-  function istInnerhalbDesRundenKnopfs(e){
+  // Zwei verschiedene Radien für zwei verschiedene Zwecke (Nutzer-Präzisierung
+  // 2026-08-17): DREHEN darf über die ganze sichtbare Zahnrad-Scheibe gehen
+  // (großer Radius, verhindert nur, dass Klicks in den leeren Ecken des
+  // eckigen Referenz-Quadrats fälschlich reagieren -- z.B. bei den schräg
+  // stehenden Ring-Schildchen Kooperationen/Artikel/Unterstützen/Führungen).
+  // BESTÄTIGEN per Tap/Klick (ohne Ziehen) darf dagegen nur auf der kleinen
+  // schwarzen Kappe in der Mitte auslösen (halbierter Radius, 0.16 statt der
+  // Kappen-eigenen 0.32, siehe vorherige Korrektur).
+  var KNOPF_DREH_RADIUS_ANTEIL = 1.0;
+  var KNOPF_KLICK_RADIUS_ANTEIL = 0.16;
+  function istInnerhalbKreis(clientX, clientY, radiusAnteil){
     var rect = knobWrap.getBoundingClientRect();
     var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
-    var dx = e.clientX - cx, dy = e.clientY - cy;
-    var radius = (Math.min(rect.width, rect.height) / 2) * KNOPF_KLICKRADIUS_ANTEIL;
+    var dx = clientX - cx, dy = clientY - cy;
+    var radius = (Math.min(rect.width, rect.height) / 2) * radiusAnteil;
     return Math.hypot(dx, dy) <= radius;
   }
 
   function onPointerDown(e){
     if(e.button !== undefined && e.button !== 0) return;
-    if(!istInnerhalbDesRundenKnopfs(e)) return;
+    if(!istInnerhalbKreis(e.clientX, e.clientY, KNOPF_DREH_RADIUS_ANTEIL)) return;
     dragging = true;
     dragMoved = false;
     settling = false;
@@ -356,7 +359,8 @@
     if(!dragging) return;
     dragging = false;
     knobWrap.classList.remove('is-dragging');
-    var wasQuickTap = !dragMoved && (Date.now() - pointerDownTime) < 400;
+    var wasQuickTap = !dragMoved && (Date.now() - pointerDownTime) < 400
+      && istInnerhalbKreis(dragStartX, dragStartY, KNOPF_KLICK_RADIUS_ANTEIL);
     var rawIndex = Math.round(currentTheta/STEP);
     settleTarget = rawIndex*STEP;
     settling = true;
