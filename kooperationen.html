@@ -305,8 +305,6 @@
 </script>
 <script>
 (function(){
-  var YT_API_KEY = 'AIzaSyDdcH0hDhnXCB8ESPcTEasdWsNy-N-ce-0'; // Google Cloud Console -> YouTube Data API v3 -> API-Schlüssel (mit HTTP-Referrer-Einschränkung auf diese Domain)
-  var YT_CHANNEL_ID = 'UCS66v6xykvKupyUme3wpMwA';
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var elSubs = document.getElementById('stat-subs');
@@ -367,36 +365,31 @@
     el.textContent = 'Seit ' + year;
   }
 
-  if(!YT_API_KEY || YT_API_KEY === 'DEIN_YOUTUBE_API_KEY'){
-    showError(elSubs); showError(elViews); showError(elVideos);
-    setSinceText(elSince, FALLBACK_SINCE_YEAR);
-    return;
-  }
+  // Läuft jetzt über unsere eigene, serverseitige Function statt direkt über
+  // die YouTube-API -- funktioniert dadurch unabhängig davon, auf welcher
+  // Adresse die Seite gerade läuft (Produktion, Vorschau-Branch, lokal).
+  fetch('/.netlify/functions/youtube-stats')
+    .then(function(r){ return r.json().then(function(data){ return {ok:r.ok, data:data}; }); })
+    .then(function(r){
+      if(!r.ok || !r.data.ok) throw new Error(r.data && r.data.error || 'Fehler beim Laden');
+      var data = r.data;
 
-  fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      var item = data.items && data.items[0];
-      var stats = item && item.statistics;
-      if(!stats) throw new Error('no statistics');
-
-      var subs = parseInt(stats.subscriberCount, 10);
-      var views = parseInt(stats.viewCount, 10);
-      var videos = parseInt(stats.videoCount, 10);
+      var subs = parseInt(data.subscriberCount, 10);
+      var views = parseInt(data.viewCount, 10);
+      var videos = parseInt(data.videoCount, 10);
 
       if(!isNaN(subs)) animateCount(elSubs, subs, formatCount(subs)); else showError(elSubs);
       if(!isNaN(views)) animateCount(elViews, views, formatCount(views)); else showError(elViews);
       if(!isNaN(videos)) animateCount(elVideos, videos, deInt(videos)); else showError(elVideos);
 
-      // Gründungsjahr aus snippet.publishedAt, mit festem Fallback falls nicht vorhanden/unplausibel.
-      var publishedAt = item && item.snippet && item.snippet.publishedAt;
-      var year = publishedAt ? new Date(publishedAt).getFullYear() : NaN;
+      // Gründungsjahr aus publishedAt, mit festem Fallback falls nicht vorhanden/unplausibel.
+      var year = data.publishedAt ? new Date(data.publishedAt).getFullYear() : NaN;
       var plausible = !isNaN(year) && year >= 2005 && year <= new Date().getFullYear();
       setSinceText(elSince, plausible ? year : FALLBACK_SINCE_YEAR);
     })
     .catch(function(){
       showError(elSubs); showError(elViews); showError(elVideos);
-      // API insgesamt nicht erreichbar (z.B. Referrer-Sperre bei lokaler Vorschau) -
+      // Funktion insgesamt nicht erreichbar/fehlgeschlagen -
       // das Gründungsjahr ist trotzdem bekannt, daher kein Fehler-Zustand hier.
       setSinceText(elSince, FALLBACK_SINCE_YEAR);
     });
