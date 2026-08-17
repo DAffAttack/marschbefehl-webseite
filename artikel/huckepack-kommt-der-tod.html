@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Huckepack kommt der Tod: Die Mistel-Kampfflugzeuge an der Oder – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Ausgemusterte Ju-88-Bomber werden zu ferngesteuerten Großbomben: Wie die deutsche Luftwaffe im März 1945 mit dem Mistel-Kampfflugzeug die sowjetischen Oder-Brücken bei Göritz und Steinau zerstören wollte.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:700px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  .hero{
+    background:var(--ink);
+    color:#fff;
+    min-height:64vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:64px 24px;
+    position:relative;
+    overflow:hidden;
+  }
+  #terrain-canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index:0;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    background:radial-gradient(ellipse at 50% 40%, rgba(27,27,27,0) 0%, rgba(27,27,27,0.5) 70%, rgba(27,27,27,0.88) 100%);
+    pointer-events:none;
+  }
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    max-width:780px;
+  }
+  .hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--green);
+    margin:0 0 18px;
+  }
+  .hero h1{
+    font-size:clamp(28px, 5vw, 46px);
+    font-weight:700;
+    letter-spacing:-0.02em;
+    line-height:1.15;
+    margin:0 0 18px;
+  }
+  .hero p{
+    font-size:clamp(15px, 2vw, 18px);
+    color:#c7c7c2;
+    max-width:560px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  .article-image{
+    max-width:var(--max);
+    margin:40px auto 0;
+    padding:0 24px;
+    opacity:0;
+    transform:translateY(16px);
+  }
+  .article-image img{
+    width:100%;
+    display:block;
+    border-radius:14px;
+    box-shadow:0 20px 40px rgba(27,27,27,0.14);
+  }
+  .article-image figcaption{
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.5;
+    margin:10px 2px 0;
+  }
+
+  main.article{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:40px 24px 24px;
+  }
+  .lead{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 48px;
+  }
+  .chapter{
+    margin-bottom:44px;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .chapter h2{
+    font-size:22px;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .chapter .kicker{
+    font-size:13px;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .chapter p{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+  .chapter blockquote{
+    margin:28px 0;
+    padding:4px 0 4px 20px;
+    border-left:3px solid var(--green);
+    font-size:18px;
+    font-style:italic;
+    color:var(--ink);
+  }
+
+  .video-cta{
+    max-width:var(--max);
+    margin:24px auto 72px;
+    padding:0 24px;
+  }
+  .video-cta .label{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .video-cta a{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    background:var(--ink);
+    border-radius:16px;
+    overflow:hidden;
+    text-decoration:none;
+    color:#fff;
+    transition:transform 180ms ease, box-shadow 180ms ease;
+  }
+  .video-cta a:hover{
+    transform:translateY(-3px);
+    box-shadow:0 16px 32px rgba(27,27,27,0.18);
+  }
+  .video-cta .thumb-wrap{
+    position:relative;
+    flex:none;
+    width:44%;
+    aspect-ratio:16/9;
+  }
+  .video-cta .thumb-wrap img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .video-cta .play{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .video-cta .play span{
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .video-cta .play svg{width:20px; height:20px; color:var(--ink);}
+  .video-cta .vtext{padding:16px 24px 16px 0;}
+  .video-cta .vtitle{font-weight:700; font-size:16px; margin:0 0 6px;}
+  .video-cta .vsub{font-size:13px; color:#c7c7c2; margin:0;}
+
+  .back-links{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    max-width:var(--max);
+    margin:0 auto 64px;
+    padding:0 24px;
+  }
+  .back-links a{
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .back-links a:hover{color:var(--green-dark);}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+
+  @media (max-width:560px){
+    .video-cta a{flex-direction:column;}
+    .video-cta .thumb-wrap{width:100%;}
+    .video-cta .vtext{padding:16px 20px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<section class="hero">
+  <canvas id="terrain-canvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">Oderfront · März 1945</p>
+    <h1>Huckepack kommt der Tod: Die Mistel-Kampfflugzeuge an der Oder</h1>
+    <p>Ausgemusterte Bomber werden zu ferngesteuerten Großbomben – Deutschlands letzter, aussichtsloser Versuch, die sowjetischen Oder-Brücken vor dem Sturm auf Berlin zu zerstören.</p>
+  </div>
+</section>
+
+<figure class="article-image">
+  <img src="/assets/artikel/mistel-merseburg.jpg" alt="Ein deutsches Mistel-Kampfflugzeug auf dem Flugplatz Merseburg, April 1945: Ein unbemannter Junkers Ju 88 als fliegende Großbombe, obenauf ein Jagdflugzeug zur Steuerung." loading="lazy">
+  <figcaption>Ein startbereites Mistel-Gespann auf dem Flugplatz Merseburg, April 1945. (Bildquelle: National Archives, USAF-Sammlung 342-FH)</figcaption>
+</figure>
+
+<main class="article">
+  <p class="lead">Ein Flugzeug, das nie landen durfte. Ein Flugzeug, in dem keine Besatzung saß, gebaut, um schwer gepanzerte Schlachtschiffe der Royal Navy zu versenken – und im März 1945 stattdessen gegen eine gewöhnliche Flussbrücke geschickt. Dies ist die Geschichte der Mistel, jener deutschen Spezialwaffe, deren Weg vom Zeichenbrett bis in die letzten Kämpfe um die Oder-Übergänge führte.</p>
+
+  <section class="chapter">
+    <h2>Der Fluss, der zur Mauer werden sollte</h2>
+    <p class="kicker">Winter 1944/45 – der Rückzug an die Oder</p>
+    <p>Im Winter 1944 auf 1945 wurde die deutsche Ostfront bis an die Oder zurückgedrängt. Der Fluss stellte den sowjetischen Verbänden ein natürliches, aber kein unüberwindliches Hindernis entgegen. Die Wehrmacht versuchte bei ihrem Rückzug, sämtliche Oder-Brücken zu sprengen – das gelang nur unvollständig. Bis in den März 1945 hinein blieben lediglich zwölf Brücken dauerhaft zerstört. Rund 120 Eisenbahn- und Straßenbrücken dagegen fielen den sowjetischen Truppen nahezu unbeschädigt in die Hände, dazu kamen laufend neue Behelfsbrücken.</p>
+    <p>Über diese Übergänge sollte die Rote Armee Panzerverbände, Artillerie und ihren gewaltigen Nachschub in kurzer Zeit auf das westliche Oderufer verlegen – die logistische Grundlage für den Vorstoß auf Berlin. Eine dauerhafte Zerstörung dieser Brücken hätte einsatzbereite Flugzeuge in ausreichender Zahl und vor allem Treibstoff erfordert. Doch die alliierten Luftangriffe auf die Hydrierwerke und das zusammengebrochene Verkehrsnetz hatten selbst die Reichsverteidigung auf strikte Rationierung gesetzt. Aus dieser Zwangslage heraus griff die deutsche Führung zu einer Waffe, die ursprünglich einen ganz anderen Zweck erfüllen sollte: der Mistel.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Aus Schrott wird eine gefährliche Waffe</h2>
+    <p class="kicker">Vom Reichweiten-Problem zur ferngesteuerten Großbombe</p>
+    <p>Am Anfang stand kein militärisches, sondern ein rein technisches Problem: die begrenzte Reichweite von Flugzeugen. 1938 hatte die britische Short-Mayo-Kombination gezeigt, dass ein größeres Flugboot ein kleineres Flugzeug huckepack über den Atlantik tragen und dort abtrennen konnte. In Deutschland wurde dieser Gedanke weitergedacht, aber in eine völlig andere Richtung: Das untere, größere Flugzeug sollte unbemannt bleiben, mit Sprengstoff beladen und vom oberen Flugzeug aus bis kurz vor das Ziel gesteuert werden. Kurz vor dem Aufschlag sollte sich das Führungsflugzeug absprengen und zur eigenen Basis zurückkehren, während das untere Flugzeug als ferngesteuerte Bombe ins Ziel flog.</p>
+    <p>Ab 1942 erprobte das Deutsche Forschungsinstitut für Segelflug diese Kombination, zunächst mit einfachen Schulflugzeugen auf einem Lastensegler, später mit einer Bf 109 auf einem motorisierten Gleiter. Aus dieser Versuchsreihe entstand beim Junkers-Chefpiloten Siegfried Holzbaur die entscheidende Idee: Ausgemusterte Ju-88-Bomber, deren Zellen und Triebwerke ohnehin am Ende ihrer Betriebsstundenzahl standen, ließen sich für einen letzten Einsatz zur fliegenden Großbombe umrüsten. Im Bug der einsatzbereiten „scharfen" Mistel saß an Stelle der Pilotenkanzel eine fast vier Tonnen schwere Hohlladung, imstande, 20 Meter Stahlbeton zu durchschlagen. Das aufgesetzte Jagdflugzeug – meist eine Bf 109 oder Fw 190 – führte das gesamte Gespann bis auf rund anderthalb Kilometer an das Ziel heran, ehe der Pilot sich absprengte und die Ju 88 selbstständig weiterflog.</p>
+    <p>Voll betankt wog das Gespann über 20 Tonnen, fast das Doppelte einer regulären Ju 88 – ein Gewicht, dem das Fahrwerk nie gewachsen war. Landen ließ sich das Gespann deshalb nie: Jeder technische Defekt kostete die untere Maschine, retten ließ sich nur der obere Jäger. Bis zum Absprengen steuerte der Pilot die Ju 88 aktiv über eine Rudermaschine und ein kreiselgesteuertes Reflexvisier, das ihm über die Bombenzielautomatik Anflugwinkel und Kurs errechnete. Erst im letzten Augenblick vor der Trennung übergab er diese Werte an einen Autopiloten in der unteren Maschine – von diesem Moment an war jede Korrektur ausgeschlossen. Die gesamte Treffergenauigkeit der Waffe hing damit an einem einzigen, unwiderbringlichen Sekundenbruchteil kurz vor dem Absprung.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Ein Ziel versinkt, ein Plan verglüht</h2>
+    <p class="kicker">Scapa Flow, Eisenhammer und das gescheiterte Unternehmen Weichsel</p>
+    <p>Gedacht war diese aufwendige, technisch riskante Konstruktion ursprünglich für ein sehr bestimmtes Ziel: schwer gepanzerte Einheiten der britischen Home Fleet im schottischen Scapa Flow, mit konventionellen Bomben aus der Luft kaum zu erreichen. Doch am 12. November 1944 versenkten britische Bomber das Schlachtschiff Tirpitz in norwegischen Gewässern – damit verschwand der Grund, weshalb die Home Fleet überhaupt in Scapa Flow lag. Ein Einsatzziel besaßen die Mistel-Verbände nun nicht mehr.</p>
+    <p>Also griff das Reichsluftfahrtministerium auf den älteren Plan „Eisenhammer" zurück: Angriffe auf sowjetische Kraftwerke bei Moskau und Gorki, um die Stromversorgung der Rüstungsindustrie zu treffen. Von 100 ausgewählten Mistel-Piloten verlangte der Plan einen nächtlichen Anflug durch den sowjetischen Luftraum und danach, mit abgesprengtem, unbewaffnetem Jäger, einen einsamen Rückflug von über 1.600 Kilometern über feindbesetztes Gebiet – ein Vorhaben, für das der verfügbare Treibstoff selbst unter günstigsten Windverhältnissen kaum ausreichte. Der sowjetische Vormarsch unterlief die Planung bereits im Ansatz: Die ursprünglich vorgesehenen ostpreußischen Fliegerhorste rückten immer weiter hinter die Front, während die Ziele bei Moskau und Gorki unverändert blieben. Anfang März 1945 zerstörte ein amerikanischer Luftangriff auf Rechlin zusätzlich 18 einsatzbereite Mistel-Gespanne. Erst als sich das Ziel auf die nähergelegenen Weichselbrücken bei Warschau-Thorn und Deblin verlagerte, kam es in der Nacht zum 8. April 1945 als „Unternehmen Weichsel" zu einem Einsatz – der scheiterte, noch bevor er begonnen hatte: Stunden zuvor zerstörten amerikanische Bomber den Flugplatz Parchim samt der dort bereitstehenden Gespanne.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Hitlers Entscheidung: ein Auftrag ohne Mittel</h2>
+    <p class="kicker">1. März 1945 – Baumbach wird Bevollmächtigter</p>
+    <p>Am 1. März 1945 traf Hitler eine weitreichende Entscheidung. Als sich die deutsche Führung der Erkenntnis nicht länger verschließen konnte, dass die bisherigen Maßnahmen den sowjetischen Übergang über die Oder wohl nicht mehr verhindern würden, wählte er einen ungewöhnlichen Weg: Anstatt einen erfahrenen Pionieroffizier des Heeres zu betrauen, unterzeichnete er den Befehl, der Oberst Werner Baumbach, den Kommodore des Kampfgeschwaders 200, zum Bevollmächtigten für die Bekämpfung aller feindlichen Übergänge über Oder und Neiße ernannte – mit der Befugnis, Kampfmittel sämtlicher Wehrmachtsteile zum Einsatz zu bringen.</p>
+    <p>Persönliche, nicht organisatorische Erwägungen lagen dieser Wahl zugrunde: Baumbach galt als einer der erfolgreichsten Kampfflieger der Luftwaffe, war Hitler persönlich bekannt und durch die Kriegsberichterstattung einem breiten Publikum vertraut. Mit außerordentlichen Vollmachten formal ausgestattet, sah sich Baumbach zugleich dem Widerstand jener Dienststellen bei Heer, Marine und Partei gegenüber, die sich durch seine Berufung übergangen fühlten. Die tatsächliche Materiallage sah grundlegend anders aus, als der Durchführungsbefehl mit seiner Aufzählung zahlreicher Kampfmittel suggerierte: Es fehlte durchweg an einsatzbereiten Flugzeugen und vor allem an Treibstoff. Der Einsatz der Mistel war weniger das Ergebnis überlegter taktischer Planung als vielmehr Ausdruck dessen, was tatsächlich noch zur Verfügung stand – eine geringe Zahl technisch aufwendiger, aber einsatzbereiter Gespanne, deren ursprüngliches Ziel entfallen war. Der eigentliche Auftrag, die Vernichtung von über 100 intakten Flussübergängen, blieb mit den vorhandenen Mitteln von vornherein unerfüllbar.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Gefechtsverband Helbig im Anflug auf die Oder</h2>
+    <p class="kicker">Göritz, 8. März – Steinau, 31. März 1945</p>
+    <p>Zwischen 9 Uhr und 9:42 Uhr startete am 8. März 1945 der Gefechtsverband Helbig zum ersten Mistel-Angriff auf die Behelfsbrücken bei Göritz, wo sowjetische Pioniere sieben Übergänge für den Vormarsch auf Berlin errichtet hatten. Vier Gespanne, begleitet von sieben zweimotorigen Kampfflugzeugen, sollten die dortigen Flakstellungen niederhalten. Eines der vier Gespanne musste bereits unterwegs abgesprengt werden, die übrigen drei setzten unter dichtem Flakfeuer zum Gleitangriff an. Ein Gespann erhielt im letzten Moment einen Flaktreffer, der die Kurssteuerung zerstörte und es zu kurz in den gegnerischen Brückenkopf stürzen ließ; ein zweites schlug hart neben der Brücke ein, ein drittes detonierte ebenfalls daneben. Die Besatzungen meldeten beim Abflug zunächst zuversichtlich Trümmer im Fluss – doch die Luftaufklärung fand noch am selben Vormittag keine wesentlichen Schäden. Über die Südbrücke strömten weiterhin ungehindert sowjetische Truppen, an der Nordbrücke fehlte nur ein schon zuvor beschädigtes Mittelstück. Kurz danach entstand bei Göritz sogar noch eine dritte sowjetische Behelfsbrücke.</p>
+    <p>Am 31. März folgte ein zweiter Einsatz gegen die Eisenbahnbrücke von Steinau: sechs Mistel-Gespanne, vier Begleit- und Lotsenflugzeuge, 24 Jagdflugzeuge. Von den sechs Gespannen erreichten nur drei das Ziel, die übrigen fielen durch Motor- und Hydraulikschäden aus und mussten über freiem Gelände abgesprengt werden. Die verbliebenen drei griffen aus 2.000 Metern Höhe an: Die erste kam gut an die Brückenmitte heran, die zweite traf nur hart neben der Brücke, die dritte traf trotz künstlicher Vernebelung nah der Mitte und riss Rauch und Trümmer auf. Beim Gefechtsverband Helbig überwog danach nicht der Erfolg, sondern die Sorge über die technischen Ausfälle – drei von sechs Gespannen vor dem Ziel zu verlieren galt als kaum hinnehmbar.</p>
+    <blockquote>Aus Sekunden vor dem Abspringen entschied sich Kurs und Sinkwinkel unwiderruflich – und damit der gesamte Ausgang des Angriffs.</blockquote>
+  </section>
+
+  <section class="chapter">
+    <h2>Auftragstaktik ohne Erfolgsaussicht</h2>
+    <p class="kicker">Warum die Mistel an der Oder scheiterte</p>
+    <p>Warum also griff die deutsche Führung im März 1945 ausgerechnet auf die Mistel zurück, um den sowjetischen Vormarsch an der Oder aufzuhalten? Nicht, weil diese Waffe für diese Aufgabe konzipiert worden wäre – ihr ursprüngliches Ziel, die Home Fleet, war durch die Versenkung der Tirpitz entfallen, ihr Ersatzauftrag Eisenhammer hatte sich als Unternehmen Weichsel in monatelanger, ergebnisloser Planung erschöpft. Sondern weil sie, anders als nahezu jedes andere Kampfmittel der Luftwaffe in diesem Frontabschnitt, überhaupt noch einsatzbereit war, während Treibstoff, intakte Flugzeuge und geschlossene Verbände bereits fehlten. Verstärkt wird dieser Befund durch die Berufung Baumbachs – eine an eine bekannte Persönlichkeit geknüpfte Führerentscheidung, die reguläre Zuständigkeiten von Heer und Marine überging, statt sie zu ordnen.</p>
+    <p>In aller Deutlichkeit zeigten die Einsätze bei Göritz und Steinau die Kluft zwischen Auftrag und Wirklichkeit: hoher Aufwand, dem bei Göritz ein vollständiger Fehlschlag und bei Steinau ein durch technische Ausfälle geschmälerter Teilerfolg gegenüberstand, während über hundert intakte Brücken insgesamt unerreichbar blieben. Kein Beleg gewachsener militärischer Stärke war der Mistel-Einsatz an der Oder somit, sondern das Symptom einer Luftwaffe, der die materiellen Grundlagen des konventionellen Luftkriegs bereits entzogen waren – und die deshalb auf eine zweckentfremdete Spezialwaffe sowie eine symbolträchtige Personalentscheidung auswich. Die letzten Misteln starteten in einem Krieg, dessen Ausgang längst entschieden war. Selbst die kühnste technische Konstruktion konnte nicht ersetzen, was inzwischen verloren gegangen war: Zeit, Treibstoff und die Luftherrschaft.</p>
+  </section>
+</main>
+
+<div class="video-cta">
+  <p class="label">Die vollständige Dokumentation</p>
+  <a href="https://www.youtube.com/watch?v=0npSzrEmlrc" target="_blank" rel="noopener">
+    <div class="thumb-wrap">
+      <img src="https://i.ytimg.com/vi/0npSzrEmlrc/maxresdefault.jpg" alt="" loading="lazy">
+      <div class="play"><span>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 8L16 12L9 16V8Z" fill="currentColor"/></svg>
+      </span></div>
+    </div>
+    <div class="vtext">
+      <p class="vtitle">Huckepack kommt der Tod – Eine deutsche Spezialwaffe an der Ostfront</p>
+      <p class="vsub">Auf YouTube ansehen →</p>
+    </div>
+  </a>
+</div>
+
+<div class="back-links">
+  <a href="index.html">&#8592; Alle Artikel</a>
+  <a href="/quellen.html">Alle Quellen &amp; Buchtipps &#8594;</a>
+</div>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas = document.getElementById('terrain-canvas');
+  var hero = document.querySelector('.hero');
+  if(!canvas || typeof THREE === 'undefined') return;
+
+  var renderer;
+  try{
+    renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  }catch(e){ return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 2.3, 5.2);
+  camera.lookAt(0, -0.9, -1);
+
+  var geo = new THREE.PlaneGeometry(18, 13, 56, 40);
+  var mat = new THREE.MeshBasicMaterial({color:0xA1C74F, wireframe:true, transparent:true, opacity:0.24});
+  var terrain = new THREE.Mesh(geo, mat);
+  terrain.rotation.x = -Math.PI/2.3;
+  terrain.position.set(0, -1.9, -2);
+  scene.add(terrain);
+
+  function terrainHeight(x, y, t){
+    var h = 0;
+    h += Math.sin(x*0.28 + 1.7 + Math.sin(t*0.05)*0.7) * Math.cos(y*0.22 + 0.4 + Math.cos(t*0.04)*0.6) * 0.95;
+    h += Math.sin(x*0.52 - y*0.33 + 3.1 + t*0.08) * 0.42;
+    h += Math.cos(x*0.83 + y*0.66 - 1.2 + Math.sin(t*0.065)*0.9) * 0.22;
+    h += Math.sin(x*1.5 + y*1.2 + 4.0 + t*0.1) * 0.09;
+    return h;
+  }
+
+  function resize(){
+    var w = hero.clientWidth, h = hero.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var clock = new THREE.Clock();
+  var posAttr = geo.attributes.position;
+
+  function animate(){
+    var t = reduceMotion ? 0 : clock.getElapsedTime();
+    for(var i=0;i<posAttr.count;i++){
+      var x = posAttr.getX(i), y = posAttr.getY(i);
+      posAttr.setZ(i, terrainHeight(x, y, t));
+    }
+    posAttr.needsUpdate = true;
+    renderer.render(scene, camera);
+    if(!reduceMotion){
+      requestAnimationFrame(animate);
+    }
+  }
+  animate();
+})();
+
+(function(){
+  if(typeof gsap === 'undefined') return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  gsap.set('.hero-inner > *', {opacity:0, y:16});
+  gsap.to('.hero-inner > *', {opacity:1, y:0, duration:0.9, ease:'power2.out', stagger:0.12, delay:0.1});
+
+  if(reduceMotion){
+    document.querySelectorAll('.chapter, .article-image').forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+    return;
+  }
+
+  gsap.to('.article-image', {opacity:1, y:0, duration:0.9, ease:'power2.out', delay:0.5});
+
+  if(typeof ScrollTrigger !== 'undefined'){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('.chapter').forEach(function(chapter){
+      gsap.to(chapter, {
+        opacity:1, y:0, duration:0.7, ease:'power2.out',
+        scrollTrigger:{trigger:chapter, start:'top 85%'}
+      });
+    });
+    gsap.fromTo('.video-cta a', {opacity:0, y:24}, {
+      opacity:1, y:0, duration:0.6, ease:'power2.out',
+      scrollTrigger:{trigger:'.video-cta', start:'top 90%'}
+    });
+  }
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
