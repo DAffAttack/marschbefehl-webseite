@@ -128,14 +128,17 @@
     margin:-24px 0 34px;
   }
   .dial-section{margin-bottom:8px;}
+  /* Panel-Grund ist jetzt eine echte Foto-Textur (abgenutztes Blech) statt
+     der früheren reinen CSS-Verläufe + Rausch-/Kratzer-Overlays. Vorlage vom
+     Nutzer, Bild per Higgsfield daraus erzeugt (2026-08-17).
+     Die dunkle Grundfarbe bleibt als Unterlage stehen, falls das Bild (noch)
+     nicht geladen ist -- sonst blitzt kurz Weiß durch. */
   .dial-panel{
     position:relative;
-    background:
-      radial-gradient(ellipse 130% 85% at 16% -12%, rgba(255,255,255,0.055), transparent 55%),
-      radial-gradient(ellipse 115% 75% at 88% 116%, rgba(0,0,0,0.4), transparent 62%),
-      radial-gradient(circle at 74% 10%, rgba(255,255,255,0.03), transparent 42%),
-      radial-gradient(circle at 22% 82%, rgba(255,255,255,0.025), transparent 38%),
-      linear-gradient(152deg, #242420 0%, #1c1c19 32%, #201f1a 54%, #19190f 78%, #15150d 100%);
+    background-color:#1c1c19;
+    background-image:url("/assets/drehschalter/panel-metall-v1.webp");
+    background-size:cover;
+    background-position:center;
     border-radius:20px;
     padding:clamp(32px, 5vw, 52px) 20px clamp(30px, 5vw, 44px);
     display:flex;
@@ -144,22 +147,34 @@
     gap:22px;
     box-shadow:0 24px 60px rgba(27,27,27,0.16);
   }
-  /* Feiner Rauschgrund -- macht aus der flachen Farbe eine ungleichmäßige,
-     genutzte Metalloberfläche statt Einheitsfläche. */
-  .dial-panel::before{
-    content:"";
+  /* Einschussloch. Eigenes Element statt background-layer, weil nur so die
+     Position bei JEDER Panel-Größe stabil bleibt: left/top in % plus
+     translate(-50%,-50%) setzt den Loch-MITTELPUNKT exakt auf den Zielpunkt.
+     Mit background-position in % würde stattdessen ein größenabhängiger
+     Mischwert herauskommen (dort gilt p*(Container-Bild), nicht p*Container),
+     das Loch würde also je nach Fenstergröße wandern.
+     Position 11,5% / 15,5% stammt aus der vom Nutzer markierten Stelle
+     (Screenshot startseite1.png, blaue Markierung, 2026-08-17).
+     Liegt bewusst VOR .dial-panel::after im Malzyklus, damit die
+     Abdunklung/Vignette dort auch über dem Loch liegt -- sonst säße das Loch
+     als hellerer Fleck sichtbar "über" der Panel-Stimmung. */
+  .dial-bullet-hole{
     position:absolute;
-    inset:0;
+    left:11.5%;
+    top:15.5%;
+    width:clamp(78px, 14%, 158px);
+    aspect-ratio:1;
+    transform:translate(-50%,-50%);
+    background:url("/assets/drehschalter/einschussloch-v1.webp") center/contain no-repeat;
     z-index:0;
-    border-radius:inherit;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.45'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size:170px 170px;
-    opacity:0.5;
-    mix-blend-mode:overlay;
     pointer-events:none;
   }
-  /* Verstreute Kratzer -- kurze, unregelmäßig platzierte Riefen statt
-     durchgehender Streifen, damit es wie abgenutztes Blech statt Muster wirkt. */
+  /* Stimmungsschicht über Textur UND Einschussloch: dunkelt das Blech auf das
+     Niveau der übrigen Seite ab und legt eine Vignette an die Ränder, damit
+     der Knopf in der Mitte weiterhin der hellste Punkt bleibt.
+     Die früheren CSS-Kratzer und der feTurbulence-Rauschgrund sind hier
+     ersatzlos entfallen -- beides bringt die Foto-Textur jetzt selbst mit,
+     doppelt aufgetragen wurde es unruhig. */
   .dial-panel::after{
     content:"";
     position:absolute;
@@ -167,18 +182,8 @@
     z-index:0;
     border-radius:inherit;
     background:
-      linear-gradient(112deg, transparent 42%, rgba(255,255,255,0.5) 49%, rgba(255,255,255,0.18) 53%, transparent 60%) no-repeat 6% 12% / 130px 5px,
-      linear-gradient(96deg, transparent 40%, rgba(255,255,255,0.4) 48%, transparent 58%) no-repeat 88% 8% / 90px 4px,
-      linear-gradient(128deg, transparent 44%, rgba(0,0,0,0.32) 50%, transparent 58%) no-repeat 14% 34% / 70px 3px,
-      linear-gradient(101deg, transparent 42%, rgba(255,255,255,0.32) 49%, transparent 58%) no-repeat 78% 40% / 110px 4px,
-      linear-gradient(118deg, transparent 44%, rgba(255,255,255,0.28) 50%, transparent 58%) no-repeat 8% 62% / 95px 3px,
-      linear-gradient(94deg, transparent 42%, rgba(0,0,0,0.28) 49%, transparent 58%) no-repeat 92% 60% / 80px 3px,
-      linear-gradient(133deg, transparent 44%, rgba(255,255,255,0.4) 50%, transparent 58%) no-repeat 40% 4% / 100px 4px,
-      linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.22) 50%, transparent 60%) no-repeat 30% 92% / 85px 3px,
-      linear-gradient(90deg, transparent 44%, rgba(0,0,0,0.24) 50%, transparent 58%) no-repeat 62% 88% / 65px 3px,
-      linear-gradient(120deg, transparent 43%, rgba(255,255,255,0.3) 50%, transparent 59%) no-repeat 55% 20% / 75px 3px;
-    mix-blend-mode:overlay;
-    opacity:0.8;
+      radial-gradient(ellipse 78% 72% at 50% 46%, rgba(0,0,0,0.05), rgba(0,0,0,0.42) 78%, rgba(0,0,0,0.6) 100%),
+      linear-gradient(158deg, rgba(26,26,20,0.34) 0%, rgba(18,18,13,0.5) 62%, rgba(12,12,8,0.62) 100%);
     pointer-events:none;
   }
   .dial-panel > .dial-readout,
@@ -521,6 +526,7 @@
 
   <section class="dial-section" aria-label="Themenbereiche der Seite">
     <div class="dial-panel">
+      <span class="dial-bullet-hole" aria-hidden="true"></span>
       <div class="dial-readout" aria-hidden="true">
         <span class="dial-readout-label" id="dialReadoutLabel">Videos</span>
       </div>
