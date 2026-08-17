@@ -324,6 +324,23 @@
   .admin-termin-head .meta{ font-size:12px; color:var(--muted); margin-top:3px; }
   .admin-termin-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
+  /* Auslastungs-Balken pro Termin -- nur im (privaten) Verwaltungsbereich,
+     zeigt die exakte Auslastung farblich/in der Breite an. Vier Farbstufen
+     nach Viertel der maximalen Personenzahl: grün/gelb/orange/rot. */
+  .admin-kapazitaet-bar{
+    height:6px;
+    max-width:160px;
+    border-radius:4px;
+    background:var(--line);
+    overflow:hidden;
+    margin-top:6px;
+  }
+  .admin-kapazitaet-bar .fill{
+    height:100%;
+    border-radius:4px;
+    transition:width 200ms ease, background 200ms ease;
+  }
+
   .edit-row{
     display:none;
     grid-template-columns:1fr auto auto;
@@ -757,6 +774,19 @@
   });
 
   // ---------- Termin-Element (innerhalb einer Führung) ----------
+  // Auslastungs-Balken: Breite = Auslastung in % (Balken selbst also bei
+  // wenig Belegung auch optisch kürzer), Farbe wechselt in vier Vierteln
+  // von grün über gelb/orange zu rot -- kalibriert immer an t.maxPersonen.
+  function kapazitaetsBalkenHtml(belegt, maxPersonen){
+    var pct = maxPersonen > 0 ? Math.min(100, Math.round((belegt / maxPersonen) * 100)) : 0;
+    var farbe;
+    if(pct < 25){ farbe = '#4caf50'; }        // grün -- kaum belegt
+    else if(pct < 50){ farbe = '#e0b400'; }   // gelb -- ein Viertel bis zur Hälfte
+    else if(pct < 75){ farbe = '#e07b00'; }   // orange -- über die Hälfte
+    else { farbe = '#d64545'; }               // rot -- fast/ganz ausgebucht
+    return '<div class="admin-kapazitaet-bar"><div class="fill" style="width:' + pct + '%; background:' + farbe + ';"></div></div>';
+  }
+
   function buildTerminEl(t, alleBuchungen){
     var wrap = document.createElement('div');
     wrap.className = 'admin-termin' + (t.istVergangenheit ? ' is-past' : '');
@@ -767,6 +797,7 @@
         '<div>' +
           '<div class="when">' + escapeHtml(formatDatum(t.datumIso, t.uhrzeit)) + (t.istVergangenheit ? ' <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(vergangen)</span>' : '') + '</div>' +
           '<div class="meta">' + t.belegtePersonen + ' / ' + t.maxPersonen + ' belegt</div>' +
+          kapazitaetsBalkenHtml(t.belegtePersonen, t.maxPersonen) +
         '</div>' +
         '<div class="admin-termin-actions">' +
           '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.length + ')</button>' +
