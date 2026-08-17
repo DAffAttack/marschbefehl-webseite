@@ -432,15 +432,22 @@
     letter-spacing:0.08em;
     text-transform:uppercase;
     color:#a9a89c;
-    background:none;
-    border:1px solid #3a392f;
+    /* Gleiche deckende Fläche wie .dial-link -- der Button gehört optisch in
+       dieselbe Familie, und ohne Hintergrund schlüge auch hier die Blech-
+       Textur durch die Beschriftung. */
+    background:linear-gradient(180deg, #302f29 0%, #26251f 55%, #201f19 100%);
+    border:1px solid #4b4a40;
     border-radius:999px;
     padding:8px 20px;
     cursor:pointer;
     outline:none;
+    box-shadow:
+      0 2px 5px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.09),
+      inset 0 -1px 0 rgba(0,0,0,0.4);
     transition:background 160ms ease, color 160ms ease, border-color 160ms ease;
   }
-  .dial-toggle:hover{color:#c7c6ba; border-color:#4a4938;}
+  .dial-toggle:hover{color:#c7c6ba; border-color:#5a594a;}
   .dial-toggle:focus-visible{outline:2px solid #f2e8cf; outline-offset:3px;}
   .dial-toggle.is-lit{background:var(--green); border-color:var(--green); color:var(--ink);}
 
@@ -450,21 +457,36 @@
     gap:10px;
     justify-content:center;
   }
+  /* Deckende, leicht erhabene Fläche (2026-08-17): Vorher hatten die Buttons
+     gar keinen Hintergrund, dadurch schlug seit dem Umbau auf die Foto-Textur
+     das Blech samt Kratzern und Lackabplatzern mitten durch die Beschriftung.
+     Jetzt sitzen sie sauber AUF der Fläche: eigener deckender Verlauf,
+     heller Lichtkante oben / dunkler Kante unten (innere Schatten) und ein
+     Schlagschatten nach unten -- liest sich als aufgesetztes Bedienteil,
+     nicht als ausgeschnittenes Loch in der Platte. */
   .dial-link{
     font-size:13px;
     font-weight:600;
     color:#e7e6df;
     text-decoration:none;
     padding:8px 16px;
-    border:1px solid #3a392f;
+    border:1px solid #4b4a40;
     border-radius:999px;
-    transition:background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    background:linear-gradient(180deg, #302f29 0%, #26251f 55%, #201f19 100%);
+    box-shadow:
+      0 2px 5px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.09),
+      inset 0 -1px 0 rgba(0,0,0,0.4);
+    transition:background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
   }
   .dial-link:hover{
     background:var(--green);
     border-color:var(--green);
     color:var(--ink);
     transform:translateY(-2px);
+    box-shadow:
+      0 5px 12px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.25);
   }
 
   /* Fallback: prefers-reduced-motion oder Bild lädt nicht -> volle, statische Liste */
