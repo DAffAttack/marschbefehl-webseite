@@ -314,8 +314,10 @@
   // Nutzer-Präzisierung: der klickbare Bereich soll nur die schwarze Kappe in
   // der Mitte sein, nicht die ganze olivgrüne Zahnrad-Scheibe -- die Kappe
   // misst im Ausgangsfoto ca. 32% des vollen Knopf-Radius (Bildvermessung:
-  // Kappen-Durchmesser ~330px von 1024px Gesamtbreite).
-  var KNOPF_KLICKRADIUS_ANTEIL = 0.32;
+  // Kappen-Durchmesser ~330px von 1024px Gesamtbreite). Auf Nutzer-Wunsch
+  // (2026-08-17) nochmal um 50% verkleinert -- Durchmesser UND Radius
+  // halbiert (0.32 -> 0.16).
+  var KNOPF_KLICKRADIUS_ANTEIL = 0.16;
   function istInnerhalbDesRundenKnopfs(e){
     var rect = knobWrap.getBoundingClientRect();
     var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
