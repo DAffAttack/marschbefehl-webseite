@@ -90,6 +90,15 @@ exports.handler = async (event) => {
     return json(200, { ok: true, imageId: id });
   } catch (err) {
     console.error('fuehrungen-bild-upload Fehler:', err);
-    return errorResponse(500, 'Bild konnte nicht gespeichert werden.');
+    // TEMPORÄR (2026-08-17): Klartext-Fehlerdetails mit in die Antwort, damit sich der
+    // eigentliche Netlify-Blobs-Fehler direkt in der Verwaltungsseite zeigt, ohne erst
+    // durch die Netlify-Dashboard-Logs suchen zu müssen. Vor dem echten Go-Live wieder
+    // auf die schlichte Meldung zurücksetzen (kein Grund, Interna öffentlich zu zeigen).
+    return errorResponse(
+      500,
+      'Bild konnte nicht gespeichert werden. Technisches Detail: ' +
+        (err && err.name ? err.name + ': ' : '') +
+        (err && err.message ? err.message : String(err))
+    );
   }
 };
