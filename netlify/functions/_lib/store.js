@@ -153,10 +153,21 @@ function neueId() {
   return crypto.randomUUID();
 }
 
+// Ampel-Status statt exakter Platzzahl für öffentliche Ausgaben (Nutzer-Wunsch
+// 2026-08-17: keine genaue Zahl freier Plätze mehr nach außen zeigen, weder in
+// der Terminliste noch in Fehlermeldungen/Buchungsbestätigungen). "wenige" greift
+// unterhalb von 20% der Gesamtkapazität (mindestens 1 Platz Schwelle).
+function verfuegbarkeitsStatus(frei, maxPersonen) {
+  if (frei <= 0) return 'ausgebucht';
+  const schwelle = Math.max(1, Math.ceil(maxPersonen * 0.2));
+  return frei <= schwelle ? 'wenige' : 'frei';
+}
+
 module.exports = {
   withState,
   readState,
   belegtePersonen,
+  verfuegbarkeitsStatus,
   terminDatumZeit,
   findFuehrung,
   neueId,

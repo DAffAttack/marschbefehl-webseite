@@ -166,32 +166,23 @@
   .termin-price span{ font-size:12px; font-weight:600; color:var(--muted); margin-left:4px; }
 
   .termin-capacity{ margin-top:14px; }
-  .capacity-bar{
-    height:6px;
-    border-radius:4px;
-    background:var(--line);
-    overflow:hidden;
-    margin-bottom:7px;
-  }
-  .capacity-bar .fill{
-    height:100%;
-    background:var(--green);
-    border-radius:4px;
-  }
-  .termin-card.is-full .capacity-bar .fill{ background:var(--muted); }
-  .capacity-label{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:8px; }
-  .badge-full{
+  .capacity-label{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:8px; margin-bottom:2px; }
+  /* Ampel-Badges statt genauer Platzzahl -- bewusst keine exakten Zahlen nach
+     außen (siehe werner_notizen.md, 2026-08-17): "verfügbar" / "wenige Plätze" /
+     "ausgebucht" statt "12 von 20 frei". */
+  .badge-frei, .badge-wenige, .badge-full{
     display:inline-flex;
     align-items:center;
     font-size:11px;
     font-weight:700;
     text-transform:uppercase;
     letter-spacing:0.06em;
-    color:#8a3f2f;
-    background:#fdf1ee;
     padding:3px 9px;
     border-radius:999px;
   }
+  .badge-frei{ color:#2f6e3a; background:#eef7ef; }
+  .badge-wenige{ color:#8a6a1f; background:#fdf6e8; }
+  .badge-full{ color:#8a3f2f; background:#fdf1ee; }
 
   .termin-actions{ margin-top:16px; }
   .btn-book{
@@ -462,11 +453,15 @@
     }
   }
 
+  function verfuegbarkeitsBadge(status){
+    if(status === 'ausgebucht') return '<span class="badge-full">Ausgebucht</span>';
+    if(status === 'wenige') return '<span class="badge-wenige">Nur noch wenige Plätze frei</span>';
+    return '<span class="badge-frei">Plätze verfügbar</span>';
+  }
+
   function buildTerminCard(t){
     var card = document.createElement('div');
     card.className = 'termin-card' + (t.ausgebucht ? ' is-full' : '');
-
-    var pct = t.maxPersonen > 0 ? Math.min(100, Math.round((t.maxPersonen - t.freiePlaetze) / t.maxPersonen * 100)) : 0;
 
     card.innerHTML =
       '<div class="termin-top">' +
@@ -477,12 +472,7 @@
         '<div class="termin-price">' + formatPreis(t.preisProPerson) + ' &euro;<span>pro Person</span></div>' +
       '</div>' +
       '<div class="termin-capacity">' +
-        '<div class="capacity-bar"><div class="fill" style="width:' + pct + '%"></div></div>' +
-        '<div class="capacity-label">' +
-          (t.ausgebucht
-            ? '<span class="badge-full">Ausgebucht</span>'
-            : '<span>' + t.freiePlaetze + ' von ' + t.maxPersonen + ' Plätzen frei</span>') +
-        '</div>' +
+        '<div class="capacity-label">' + verfuegbarkeitsBadge(t.verfuegbarkeit) + '</div>' +
       '</div>' +
       '<div class="termin-actions">' +
         '<button type="button" class="btn-book"' + (t.ausgebucht ? ' disabled' : '') + '>' +
@@ -494,7 +484,7 @@
           '<form class="booking-form" novalidate>' +
             '<div class="full"><label>Name</label><input type="text" name="name" required maxlength="120" autocomplete="name"></div>' +
             '<div><label>E-Mail</label><input type="email" name="email" required maxlength="200" autocomplete="email"></div>' +
-            '<div><label>Personen</label><input type="number" name="personen" required min="1" max="' + t.freiePlaetze + '" value="1"></div>' +
+            '<div><label>Personen</label><input type="number" name="personen" required min="1" max="30" value="1"></div>' +
             '<div class="booking-error"></div>' +
             '<div class="booking-form-actions">' +
               '<button type="submit" class="btn-book">Verbindlich buchen</button>' +
@@ -563,17 +553,10 @@
             '<p>' + personen + ' Platz/Plätze für ' + escapeHtml(formatDatum(t.datumIso, t.uhrzeit)) + ' um ' + escapeHtml(t.uhrzeit) + ' Uhr sind reserviert. Es gibt aktuell keine automatische Bestätigungsmail — bitte den Termin selbst notieren.</p>';
           successEl.classList.add('is-visible');
 
-          var freiDanach = typeof r.data.freiePlaetzeDanach === 'number' ? r.data.freiePlaetzeDanach : Math.max(0, t.freiePlaetze - personen);
-          var neuPct = t.maxPersonen > 0 ? Math.min(100, Math.round((t.maxPersonen - freiDanach) / t.maxPersonen * 100)) : 0;
-          var fillEl = card.querySelector('.capacity-bar .fill');
+          var statusDanach = r.data.verfuegbarkeitDanach || 'frei';
           var labelEl = card.querySelector('.capacity-label');
-          if(fillEl) fillEl.style.width = neuPct + '%';
-          if(labelEl){
-            labelEl.innerHTML = freiDanach <= 0
-              ? '<span class="badge-full">Ausgebucht</span>'
-              : '<span>' + freiDanach + ' von ' + t.maxPersonen + ' Plätzen frei</span>';
-          }
-          if(freiDanach <= 0){
+          if(labelEl){ labelEl.innerHTML = verfuegbarkeitsBadge(statusDanach); }
+          if(statusDanach === 'ausgebucht'){
             card.classList.add('is-full');
             bookBtn.disabled = true;
             bookBtn.textContent = 'Ausgebucht';

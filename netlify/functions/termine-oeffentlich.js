@@ -7,7 +7,7 @@
 // Der Preis pro Person liegt seit dem Führungen/Termine-Umbau NICHT mehr am Termin,
 // sondern an der übergeordneten Führung — wird hier für die Anzeige mit eingeblendet.
 
-const { readState, belegtePersonen, terminDatumZeit, findFuehrung } = require('./_lib/store');
+const { readState, belegtePersonen, terminDatumZeit, findFuehrung, verfuegbarkeitsStatus } = require('./_lib/store');
 const { json, errorResponse, istGueltigeId } = require('./_lib/http');
 
 exports.handler = async (event) => {
@@ -37,8 +37,10 @@ exports.handler = async (event) => {
           datumIso: t.datumIso,
           uhrzeit: t.uhrzeit,
           preisProPerson: fuehrung ? fuehrung.preisProPerson : null,
-          maxPersonen: t.maxPersonen,
-          freiePlaetze: frei,
+          // Bewusst KEINE exakte Zahl (freiePlaetze/maxPersonen) mehr nach außen --
+          // nur noch ein Ampel-Status. Intern bleibt die genaue Zahl weiterhin
+          // Grundlage der Kapazitätsprüfung beim Buchen (siehe buchung-erstellen.js).
+          verfuegbarkeit: verfuegbarkeitsStatus(frei, t.maxPersonen),
           ausgebucht: frei <= 0,
         };
       })

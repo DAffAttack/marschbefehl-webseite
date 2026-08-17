@@ -2,7 +2,7 @@
 // Prüft serverseitig (nicht nur im Frontend), ob genug Plätze frei sind, und schreibt
 // atomar über withState() — Überbuchen bei gleichzeitigen Anfragen ist damit ausgeschlossen.
 
-const { withState, belegtePersonen, terminDatumZeit, findFuehrung, neueId } = require('./_lib/store');
+const { withState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, verfuegbarkeitsStatus } = require('./_lib/store');
 const {
   json,
   errorResponse,
@@ -47,13 +47,14 @@ exports.handler = async (event) => {
       const belegt = belegtePersonen(state, terminId);
       const frei = termin.maxPersonen - belegt;
       if (personen > frei) {
+        // Bewusst keine exakte Zahl in der Fehlermeldung (Nutzer-Wunsch 2026-08-17).
         return {
           ok: false,
           status: 409,
           error:
             frei <= 0
               ? 'Dieser Termin ist inzwischen ausgebucht.'
-              : `Nur noch ${frei} von ${termin.maxPersonen} Plätzen frei — bitte Personenzahl anpassen.`,
+              : 'Für diese Personenzahl sind nicht mehr genug Plätze frei — bitte weniger Personen angeben oder einen anderen Termin wählen.',
         };
       }
 
@@ -77,7 +78,7 @@ exports.handler = async (event) => {
           uhrzeit: termin.uhrzeit,
           preisProPerson: fuehrung ? fuehrung.preisProPerson : null,
         },
-        freiePlaetzeDanach: frei - personen,
+        verfuegbarkeitDanach: verfuegbarkeitsStatus(frei - personen, termin.maxPersonen),
       };
     });
 
