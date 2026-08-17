@@ -325,7 +325,8 @@
   // dadurch noch bis in die Ring-Schildchen hinein. Auf Nutzer-Wunsch
   // (2026-08-17, zweite Korrektur) um 50% verkleinert: 1.0 -> 0.5.
   var KNOPF_DREH_RADIUS_ANTEIL = 0.5;
-  var KNOPF_KLICK_RADIUS_ANTEIL = 0.16;
+  // Klick-Kreis (Bestätigen) auf Nutzer-Wunsch nochmal halbiert: 0.16 -> 0.08.
+  var KNOPF_KLICK_RADIUS_ANTEIL = 0.08;
   function istInnerhalbKreis(clientX, clientY, radiusAnteil){
     var rect = knobWrap.getBoundingClientRect();
     var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
