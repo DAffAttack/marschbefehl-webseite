@@ -188,9 +188,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script>
 (function(){
-  var YT_API_KEY = 'AIzaSyDdcH0hDhnXCB8ESPcTEasdWsNy-N-ce-0'; // Google Cloud Console -> YouTube Data API v3 -> API-Schlüssel (mit HTTP-Referrer-Einschränkung auf diese Domain)
-  var YT_CHANNEL_ID = 'UCS66v6xykvKupyUme3wpMwA';
-  var PAGE_SIZE = 12;
   var grid = document.getElementById('video-grid');
   var loadMoreWrap = document.getElementById('load-more-wrap');
   var loadMoreBtn = document.getElementById('load-more-btn');
@@ -252,15 +249,18 @@
     animateIn(newCards);
   }
 
+  // Läuft jetzt über unsere eigene, serverseitige Function statt direkt über
+  // die YouTube-API -- kein API-Schlüssel mehr im Browser-Quelltext sichtbar,
+  // funktioniert unabhängig davon, auf welcher Adresse die Seite läuft.
   function fetchPage(){
-    var url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=' + PAGE_SIZE
-      + '&playlistId=' + uploadsPlaylistId + '&key=' + YT_API_KEY
-      + (nextPageToken ? '&pageToken=' + nextPageToken : '');
+    var url = '/.netlify/functions/youtube-videos?uploadsPlaylistId=' + encodeURIComponent(uploadsPlaylistId)
+      + (nextPageToken ? '&pageToken=' + encodeURIComponent(nextPageToken) : '');
     loadMoreBtn.disabled = true;
     loadMoreBtn.textContent = 'Lädt …';
     return fetch(url)
       .then(function(r){ return r.json(); })
       .then(function(data){
+        if(!data.ok) throw new Error(data.error || 'Fehler beim Laden');
         appendVideos(data.items);
         nextPageToken = data.nextPageToken || null;
         loadMoreBtn.disabled = false;
@@ -274,17 +274,15 @@
   }
 
   function init(){
-    if(!YT_API_KEY || YT_API_KEY === 'DEIN_YOUTUBE_API_KEY'){
-      grid.innerHTML = '<p class="video-status">Video-Vorschau noch nicht konfiguriert.</p>';
-      return;
-    }
-    fetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
+    fetch('/.netlify/functions/youtube-videos')
       .then(function(r){ return r.json(); })
       .then(function(data){
-        uploadsPlaylistId = data.items && data.items[0] && data.items[0].contentDetails.relatedPlaylists.uploads;
-        if(!uploadsPlaylistId) throw new Error('no uploads playlist');
+        if(!data.ok) throw new Error(data.error || 'Fehler beim Laden');
+        uploadsPlaylistId = data.uploadsPlaylistId;
+        nextPageToken = data.nextPageToken || null;
         grid.innerHTML = '';
-        return fetchPage();
+        appendVideos(data.items);
+        loadMoreWrap.hidden = !nextPageToken;
       })
       .catch(function(){
         grid.innerHTML = '<p class="video-status">Videos konnten nicht geladen werden.</p>';
