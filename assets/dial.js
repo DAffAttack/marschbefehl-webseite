@@ -108,11 +108,44 @@
     return audioCtx;
   }
 
+  var audioWeckLaeuft = false;
+  /* Liefert den Ton-Kanal NUR zurueck, wenn sofort abgespielt werden kann.
+     Hintergrund (Bugfix 2026-08-17, Nutzer-Meldung "die Geraeusche kommen
+     beim ersten Mal nach dem Refresh nicht, erst beim zweiten Mal"):
+     Browser starten den Ton-Kanal aus Werbeschutz-Gruenden im Ruhezustand;
+     er darf erst nach einer echten Nutzergeste aufwachen. Bisher stand in
+     allen drei Sound-Funktionen nur `ctx.resume();` ohne auf das Ergebnis zu
+     warten -- resume() ist aber ASYNCHRON. Beim allerersten Klick war der
+     Kanal deshalb noch nicht wach, `ctx.currentTime` stand faktisch still,
+     und der Ton wurde auf einen bereits vergangenen Zeitpunkt gelegt: er
+     verpuffte lautlos. Ab dem zweiten Mal lief der Kanal und alles klang.
+     Loesung: Ist der Kanal noch im Ruhezustand, wird er aufgeweckt und der
+     Sound danach EINMALIG nachgeholt, statt ihn ins Leere zu schicken.
+     Die Wiederhol-Sperre verhindert dabei sowohl Endlosschleifen (falls der
+     Kanal trotz resume nicht aufwacht) als auch einen Schwall nachgeholter
+     Toene, wenn waehrend des Aufweckens mehrfach geklickt wurde. */
+  function audioBereit(nachholen){
+    var ctx = ensureAudio();
+    if(!ctx) return null;
+    if(ctx.state === 'suspended'){
+      if(!audioWeckLaeuft){
+        audioWeckLaeuft = true;
+        try{
+          ctx.resume().then(function(){
+            audioWeckLaeuft = false;
+            if(ctx.state === 'running' && typeof nachholen === 'function') nachholen();
+          }).catch(function(){ audioWeckLaeuft = false; });
+        }catch(e){ audioWeckLaeuft = false; }
+      }
+      return null;
+    }
+    return ctx;
+  }
+
   // Sound A: kurzer, heller Rast-Klick beim Weiterdrehen auf die nächste Position.
   function playDetentClick(){
-    var ctx = ensureAudio();
+    var ctx = audioBereit(playDetentClick);
     if(!ctx) return;
-    if(ctx.state === 'suspended'){ ctx.resume(); }
     var now = ctx.currentTime;
     var len = Math.floor(ctx.sampleRate*0.035);
     var buffer = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -139,9 +172,8 @@
   // rein Noise-basiert (kein Sinuston/Piepser), hörbar voller/tiefer als der
   // helle Rast-Klick, mit tiefem "Thunk"-Nachschlag für das Gefühl von Gewicht.
   function playConfirmSound(){
-    var ctx = ensureAudio();
+    var ctx = audioBereit(playConfirmSound);
     if(!ctx) return;
-    if(ctx.state === 'suspended'){ ctx.resume(); }
     var now = ctx.currentTime;
 
     function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
@@ -201,9 +233,8 @@
   // Richtungen (an/aus) -- ein Kippschalter macht in beide Richtungen
   // denselben Anschlag.
   function playToggleClick(){
-    var ctx = ensureAudio();
+    var ctx = audioBereit(playToggleClick);
     if(!ctx) return;
-    if(ctx.state === 'suspended'){ ctx.resume(); }
     var now = ctx.currentTime;
 
     function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
