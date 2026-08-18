@@ -1,0 +1,410 @@
+/* ==========================================================================
+   Artikel-Stylesheet — marschbefehl.com
+   Zusammengefuehrt aus den bis dahin acht handgeschriebenen Artikeln
+   (18.08.2026). Grundlage war armeegruppe-steiner.html als die
+   vollstaendigste Fassung; die uebrigen Artikel steuerten 21 zusaetzliche
+   Bausteine bei (Serienuebersicht, Bildunterschriften, Zahlenbloecke).
+
+   Vier Selektoren wichen zwischen den Artikeln voneinander ab — durchweg
+   Abstandswerte, entstanden durch Kopieren, nicht durch Gestaltungsabsicht.
+   Es gilt jeweils die Mehrheitsfassung:
+     main.article          padding-top 64px (6 von 8 Artikeln)
+     .video-cta            margin 24px auto 72px (6 von 8)
+     .episodes             margin 0 auto 56px
+     .chapter .video-hint  margin 0 (beide Fassungen wirkungsgleich)
+   ========================================================================== */
+
+:root {
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:700px;
+  }
+* {box-sizing:border-box;}
+html {scroll-behavior:smooth;}
+body {
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+a {color:inherit;}
+.hero {
+    background:var(--ink);
+    color:#fff;
+    min-height:64vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:64px 24px;
+    position:relative;
+    overflow:hidden;
+  }
+#terrain-canvas {
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index:0;
+  }
+.hero::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    background:radial-gradient(ellipse at 50% 40%, rgba(27,27,27,0) 0%, rgba(27,27,27,0.5) 70%, rgba(27,27,27,0.88) 100%);
+    pointer-events:none;
+  }
+.hero-inner {
+    position:relative;
+    z-index:2;
+    max-width:780px;
+  }
+.hero .eyebrow {
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--green);
+    margin:0 0 18px;
+  }
+.hero h1 {
+    font-size:clamp(28px, 5vw, 46px);
+    font-weight:700;
+    letter-spacing:-0.02em;
+    line-height:1.15;
+    margin:0 0 18px;
+  }
+.hero p {
+    font-size:clamp(15px, 2vw, 18px);
+    color:#c7c7c2;
+    max-width:560px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+main.article {
+    max-width:var(--max);
+    margin:0 auto;
+    padding:64px 24px 24px;
+  }
+.lead {
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 48px;
+  }
+.chapter {
+    margin-bottom:44px;
+    opacity:0;
+    transform:translateY(20px);
+  }
+.chapter h2 {
+    font-size:22px;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+.chapter .kicker {
+    font-size:13px;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+.chapter p {
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+.chapter blockquote {
+    margin:28px 0;
+    padding:4px 0 4px 20px;
+    border-left:3px solid var(--green);
+    font-size:18px;
+    font-style:italic;
+    color:var(--ink);
+  }
+.video-cta {
+    max-width:var(--max);
+    margin:24px auto 72px;
+    padding:0 24px;
+  }
+.video-cta .label {
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+.video-cta a {
+    display:flex;
+    align-items:center;
+    gap:20px;
+    background:var(--ink);
+    border-radius:16px;
+    overflow:hidden;
+    text-decoration:none;
+    color:#fff;
+    transition:transform 180ms ease, box-shadow 180ms ease;
+  }
+.video-cta a:hover {
+    transform:translateY(-3px);
+    box-shadow:0 16px 32px rgba(27,27,27,0.18);
+  }
+.video-cta .thumb-wrap {
+    position:relative;
+    flex:none;
+    width:44%;
+    aspect-ratio:16/9;
+  }
+.video-cta .thumb-wrap img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+.video-cta .play {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+.video-cta .play span {
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+.video-cta .play svg {width:20px; height:20px; color:var(--ink);}
+.video-cta .vtext {padding:16px 24px 16px 0;}
+.video-cta .vtitle {font-weight:700; font-size:16px; margin:0 0 6px;}
+.video-cta .vsub {font-size:13px; color:#c7c7c2; margin:0;}
+.book-inline {
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin:28px 0;
+    padding:14px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:3px solid var(--green);
+    border-radius:14px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform 180ms ease, box-shadow 180ms ease;
+  }
+.book-inline:hover {
+    transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(27,27,27,0.1);
+  }
+.book-inline .cover {
+    flex:none;
+    width:52px;
+    height:78px;
+    object-fit:cover;
+    border-radius:4px;
+    box-shadow:0 3px 8px rgba(27,27,27,0.2);
+  }
+.book-inline .info {flex:1; min-width:0;}
+.book-inline .tag {
+    display:block;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--green-dark);
+    margin:0 0 4px;
+  }
+.book-inline .btitle {display:block; font-weight:600; font-size:15px; margin:0 0 2px;}
+.book-inline .bauthor {display:block; font-size:13px; color:var(--muted);}
+.book-inline .barrow {flex:none; color:var(--muted); font-size:14px;}
+.back-links {
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    max-width:var(--max);
+    margin:0 auto 64px;
+    padding:0 24px;
+  }
+.back-links a {
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--ink);
+  }
+.back-links a:hover {color:var(--green-dark);}
+footer {
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+  }
+footer a {color:#c7c7c2; opacity:0.85; text-decoration:none;}
+footer a:hover {opacity:1; text-decoration:underline;}
+@media (max-width:560px) {
+    .video-cta a{flex-direction:column;}
+    .video-cta .thumb-wrap{width:100%;}
+    .video-cta .vtext{padding:16px 20px 20px;}
+  }
+
+/* --- Bausteine, die nur einzelne Artikel mitbrachten --- */
+.chapter .video-hint {
+    font-size:13.5px;
+    font-style:italic;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 0 0;
+    padding:10px 0 0 14px;
+    border-left:2px solid var(--line);
+  }
+.episodes {
+    max-width:var(--max);
+    margin:0 auto 56px;
+    padding:0 24px;
+  }
+.episodes .label {
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+.episode-list {
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+.episode-list a {
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 16px;
+    text-decoration:none;
+    color:var(--ink);
+    font-size:14.5px;
+    line-height:1.4;
+    transition:transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+.episode-list a:hover {
+    transform:translateY(-2px);
+    box-shadow:0 12px 28px rgba(27,27,27,0.08);
+    border-color:var(--green);
+  }
+.episode-list .ep-num {
+    flex:none;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:var(--green);
+    color:var(--ink);
+    font-weight:700;
+    font-size:12.5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+.episode-list .ep-title {flex:1; min-width:0;}
+.article-image {
+    max-width:var(--max);
+    margin:40px auto 0;
+    padding:0 24px;
+    opacity:0;
+    transform:translateY(16px);
+  }
+.article-image img {
+    width:100%;
+    display:block;
+    border-radius:14px;
+    box-shadow:0 20px 40px rgba(27,27,27,0.14);
+  }
+.article-image figcaption {
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.5;
+    margin:10px 2px 0;
+  }
+.chapter .stats {
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:12px;
+    margin:24px 0;
+  }
+.chapter .stats div {
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+.chapter .stats .num {
+    font-size:20px;
+    font-weight:700;
+    color:var(--green-dark);
+    display:block;
+  }
+.chapter .stats .lbl {
+    font-size:12.5px;
+    color:var(--muted);
+  }
+.episodes h2 {
+    font-size:19px;
+    margin:0 0 16px;
+  }
+.episodes ol {
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+.episodes li {
+    display:flex;
+    gap:12px;
+    align-items:baseline;
+    font-size:14.5px;
+    line-height:1.5;
+    padding:12px 16px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+.episodes .num {
+    flex:none;
+    font-weight:700;
+    color:var(--green-dark);
+    font-size:13px;
+  }
+.episodes a {
+    color:var(--ink);
+    text-decoration:none;
+    font-weight:600;
+  }
+.episodes a:hover {color:var(--green-dark); text-decoration:underline;}
+
+/* --- Anpassungen fuer aus Markdown erzeugte Artikel --- */
+/* Markdown verpackt Zitatinhalte in einen zusaetzlichen Absatz. Der Absatz
+   soll dabei keine eigenen Abstaende beisteuern, damit das Zitat exakt so
+   aussieht wie in den frueher handgeschriebenen Artikeln. */
+.chapter blockquote p {
+    margin: 0;
+  }

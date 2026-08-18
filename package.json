@@ -4,6 +4,7 @@
   "private": true,
   "description": "marschbefehl.com — statische Webseite + Netlify Functions (YouTube-Daten)",
   "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
     "netlify-cli": "^27.1.1"
   }
 }

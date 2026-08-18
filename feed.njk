@@ -1,0 +1,23 @@
+---
+permalink: /feed.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Zeitreise Seelower Höhen — Artikel</title>
+    <link>https://marschbefehl.com/artikel/</link>
+    <description>Hintergründe zu den Ereignissen und Themen aus den Dokumentationen.</description>
+    <language>de</language>
+    <atom:link href="https://marschbefehl.com/feed.xml" rel="self" type="application/rss+xml"/>
+{%- for eintrag in collections.artikel %}
+    <item>
+      <title>{{ eintrag.data.titel }}</title>
+      <link>https://marschbefehl.com{{ eintrag.url }}</link>
+      <guid isPermaLink="true">https://marschbefehl.com{{ eintrag.url }}</guid>
+      <pubDate>{{ eintrag.data.datum | datumRfc }}</pubDate>
+      <description>{{ eintrag.data.beschreibung }}</description>
+    </item>
+{%- endfor %}
+  </channel>
+</rss>
