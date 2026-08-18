@@ -5,6 +5,18 @@
    zusammen mit <link rel="stylesheet" href="/assets/nav.css">.
    ========================================================================== */
 (function(){
+  // Verhindert, dass Google & Co. Vorschau-/Test-Adressen (Netlify-Branch-Deploys,
+  // localhost, etc.) indexieren. Nur die echte Domain darf durch. Muss client-
+  // seitig laufen, weil die meisten Seiten als statisches HTML durchgereicht
+  // werden (Eleventy verarbeitet nur artikel/*.md), ein serverseitiges "nur bei
+  // Nicht-Produktion" ist dafuer nicht ohne Umbau aller Seiten moeglich.
+  if(!/(^|\.)marschbefehl\.com$/.test(location.hostname)){
+    var meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+  }
+
   var NAV_ITEMS = [
     {href:'/index.html',        label:'Start'},
     {href:'/videos.html',       label:'Videos'},
