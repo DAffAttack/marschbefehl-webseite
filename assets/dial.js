@@ -14,7 +14,6 @@
     {label:'Videos', href:'/videos.html'},
     {label:'Artikel', href:'/artikel/index.html'},
     {label:'Karte', href:'/karte.html'},
-    {label:'Führungen', href:'/fuehrungen.html'},
     {label:'Literatur', href:'/quellen.html'},
     {label:'Unterstützen', href:'/unterstuetzen.html'},
     {label:'Kontakt', href:'/kontakt.html'},
