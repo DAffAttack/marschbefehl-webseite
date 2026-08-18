@@ -11,6 +11,7 @@
     {href:'/artikel/index.html',label:'Artikel', prefix:'/artikel'},
     {href:'/unterstuetzen.html',label:'Unterstützen'},
     {href:'/karte.html',        label:'Karte'},
+    {href:'/fuehrungen.html',   label:'Führungen'},
     {href:'/quellen.html',      label:'Literatur'},
     {href:'/kooperationen.html',label:'Kooperationen'},
     {href:'/kontakt.html',      label:'Kontakt'}

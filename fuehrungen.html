@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Führungen – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Geführte Touren zu den Schauplätzen der Schlacht um die Seelower Höhen am Oderbruch – vor Ort buchen.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:760px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  main{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 36px);
+    margin:0 0 12px;
+  }
+  main > p.intro{
+    font-size:16px;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 0 40px;
+  }
+
+  /* -----------------------------------------------------------------
+     EVENTIM.Light-Einbindung. Shop-ID: 6a84a755956ff16800befb44
+     Code stammt original aus dem EVENTIM.Light-Dashboard
+     (Shop -> Shop Einbindung), unveraendert uebernommen.
+     ----------------------------------------------------------------- */
+  .shop-embed{
+    min-height:280px;
+  }
+  .shop-embed iframe{
+    display:block;
+  }
+  /* Zeigt sich nur, falls das iFrame aus irgendeinem Grund leer bleibt
+     (z.B. blockierte Drittanbieter-Skripte) — via JS eingeblendet. */
+  .shop-fallback{
+    display:none;
+    border:1px dashed var(--line);
+    border-radius:14px;
+    padding:48px 32px;
+    text-align:center;
+    background:#fff;
+  }
+  .shop-fallback.is-visible{display:block;}
+  .shop-fallback .icon{
+    font-size:32px;
+    margin-bottom:12px;
+  }
+  .shop-fallback h2{
+    font-size:19px;
+    margin:0 0 8px;
+  }
+  .shop-fallback p{
+    font-size:14px;
+    color:var(--muted);
+    line-height:1.6;
+    max-width:440px;
+    margin:0 auto;
+  }
+  .shop-fallback a{
+    color:var(--green-dark);
+    font-weight:600;
+    text-decoration:none;
+  }
+  .shop-fallback a:hover{text-decoration:underline;}
+
+  .info-strip{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin:40px 0;
+    padding:20px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .info-strip .item{
+    flex:1 1 160px;
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .info-strip .item strong{
+    display:block;
+    color:var(--ink);
+    font-size:14px;
+    margin-bottom:2px;
+  }
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+    margin-top:56px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <h1>Führungen vor Ort</h1>
+  <p class="intro">Geführte Touren zu den Schauplätzen der Schlacht um die Seelower Höhen am Oderbruch – vor Ort, dort wo Geschichte stattgefunden hat.</p>
+
+  <div class="info-strip">
+    <div class="item"><strong>Zahlung</strong>Ausschließlich online im Voraus</div>
+    <div class="item"><strong>Plätze</strong>Begrenzt, nach Verfügbarkeit</div>
+    <div class="item"><strong>Fragen</strong><a href="/kontakt.html">Kontakt aufnehmen</a></div>
+  </div>
+
+  <div class="shop-embed">
+    <div style="padding: 0;"><iframe id="eventim-light-iframe-v2-6a84a755956ff16800befb44" src="https://www.eventim-light.com/de/a/6a84a755956ff16800befb44/iframe/" width="100%" data-scroll="true" data-scroll-offset-y="0" scrolling="no" frameborder="0" name="eventim-light-iframe-v2-6a84a755956ff16800befb44"></iframe><script type="text/javascript" src="https://www.eventim-light.com/de/a/6a84a755956ff16800befb44/public/iframe/el-shop.js"></script></div>
+  </div>
+
+  <div class="shop-fallback" id="shop-fallback">
+    <div class="icon">🗺️</div>
+    <h2>Shop konnte nicht geladen werden</h2>
+    <p>Möglicherweise blockiert ein Werbe-/Skriptblocker die Buchungsseite. Bei Fragen zu Terminen gerne <a href="/kontakt.html">Kontakt aufnehmen</a>.</p>
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // Zeigt den Ersatz-Hinweis, falls das el-shop.js-Skript nicht laedt
+  // (z.B. durch einen Werbe-/Skriptblocker). Cross-Origin-iFrames lassen
+  // sich aus Sicherheitsgruenden nicht von aussen auf ihren Inhalt pruefen,
+  // deshalb hier nur der zuverlaessig testbare Fall: das Ladefehler-Ereignis
+  // des externen Skripts selbst.
+  var script = document.querySelector('.shop-embed script');
+  var fallback = document.getElementById('shop-fallback');
+  if(!script || !fallback) return;
+  script.addEventListener('error', function(){
+    fallback.classList.add('is-visible');
+  });
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
