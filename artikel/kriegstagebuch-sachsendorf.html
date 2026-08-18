@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kriegstagebuch aus Sachsendorf: Ein Zivilist berichtet vom Oderbruch 1945 – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Das Tagebuch des Gutsbesitzers Hans Schmelzer aus Sachsendorf im Oderbruch: von den ersten Flüchtlingstrecks im Januar 1945 über die Schlacht um die Seelower Höhen bis zum Kessel von Halbe.">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#84a83c;
+    --ink:#1b1b1b;
+    --ink-soft:#303030;
+    --paper:#fafaf8;
+    --line:#e6e5e0;
+    --muted:#7a7a76;
+    --max:700px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  .hero{
+    background:var(--ink);
+    color:#fff;
+    min-height:64vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:64px 24px;
+    position:relative;
+    overflow:hidden;
+  }
+  #terrain-canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index:0;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    background:radial-gradient(ellipse at 50% 40%, rgba(27,27,27,0) 0%, rgba(27,27,27,0.5) 70%, rgba(27,27,27,0.88) 100%);
+    pointer-events:none;
+  }
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    max-width:780px;
+  }
+  .hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--green);
+    margin:0 0 18px;
+  }
+  .hero h1{
+    font-size:clamp(28px, 5vw, 46px);
+    font-weight:700;
+    letter-spacing:-0.02em;
+    line-height:1.15;
+    margin:0 0 18px;
+  }
+  .hero p{
+    font-size:clamp(15px, 2vw, 18px);
+    color:#c7c7c2;
+    max-width:560px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  main.article{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:64px 24px 24px;
+  }
+  .lead{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 48px;
+  }
+  .chapter{
+    margin-bottom:44px;
+    opacity:0;
+    transform:translateY(20px);
+  }
+  .chapter h2{
+    font-size:22px;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .chapter .kicker{
+    font-size:13px;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .chapter p{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+  .chapter blockquote{
+    margin:28px 0;
+    padding:4px 0 4px 20px;
+    border-left:3px solid var(--green);
+    font-size:18px;
+    font-style:italic;
+    color:var(--ink);
+  }
+  .chapter .video-hint{
+    font-size:13.5px;
+    font-style:italic;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 0 0;
+    padding:10px 0 0 14px;
+    border-left:2px solid var(--line);
+  }
+
+  .episodes{
+    max-width:var(--max);
+    margin:0 auto 8px;
+    padding:0 24px;
+  }
+  .episodes h2{
+    font-size:19px;
+    margin:0 0 16px;
+  }
+  .episodes ol{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .episodes li{
+    display:flex;
+    gap:12px;
+    align-items:baseline;
+    font-size:14.5px;
+    line-height:1.5;
+    padding:12px 16px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+  .episodes .num{
+    flex:none;
+    font-weight:700;
+    color:var(--green-dark);
+    font-size:13px;
+  }
+  .episodes a{
+    color:var(--ink);
+    text-decoration:none;
+    font-weight:600;
+  }
+  .episodes a:hover{color:var(--green-dark); text-decoration:underline;}
+
+  .video-cta{
+    max-width:var(--max);
+    margin:32px auto 72px;
+    padding:0 24px;
+  }
+  .video-cta .label{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .video-cta a{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    background:var(--ink);
+    border-radius:16px;
+    overflow:hidden;
+    text-decoration:none;
+    color:#fff;
+    transition:transform 180ms ease, box-shadow 180ms ease;
+  }
+  .video-cta a:hover{
+    transform:translateY(-3px);
+    box-shadow:0 16px 32px rgba(27,27,27,0.18);
+  }
+  .video-cta .thumb-wrap{
+    position:relative;
+    flex:none;
+    width:44%;
+    aspect-ratio:16/9;
+  }
+  .video-cta .thumb-wrap img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .video-cta .play{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .video-cta .play span{
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .video-cta .play svg{width:20px; height:20px; color:var(--ink);}
+  .video-cta .vtext{padding:16px 24px 16px 0;}
+  .video-cta .vtitle{font-weight:700; font-size:16px; margin:0 0 6px;}
+  .video-cta .vsub{font-size:13px; color:#c7c7c2; margin:0;}
+
+  .back-links{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    max-width:var(--max);
+    margin:0 auto 64px;
+    padding:0 24px;
+  }
+  .back-links a{
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .back-links a:hover{color:var(--green-dark);}
+
+  footer{
+    background:var(--ink-soft);
+    color:#c7c7c2;
+    text-align:center;
+    padding:36px 24px;
+    font-size:13px;
+  }
+  footer a{color:#c7c7c2; opacity:0.85; text-decoration:none;}
+  footer a:hover{opacity:1; text-decoration:underline;}
+
+  @media (max-width:560px){
+    .video-cta a{flex-direction:column;}
+    .video-cta .thumb-wrap{width:100%;}
+    .video-cta .vtext{padding:16px 20px 20px;}
+    .episodes li{flex-direction:column; gap:2px;}
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<section class="hero">
+  <canvas id="terrain-canvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">Sachsendorf, Oderbruch · Januar–April 1945</p>
+    <h1>Kriegstagebuch aus Sachsendorf – ein Zivilist berichtet</h1>
+    <p>Wie ein kleines Gut im Oderbruch zwischen Flüchtlingstrecks, brennenden Scheunen und der Schlacht um die Seelower Höhen zur Frontstellung wurde – erzählt nach dem Tagebuch des Gutsbesitzers Hans Schmelzer.</p>
+  </div>
+</section>
+
+<main class="article">
+  <p class="lead">Sachsendorf, ein Gut südwestlich von Küstrin, liegt im Januar 1945 noch tief verschneit und ahnungslos im Oderbruch. Vier Monate später ist davon kaum mehr etwas übrig. Was dazwischen geschah, hat der Gutsbesitzer Hans Schmelzer in einem Tagebuch festgehalten – ein seltenes ziviles Zeugnis der Schlacht um die Seelower Höhen, das dieser Artikel entlang der sechsteiligen Videoreihe nacherzählt.</p>
+
+  <section class="chapter">
+    <h2>Winter an der Oder: Wie die Front nach Sachsendorf kam</h2>
+    <p class="kicker">Flüchtlingsströme, Kosaken-Quartiere und die ersten Schüsse</p>
+    <p>Schmelzers Aufzeichnungen beginnen am 26. Januar 1945: Bei Frost von minus zehn Grad füllen sich die Straßen um Sachsendorf mit Flüchtlingswagen aus den Ostprovinzen, auf dem Gut wird eine Kosakenabteilung samt Pferden einquartiert. Am 30. Januar geraten vier Gespanne des Gutes auf dem Weg zum Monopolamt in Küstrin unvermittelt unter Beschuss sowjetischer Panzerspitzen, die der eigenen Front weit vorausgeeilt sind – zwei Fuhrleute bleiben tagelang vermisst. Einen Tag später überschreiten sowjetische Truppen bei Kienitz die zugefrorene Oder und bilden einen ersten Brückenkopf, nur sechzig Kilometer vor Berlin.</p>
+    <p>Ab dem 1. Februar wird der Geschützdonner täglich lauter, nachts steht der Himmel jenseits der Oder rot von Bränden. Am 3. Februar erreicht deutsche Artillerie das Nachbardorf Reitwein, das tags zuvor kurzzeitig in sowjetischer Hand war. Der Krieg ist im Oderbruch angekommen.</p>
+    <blockquote>Die Nachrichten der in Mengen über die Oder zurückflutenden Soldaten, die nachts jenseits der Oder aufleuchtenden Brände, Schauergeschichten der Flüchtlinge – all das beunruhigt die Bevölkerung.</blockquote>
+    <p class="video-hint">Eine Kartenanimation im Video zeigt, wie schnell sich die sowjetische Frontlinie im Januar 1945 auf das Oderbruch zubewegte.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Aufbruch nach Westen – und die Rückkehr zum verwaisten Hof</h2>
+    <p class="kicker">Der Treck verlässt Sachsendorf, der Gutsherr bleibt</p>
+    <p>In der Nacht zum 5. Februar fällt die Entscheidung: Ohne einen offiziellen Räumungsbefehl abzuwarten, bricht der Treck des Gutes auf – fünfzig Gespanne, rund 395 Menschen. Nachdem Berlin, das gleichnamige Dorf im Oderbruch, keinen Platz mehr bietet, findet der Treck schließlich in Petershagen Unterschlupf. Schmelzer selbst kehrt jedoch immer wieder allein nach Sachsendorf zurück, um nach dem zurückgelassenen Vieh zu sehen – rund 2.000 Schafe, 350 Rinder, 300 Schweine, dazu ausländische Zwangsarbeiter, die im Dorf bleiben mussten. Was er dort vorfindet, beschreibt er nüchtern.</p>
+    <blockquote>Das Dorf war wie ausgestorben, der Hof fürchterlich verwüstet zurückgelassen. Die Dorfstraße war leer und öde – kein Lichtschein, kein Hund auf der Straße, kein Kind, kein Ton.</blockquote>
+    <p>In den folgenden Tagen organisiert er die Rettung der Tiere: Schafherden wandern nach Behlendorf und Heinersdorf, Ochsengespanne nach Wilmersdorf, während im Dorf selbst immer mehr Militär einquartiert wird, darunter eine Abteilung der Fahnenjunkerschule Potsdam. Am 9. Februar wird auf dem Friedhof von Sachsendorf mit den ersten gefallenen Soldaten begonnen. In diesen Tagen wird auch Oberst Hans-Ulrich Rudel, mit über 500 abgeschossenen Panzern der erfolgreichste deutsche Kampfflieger des Krieges, bei Friedersdorf verwundet.</p>
+    <p class="video-hint">Das Video zeigt zusätzlich historisches Bildmaterial zur Fahnenjunkerschule Potsdam und zu den Kämpfen um Reitwein.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Das Dorf unter Beschuss: Evakuierung von Mensch und Vieh</h2>
+    <p class="kicker">Brennende Scheunen, gesperrte Straßen, ein Betretungsverbot für Zivilisten</p>
+    <p>Ab Mitte Februar verschärft sich die Lage. Am 13. Februar setzt Bordwaffenbeschuss eines sowjetischen Fliegers die große Scheune des Gutes in Brand – mit ihr 5.000 Zentner Weizen und Steinkohle. Sie brennt tagelang und wird nachts durch ihr Glimmen selbst zum Zielpunkt für russische Flieger. Bomben zerstören das Dach des Gutshauses, während weiter täglich Gespanne Getreide und Vieh aus dem Dorf abtransportieren müssen. Am 24. Februar verbietet ein Divisionsbefehl Zivilpersonen das Betreten Sachsendorfs überhaupt – das Dorf wird zur reinen Frontstellung, Flak und schwere Batterien beziehen entlang der Dorfstraße Stellung: Sachsendorf soll unter allen Umständen gehalten werden.</p>
+    <p>Ende Februar ordnet der Landrat die Räumung von 42 Ortschaften des Kreises an, jeder Evakuierte darf 50 Kilogramm Gepäck mitnehmen. Noch immer aber hofft die Kreisleitung in Frankfurt/Oder auf eine Frühjahrsbestellung der Felder im Oderbruch – obwohl die Front längst mitten durchs Dorf verläuft.</p>
+    <blockquote>Wenn schon die Hauptsache bei allem wäre, dass Grund und Boden erhalten bleiben und somit die Heimat bliebe – nur ein Kellerloch und der nackte Boden übrig, so sollte es schon gut sein, nur nicht heimatlos im Lande umherirren müssen.</blockquote>
+    <p class="video-hint">Im Video erzählt der Kanalbetreiber ausführlicher von den einzelnen zerstörten Gehöften und zeigt zusätzliches Bildmaterial aus der Region.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Panzerschlacht an der Reichsstraße 112 und der Fall Küstrins</h2>
+    <p class="kicker">8. Garde-Armee gegen Panzerregiment Brandenburg</p>
+    <p>Am 2. März startet die sowjetische 8. Garde-Armee nach dem Fall von Posen einen Großangriff entlang der Bahnlinie zwischen Neu Mahlisch und Reitwein: Rund 120 Panzer des XI. Panzerkorps – T-34/85, KW-2 und IS-2 „Josef Stalin“ – überrollen zunächst die deutsche Linie. Deutsches Sperrfeuer trennt die sowjetische Infanterie jedoch von ihren Panzern; das Panzerregiment Brandenburg vernichtet mit Panzerfäusten rund zehn sowjetische Panzer, bevor die Sowjets ihre Geländegewinne dennoch größtenteils halten können. Zwei Tage später melden Rückkehrer aus dem Oderbruch, russische Panzer seien bis Ratstock vorgedrungen, der Beschuss auf Sachsendorf werde stetig stärker.</p>
+    <p>Am 22. März durchbrechen die Sowjets bei Küstrin und Lebus die deutschen Linien, unterstützt von hundert Panzern und sechs Infanteriedivisionen – in der Nacht darauf werden zwischen Ratstock und Sachsendorf 17 zerschossene sowjetische Panzer gezählt. Ende März fällt Küstrin endgültig; das Oberkommando der Wehrmacht vermerkt den Verlust im Kriegstagebuch nur mit einem einzigen dürren Satz. Schmelzer notiert selbst den auffälligen Kontrast zur Berichterstattung über andere Frontabschnitte, so nah vor Berlin.</p>
+    <p class="video-hint">Das Video ordnet den Panzerangriff vom 2. März zusätzlich in den größeren Verlauf der Kämpfe um Küstrin ein, mit Kartenmaterial zur Reichsstraße 112.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Trommelfeuer: Abschied von der Familie</h2>
+    <p class="kicker">Die Großoffensive vom 16. April beginnt</p>
+    <p>Ende März steht Gut Sachsendorf bereits in Trümmern – Scheunen, Pferdestall und Brennerei sind abgebrannt, täglich werfen Flugzeuge Phosphorkanister auf die verbliebenen Gebäude. Am 31. März trifft Schmelzer die schwerste Entscheidung: Seine Familie wird per Autotransport nach Spangenberg in Sicherheit gebracht, während er selbst bei seinen Leuten und dem Treck bleibt.</p>
+    <blockquote>Der Gedanke, die Familie vielleicht niemals wiederzusehen, liegt schwer – sie aber schutzlos den Russen preisgegeben zu wissen, wäre noch ärger.</blockquote>
+    <p>Mitte April erhält er selbst einen Einberufungsbefehl zum Feldjägerregiment, den seine Leute mehrfach hinauszögern lassen – sie fühlen sich ohne ihn schutzlos. Am 16. April um vier Uhr morgens beginnt mit einem „unvorstellbaren Trommelfeuer“ die sowjetische Großoffensive über Oder und Neiße, der eigentliche Beginn der Schlacht um die Seelower Höhen. Sachsendorf liegt im unmittelbaren Zentrum: Russische Tiefflieger fliegen so niedrig über die Felder, dass man ihre Gesichter erkennen kann, das Dorf wird zeitweise von sowjetischen Truppen erreicht, dann wieder zurückgeworfen. Am 19. April, mit den Russen bereits bei Wilmersdorf, erwirkt der Landrat für Schmelzer die endgültige Freistellung – um sieben Uhr bricht der Treck zum letzten Mal auf.</p>
+    <p class="video-hint">Das Video schildert die Nacht vom 16. April mit weiteren O-Tönen aus dem Originaltagebuch und historischem Kartenmaterial zur Offensive.</p>
+  </section>
+
+  <section class="chapter">
+    <h2>Der Ausbruch und der Kessel von Halbe</h2>
+    <p class="kicker">Der letzte Marsch eines Trecks aus dem Oderbruch</p>
+    <p>Über Fürstenwalde und das kurz zuvor durch Luftangriffe zerstörte Storkow zieht der auf nur noch dreißig Fuhrwerke geschrumpfte Treck weiter westwärts, ständig unter Beschuss und Fliegerangriffen. Am 27. April scheitert der Versuch, eine wichtige Brücke zu überqueren, unter chaotischem sowjetischem Panzerbeschuss.</p>
+    <blockquote>Schreiende Menschen, sich bäumende Pferde, brechende Deichseln, umgestürzte Wagen boten ein Bild wüsten Durcheinanders.</blockquote>
+    <p>Am 28. April erhält der Treck den Befehl, die Fahrzeuge zurückzulassen und zu Fuß über eine von Panzern freigekämpfte Passage auszubrechen. Aus Sorge, man werde ihn als Gutsbesitzer erkennen und töten, drängen Schmelzers Leute ihn, sich vom Treck zu entfernen. Der Ausbruchsversuch scheitert unter Beschuss durch Leuchtspurmunition, die Kolonne löst sich auf. Der letzte Tagebucheintrag datiert auf den 29. April 1945 – danach gerät Hans Schmelzer wie tausende andere Flüchtlinge und Soldaten der Heeresgruppe Weichsel in sowjetische Gefangenschaft, mitten im Kessel von Halbe, dem blutigsten Kapitel der letzten Kriegswochen südlich Berlins.</p>
+    <p class="video-hint">Das letzte Video der Reihe kündigt eine eigene Fortsetzung zum Kessel von Halbe an und zeigt zusätzliches Kartenmaterial zur Fluchtroute des Trecks.</p>
+  </section>
+
+  <section class="episodes">
+    <h2>Folgenübersicht</h2>
+    <ol>
+      <li><span class="num">1</span> <a href="https://www.youtube.com/watch?v=z4hbRO0TYBk" target="_blank" rel="noopener">Sachsendorf wird zum Frontgebiet vor den Seelower Höhen (1)</a></li>
+      <li><span class="num">2</span> <a href="https://www.youtube.com/watch?v=3KeUw_Ia-AU" target="_blank" rel="noopener">Kriegstagebuch aus Sachsendorf – Bericht eines Zivilisten Feb. 1945 (2)</a></li>
+      <li><span class="num">3</span> <a href="https://www.youtube.com/watch?v=A6oSFIHLFaM" target="_blank" rel="noopener">Sachsendorf im Zentrum des Schlachtfeldes – Bericht eines Zivilisten (3)</a></li>
+      <li><span class="num">4</span> <a href="https://www.youtube.com/watch?v=r7aRcn9jzPY" target="_blank" rel="noopener">Kriegstagebuch aus Sachsendorf (4) – Kämpfe im Oderbruch, März 1945</a></li>
+      <li><span class="num">5</span> <a href="https://www.youtube.com/watch?v=o3v6iPxFewM" target="_blank" rel="noopener">Kriegstagebuch aus Sachsendorf (5) – Kämpfe im Oderbruch, April 1945</a></li>
+      <li><span class="num">6</span> <a href="https://www.youtube.com/watch?v=qNIKUt04BKQ" target="_blank" rel="noopener">Kriegstagebuch aus Sachsendorf (6) – von den Seelower Höhen bis in den Kessel von Halbe</a></li>
+    </ol>
+  </section>
+</main>
+
+<div class="video-cta">
+  <p class="label">Die vollständige Dokumentation</p>
+  <a href="https://www.youtube.com/watch?v=z4hbRO0TYBk" target="_blank" rel="noopener">
+    <div class="thumb-wrap">
+      <img src="https://i.ytimg.com/vi/z4hbRO0TYBk/maxresdefault.jpg" alt="" loading="lazy">
+      <div class="play"><span>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 8L16 12L9 16V8Z" fill="currentColor"/></svg>
+      </span></div>
+    </div>
+    <div class="vtext">
+      <p class="vtitle">Kriegstagebuch aus Sachsendorf – die ganze sechsteilige Reihe</p>
+      <p class="vsub">Auf YouTube ansehen →</p>
+    </div>
+  </a>
+</div>
+
+<div class="back-links">
+  <a href="index.html">&#8592; Alle Artikel</a>
+  <a href="/quellen.html">Alle Quellen &amp; Buchtipps &#8594;</a>
+</div>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas = document.getElementById('terrain-canvas');
+  var hero = document.querySelector('.hero');
+  if(!canvas || typeof THREE === 'undefined') return;
+
+  var renderer;
+  try{
+    renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  }catch(e){ return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 2.3, 5.2);
+  camera.lookAt(0, -0.9, -1);
+
+  var geo = new THREE.PlaneGeometry(18, 13, 56, 40);
+  var mat = new THREE.MeshBasicMaterial({color:0xA1C74F, wireframe:true, transparent:true, opacity:0.24});
+  var terrain = new THREE.Mesh(geo, mat);
+  terrain.rotation.x = -Math.PI/2.3;
+  terrain.position.set(0, -1.9, -2);
+  scene.add(terrain);
+
+  function terrainHeight(x, y, t){
+    var h = 0;
+    h += Math.sin(x*0.28 + 1.7 + Math.sin(t*0.05)*0.7) * Math.cos(y*0.22 + 0.4 + Math.cos(t*0.04)*0.6) * 0.95;
+    h += Math.sin(x*0.52 - y*0.33 + 3.1 + t*0.08) * 0.42;
+    h += Math.cos(x*0.83 + y*0.66 - 1.2 + Math.sin(t*0.065)*0.9) * 0.22;
+    h += Math.sin(x*1.5 + y*1.2 + 4.0 + t*0.1) * 0.09;
+    return h;
+  }
+
+  function resize(){
+    var w = hero.clientWidth, h = hero.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var clock = new THREE.Clock();
+  var posAttr = geo.attributes.position;
+
+  function animate(){
+    var t = reduceMotion ? 0 : clock.getElapsedTime();
+    for(var i=0;i<posAttr.count;i++){
+      var x = posAttr.getX(i), y = posAttr.getY(i);
+      posAttr.setZ(i, terrainHeight(x, y, t));
+    }
+    posAttr.needsUpdate = true;
+    renderer.render(scene, camera);
+    if(!reduceMotion){
+      requestAnimationFrame(animate);
+    }
+  }
+  animate();
+})();
+
+(function(){
+  if(typeof gsap === 'undefined') return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  gsap.set('.hero-inner > *', {opacity:0, y:16});
+  gsap.to('.hero-inner > *', {opacity:1, y:0, duration:0.9, ease:'power2.out', stagger:0.12, delay:0.1});
+
+  if(reduceMotion){
+    document.querySelectorAll('.chapter').forEach(function(c){ c.style.opacity = 1; c.style.transform = 'none'; });
+    return;
+  }
+
+  if(typeof ScrollTrigger !== 'undefined'){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('.chapter').forEach(function(chapter){
+      gsap.to(chapter, {
+        opacity:1, y:0, duration:0.7, ease:'power2.out',
+        scrollTrigger:{trigger:chapter, start:'top 85%'}
+      });
+    });
+    gsap.fromTo('.video-cta a', {opacity:0, y:24}, {
+      opacity:1, y:0, duration:0.6, ease:'power2.out',
+      scrollTrigger:{trigger:'.video-cta', start:'top 90%'}
+    });
+    gsap.fromTo('.episodes li', {opacity:0, y:12}, {
+      opacity:1, y:0, duration:0.5, ease:'power2.out', stagger:0.06,
+      scrollTrigger:{trigger:'.episodes', start:'top 90%'}
+    });
+  }
+})();
+</script>
+<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
