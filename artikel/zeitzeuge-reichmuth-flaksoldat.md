@@ -25,11 +25,11 @@ In Friedrichsfelde Ost, in einer Gartenkolonie am Stadtrand, bezieht Reichmuths 
 
 Schon nach einer Woche in Berlin erlebt die Einheit im Januar 1944 einen schweren Luftangriff. Eine Luftmine reißt den Zugführer, der aus der Deckung schaut, tödlich; ein sowjetischer Kriegsgefangener, der beim Löschen von Brandbomben half, wird von derselben Explosion erfasst.
 
-> „Am nächsten Tag haben wir von ihm nur noch Fetzen gefunden."
+> „Am nächsten Tag haben wir von ihm nur noch Fetzen gefunden.“
 
 Über das restliche Jahr 1944 verlegt die Batterie mehrfach: zum Objektschutz des Siemens-Werks in Lichtenberg, zum Flugplatz Berlin-Schönefeld, zum Panzermotorenwerk in Genshagen bei Ludwigsfelde – dort zunächst durch künstlichen Nebel geschützt, bis das Werk am 8. August 1944 unvernebelt bleibt und bombardiert wird. Beim schwersten Angriff, den Reichmuth persönlich erlebt, schlagen bei Erkner rund um die eigene Stellung zahlreiche Bomben ein.
 
-> „Es war wie ein Erdbeben – die Erde hat gebebt."
+> „Es war wie ein Erdbeben – die Erde hat gebebt.“
 
 Die Stellung wird verschüttet, die Besatzung bleibt unverletzt.
 
@@ -49,7 +49,7 @@ Reichmuths Batterie bezieht Stellung auf freiem Feld vor Neulewin, zwischen Kers
 
 Der Munitionsverbrauch ist enorm; Nachschub muss von einem nahen Gutshof herangeholt werden. Während die übrige Geschützbesatzung dafür zurückgeschickt wird, bleibt Reichmuth als Ladekanonier mit einem Kameraden an der Waffe zurück. Sowjetische Granatwerfer schießen sich langsam ein – erst 100 Meter davor, dann dahinter, dann links und rechts –, bis ein Volltreffer das Geschütz zerstört. Sein Kamerad wird am Arm verwundet, Reichmuth trägt Splitterverletzungen an Hüfte und Beinen davon.
 
-> „Es wurde ganz warm am Bauch, und dann wurde mir ganz anders."
+> „Es wurde ganz warm am Bauch, und dann wurde mir ganz anders.“
 
 Über einen Panzer und einen Hauptverbandsplatz gelangt er nach Wriezen, dann in ein Lazarett im Westen – und wird bereits nach drei Tagen wieder für gesund erklärt. Bei seiner Rückkehr zur inzwischen in den nördlichen Oderbruch bei Altranft und Bad Freienwalde zurückgezogenen Batterie beginnt eine ruhigere Phase: Nur noch gelegentlich wird auf sowjetische Aufklärer geschossen. In dieser Etappenzeit meldet sich Reichmuth als Bewerber für die Reserveoffizierslaufbahn.
 
@@ -59,7 +59,7 @@ Die Entscheidung erweist sich als folgenschwer: Am 12. April 1945, sechs Tage vo
 
 ## Zusammenbruch: Kessel und Gefangennahme
 
-In Potsdam löst sich die Offiziersschule praktisch auf, noch bevor der Unterricht beginnt. Reichmuth irrt in den letzten Apriltagen 1945 zwischen Potsdam, Berlin und Brandenburg an der Havel umher und versucht vergeblich, seine Eltern zu erreichen – die Mutter war nach Wildau bei Königs Wusterhausen evakuert, der Vater in der inzwischen zur Frontstadt gewordenen Heimatstadt Forst zum Volkssturm verpflichtet. In Berlin sieht er die ersten an Laternenpfählen aufgeknüpften Gehängten, mit Schildern wie „Ich bin Verräter" oder „Vaterlandsverräter" behängt.
+In Potsdam löst sich die Offiziersschule praktisch auf, noch bevor der Unterricht beginnt. Reichmuth irrt in den letzten Apriltagen 1945 zwischen Potsdam, Berlin und Brandenburg an der Havel umher und versucht vergeblich, seine Eltern zu erreichen – die Mutter war nach Wildau bei Königs Wusterhausen evakuert, der Vater in der inzwischen zur Frontstadt gewordenen Heimatstadt Forst zum Volkssturm verpflichtet. In Berlin sieht er die ersten an Laternenpfählen aufgeknüpften Gehängten, mit Schildern wie „Ich bin Verräter“ oder „Vaterlandsverräter“ behängt.
 
 Am 20./21. April 1945 schließt sich der Ring um Potsdam: Sowjetische Verbände aus dem Süden über Luckenwalde und Treuenbrietzen treffen bei Brandenburg auf die von Norden über Oranienburg vorstoßenden Kräfte. Reichmuth, jetzt mit Volkssturm-Kameraden nahe einem Kanal eingeschlossen, erhält am 23. April ersten Kontakt mit sowjetischen Vorausabteilungen und kämpft mit Panzerfaust und Gewehr weiter. An diesem Tag schlagen in seiner Nähe Granatwerfergeschosse ein – ein Klassenkamerad verschwindet dabei spurlos, bis heute, trotz Nachfragen seiner Familie beim Roten Kreuz, ohne jede Spur.
 
@@ -73,9 +73,9 @@ Nach tagelangen, munitionsarmen Gefechten versucht die kleine Gruppe in der Nach
 
 Anfang 1948 wird er in ein Kohlerevier bei Stalinogorsk, dem heutigen Nowomoskowsk, verlegt, zur Untertagearbeit im Braunkohlebergbau bis in 100 Meter Tiefe – für den von der Malaria geschwächten Körper eine zusätzliche Belastung. Wassereinlagerungen zwingen ihn erneut ins Lazarett, mehrfach wird Flüssigkeit abpunktiert, eine Lungenentzündung droht. Erst ein Aufenthalt im Erholungslager, mit besserer Verpflegung, Vitaminen und aufmerksamer Pflege durch Krankenschwestern, bringt die Wende.
 
-> „Wer nicht arbeitet, soll auch nicht essen" – so habe das Lagermotto gelautet, erinnert sich Reichmuth: Wer arbeitsunfähig war, bekam entsprechend wenig zu essen.
+> „Wer nicht arbeitet, soll auch nicht essen“ – so habe das Lagermotto gelautet, erinnert sich Reichmuth: Wer arbeitsunfähig war, bekam entsprechend wenig zu essen.
 
-Im Herbst 1948 fällt bei einem Appell sein Name: „Reichmuth, Wolfgang Maximowitsch" – nach russischer Sitte um den Vatersnamen ergänzt. Es ist die Nachricht der bevorstehenden Entlassung.
+Im Herbst 1948 fällt bei einem Appell sein Name: „Reichmuth, Wolfgang Maximowitsch“ – nach russischer Sitte um den Vatersnamen ergänzt. Es ist die Nachricht der bevorstehenden Entlassung.
 
 <p class="video-hint">Die knapp vierjährige Gefangenschaft in der Sowjetunion – Lagerwechsel, Krankheit und Bergbau – schildert das Video in einem eigenen, deutlich ausführlicheren Erzählstrang.</p>
 
@@ -87,9 +87,9 @@ Auf ein weiteres Schulleben hat Reichmuth keine Lust mehr. 1949 beginnt er als R
 
 In den Jahrzehnten danach besucht Reichmuth mehrfach sein früheres Gefechtsfeld im Oderbruch, zunächst mit seinem in der DDR aufgewachsenen Sohn, später mit den Enkeln – auf dem Friedhof von Neulewin sucht er vergeblich nach den Gräbern gefallener Klassenkameraden. Erst um den 75. Jahrestag des Kriegsendes 2020 wächst nach seinen Worten das öffentliche Interesse an Berichten wie seinem spürbar.
 
-> „Das war ja doch verkehrt, woran du geglaubt hast – es war eigentlich schade."
+> „Das war ja doch verkehrt, woran du geglaubt hast – es war eigentlich schade.“
 
-So fasst er im Rückblick die Kriegsbegeisterung seiner Jugend zusammen. Von den Verbrechen in den Konzentrationslagern, betont er, habe die Bevölkerung während des Krieges nichts gewusst: „Das haben wir alles erst richtig erfahren nach Kriegsende."
+So fasst er im Rückblick die Kriegsbegeisterung seiner Jugend zusammen. Von den Verbrechen in den Konzentrationslagern, betont er, habe die Bevölkerung während des Krieges nichts gewusst: „Das haben wir alles erst richtig erfahren nach Kriegsende.“
 
 <p class="video-hint">Reichmuths Rückblick auf sein Leben nach 1948 und seine spätere Auseinandersetzung mit der eigenen Jugend ist im Video in voller Länge zu hören, inklusive der abschließenden Fragen der Redaktion.</p>
 
