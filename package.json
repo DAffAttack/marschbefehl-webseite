@@ -2,9 +2,12 @@
   "name": "marschbefehl-website",
   "version": "1.0.0",
   "private": true,
-  "description": "marschbefehl.com — statische Webseite + Netlify Functions (YouTube-Daten)",
+  "description": "marschbefehl.com — statische Webseite (Eleventy) + Netlify Functions (YouTube-Daten, Führungen-Buchungssystem)",
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
     "netlify-cli": "^27.1.1"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^10.7.13"
   }
 }
