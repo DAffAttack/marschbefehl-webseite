@@ -9,3 +9,6 @@ node_modules
 .env
 .env.*
 _site/
+
+# Von netlify dev automatisch erzeugt (Edge-Functions-Laufzeit), nicht versionieren
+deno.lock
