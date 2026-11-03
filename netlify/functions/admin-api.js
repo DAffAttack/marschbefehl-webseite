@@ -35,20 +35,8 @@ const LANGBESCHREIBUNG_MAX = 5000;
 const TITEL_MAX = 150;
 const ORT_MAX = 200;
 
-function passwortStimmt(eingabe) {
-  const erwartet = process.env.FUEHRUNGEN_ADMIN_PASSWORD;
-  if (!erwartet || typeof erwartet !== 'string' || erwartet.length === 0) {
-    return { konfiguriert: false, stimmt: false };
-  }
-  if (typeof eingabe !== 'string' || eingabe.length === 0) {
-    return { konfiguriert: true, stimmt: false };
-  }
-  // Zeitkonstanter Vergleich über gleich lange SHA-256-Digests, damit die Antwortzeit
-  // nichts über die Länge/den Inhalt des korrekten Passworts verrät.
-  const a = crypto.createHash('sha256').update(eingabe).digest();
-  const b = crypto.createHash('sha256').update(erwartet).digest();
-  return { konfiguriert: true, stimmt: crypto.timingSafeEqual(a, b) };
-}
+// Anmeldung seit E4 über _lib/sitzung.js: einmal Passwort -> Sitzungs-Cookie (12 h).
+const { passwortStimmt, angemeldet, tokenErzeugen, cookieSetzen, cookieLoeschen, loginGesperrt, loginFehlversuch, loginErfolg, SPERRE_MINUTEN } = require('./_lib/sitzung');
 
 function gueltigerPreis(v) {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100000;
@@ -90,23 +78,45 @@ exports.handler = async (event) => {
     return errorResponse(400, 'Ungültige Anfrage.');
   }
 
-  const pruefung = passwortStimmt(body.password);
-  if (!pruefung.konfiguriert) {
-    return errorResponse(
-      500,
-      'Der Verwaltungsbereich ist noch nicht eingerichtet: Die Umgebungsvariable FUEHRUNGEN_ADMIN_PASSWORD fehlt im Netlify-Projekt.'
-    );
-  }
-  if (!pruefung.stimmt) {
-    return errorResponse(401, 'Falsches Passwort.');
-  }
-
   const action = body.action;
 
-  try {
-    if (action === 'login') {
-      return json(200, { ok: true });
+  // Anmelden: Passwort prüfen, Sitzungs-Cookie setzen. Bremse: 5 Fehlversuche -> 15 Min. Sperre.
+  if (action === 'login') {
+    if (loginGesperrt(event)) {
+      return errorResponse(429, 'Zu viele Fehlversuche. Bitte in ' + SPERRE_MINUTEN + ' Minuten erneut versuchen.');
     }
+    const p = passwortStimmt(body.password);
+    if (!p.konfiguriert) {
+      return errorResponse(500, 'Der Verwaltungsbereich ist noch nicht eingerichtet: Die Umgebungsvariable FUEHRUNGEN_ADMIN_PASSWORD fehlt im Netlify-Projekt.');
+    }
+    if (!p.stimmt) {
+      loginFehlversuch(event);
+      return errorResponse(401, 'Falsches Passwort.');
+    }
+    loginErfolg(event);
+    return json(200, { ok: true }, { 'Set-Cookie': cookieSetzen(tokenErzeugen(), event) });
+  }
+  if (action === 'logout') {
+    return json(200, { ok: true }, { 'Set-Cookie': cookieLoeschen(event) });
+  }
+
+  const anmeldung = angemeldet(event, body);
+  if (!anmeldung.konfiguriert) {
+    return errorResponse(500, 'Der Verwaltungsbereich ist noch nicht eingerichtet: Die Umgebungsvariable FUEHRUNGEN_ADMIN_PASSWORD fehlt im Netlify-Projekt.');
+  }
+  if (!anmeldung.ok) {
+    return errorResponse(401, 'Nicht angemeldet.');
+  }
+  if (action === 'sitzung') {
+    return json(200, { ok: true, weg: anmeldung.weg });
+  }
+  if (action === 'protokoll') {
+    const state = await readState();
+    const eintraege = state.ereignisse.slice(-300).reverse();
+    return json(200, { ok: true, eintraege });
+  }
+
+  try {
 
     if (action === 'list') {
       const state = await readState();

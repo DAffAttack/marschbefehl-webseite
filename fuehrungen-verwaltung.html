@@ -539,6 +539,13 @@
         <div class="state-note">Wird geladen …</div>
       </div>
     </div>
+
+    <div class="panel">
+      <h2>Protokoll</h2>
+      <p class="panel-sub">Was im Buchungssystem passiert ist: Reservierungen, Zahlungen, Mails, Stornos, Webhook-Meldungen. Neueste zuerst, die letzten 300 Einträge.</p>
+      <button type="button" class="btn-secondary" id="protokoll-btn">Protokoll anzeigen</button>
+      <div id="protokoll-wrap" style="display:none; margin-top:12px;"></div>
+    </div>
   </div>
 </main>
 
@@ -548,7 +555,8 @@
 
 <script>
 (function(){
-  var STORAGE_KEY = 'fuehrungenAdminPw';
+  // Altlast aus der Zeit vor E4: ein evtl. noch gespeichertes Passwort aus dem Browser entfernen.
+  try { sessionStorage.removeItem('fuehrungenAdminPw'); } catch (e) { /* egal */ }
   var MAX_IMAGE_BYTES = 3 * 1024 * 1024;
   var ERLAUBTE_TYPEN = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -581,25 +589,30 @@
     return '/.netlify/functions/fuehrungen-bild?id=' + encodeURIComponent(id);
   }
 
+  // Seit E4: Sitzungs-Cookie (HttpOnly) statt Passwort je Aufruf. Der Browser schickt das
+  // Cookie automatisch mit (same-origin). Läuft die Sitzung ab, antwortet der Server 401
+  // und die Seite springt zur Anmeldung.
   function api(action, payload){
-    var pw = sessionStorage.getItem(STORAGE_KEY) || '';
-    var body = Object.assign({action:action, password:pw}, payload || {});
+    var body = Object.assign({action:action}, payload || {});
     return fetch('/.netlify/functions/admin-api', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
       body:JSON.stringify(body)
     }).then(function(res){
-      return res.json().then(function(data){ return {status:res.status, data:data}; });
+      return res.json().then(function(data){
+        if(res.status === 401 && action !== 'login'){ goToLogin(); }
+        return {status:res.status, data:data};
+      });
     });
   }
 
   function uploadBild(payload){
-    var pw = sessionStorage.getItem(STORAGE_KEY) || '';
-    var body = Object.assign({password:pw}, payload);
     return fetch('/.netlify/functions/fuehrungen-bild-upload', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
+      credentials:'same-origin',
+      body:JSON.stringify(payload)
     }).then(function(res){
       return res.json().then(function(data){ return {status:res.status, data:data}; });
     });
@@ -608,7 +621,6 @@
   function goToLogin(){
     dashView.style.display = 'none';
     loginView.style.display = 'block';
-    sessionStorage.removeItem(STORAGE_KEY);
   }
   function goToDashboard(){
     loginView.style.display = 'none';
@@ -622,14 +634,13 @@
     loginError.classList.remove('is-visible');
     loginBtn.disabled = true;
     loginBtn.textContent = 'Prüfe …';
-    sessionStorage.setItem(STORAGE_KEY, pw);
-    api('login').then(function(r){
+    api('login', {password: pw}).then(function(r){
       loginBtn.disabled = false;
       loginBtn.textContent = 'Anmelden';
       if(r.data.ok){
+        loginPwInput.value = '';
         goToDashboard();
       } else {
-        sessionStorage.removeItem(STORAGE_KEY);
         loginError.textContent = r.data.error || 'Anmeldung fehlgeschlagen.';
         loginError.classList.add('is-visible');
       }
@@ -643,7 +654,9 @@
   loginPwInput.addEventListener('keydown', function(e){
     if(e.key === 'Enter') loginBtn.click();
   });
-  logoutBtn.addEventListener('click', goToLogin);
+  logoutBtn.addEventListener('click', function(){
+    api('logout').then(goToLogin).catch(goToLogin);
+  });
 
   // ---------- Bild-Upload-Helfer ----------
   // Kapselt: Client-Validierung (Typ/Größe) -> Base64 lesen -> Upload -> Vorschau/Status.
@@ -808,6 +821,7 @@
         '<div class="admin-termin-actions">' +
           '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.filter(function(b){ return !istInaktiv(b); }).length + ')</button>' +
           (t.istVergangenheit ? '' : '<button type="button" class="btn-secondary btn-toggle-edit">Bearbeiten</button>') +
+          '<a class="btn-secondary" style="text-decoration:none;" href="/.netlify/functions/teilnehmerliste?terminId=' + t.id + '" target="_blank" rel="noopener" title="Teilnehmerliste als PDF (bezahlte Buchungen)">Teilnehmerliste</a>' +
           '<button type="button" class="btn-danger btn-delete-termin">Löschen</button>' +
         '</div>' +
       '</div>' +
@@ -1066,6 +1080,37 @@
     return wrap;
   }
 
+  // ---------- Protokoll ----------
+  var PROTOKOLL_TEXT = {
+    'buchung-reserviert':'Platz reserviert', 'bezahlsitzung-angelegt':'Bezahlseite geöffnet', 'bezahlsitzung-fehlgeschlagen':'Bezahlseite fehlgeschlagen',
+    'zahlung-eingegangen':'Zahlung eingegangen', 'zahlung-nach-ablauf':'Zahlung nach Ablauf der Reservierung', 'zahlung-betrag-abweichung':'Zahlung mit abweichendem Betrag',
+    'zahlung-ausstehend':'Zahlung ausstehend', 'zahlung-fehlgeschlagen':'Zahlung fehlgeschlagen', 'bezahlsitzung-abgelaufen':'Bezahlsitzung abgelaufen',
+    'reservierung-abgelaufen':'Reservierung abgelaufen', 'buchung-storniert':'Storniert', 'rechnung-nummer':'Rechnungsnummer vergeben',
+    'mail-bestaetigung':'Bestätigungsmail gesendet', 'mail-bestaetigung-erneut':'Bestätigungsmail erneut gesendet', 'mail-fehlgeschlagen':'Mail fehlgeschlagen',
+    'mail-erinnerung':'Erinnerung gesendet', 'mail-erinnerung-fehlgeschlagen':'Erinnerung fehlgeschlagen',
+    'webhook-ohne-buchung':'Webhook ohne passende Buchung', 'webhook-sitzung-fremd':'Webhook mit fremder Sitzung'
+  };
+  var protokollBtn = document.getElementById('protokoll-btn');
+  var protokollWrap = document.getElementById('protokoll-wrap');
+  protokollBtn.addEventListener('click', function(){
+    protokollBtn.disabled = true; protokollBtn.textContent = 'Lade …';
+    api('protokoll').then(function(r){
+      protokollBtn.disabled = false; protokollBtn.textContent = 'Protokoll aktualisieren';
+      if(!r.data.ok){ protokollWrap.innerHTML = '<div class="state-note">' + escapeHtml(r.data.error || 'Fehler') + '</div>'; protokollWrap.style.display = 'block'; return; }
+      var e = r.data.eintraege || [];
+      if(e.length === 0){ protokollWrap.innerHTML = '<div class="state-note">Noch keine Einträge.</div>'; protokollWrap.style.display = 'block'; return; }
+      protokollWrap.innerHTML = '<table class="uebersicht-table" style="font-size:.88rem;"><thead><tr><th>Zeit</th><th>Buchung</th><th>Was</th><th>Details</th></tr></thead><tbody>' +
+        e.map(function(x){
+          var warnung = /fehlgeschlagen|abweichung|fremd|ohne-buchung|nach-ablauf/.test(x.art);
+          return '<tr' + (warnung ? ' style="background:#FBE9E5;"' : '') + '><td style="white-space:nowrap;">' + escapeHtml(new Date(x.zeit).toLocaleString('de-DE')) + '</td>' +
+            '<td style="font-family:ui-monospace,Consolas,monospace;">' + escapeHtml(x.nummer || '') + '</td>' +
+            '<td>' + escapeHtml(PROTOKOLL_TEXT[x.art] || x.art) + '</td>' +
+            '<td style="color:#666;">' + escapeHtml(x.text || '') + '</td></tr>';
+        }).join('') + '</tbody></table>';
+      protokollWrap.style.display = 'block';
+    }).catch(function(){ protokollBtn.disabled = false; protokollBtn.textContent = 'Protokoll anzeigen'; });
+  });
+
   var STATUS_TEXT = { bezahlt:'bezahlt', reserviert:'reserviert', pruefen:'prüfen', abgelaufen:'abgelaufen', storniert:'storniert', erstattet:'erstattet' };
   function statusBadge(b){
     var s = b.status || 'bezahlt';
@@ -1192,15 +1237,10 @@
     });
   }
 
-  // Beim Laden prüfen, ob schon ein Passwort in dieser Browser-Sitzung hinterlegt ist.
-  var gespeichertesPw = sessionStorage.getItem(STORAGE_KEY);
-  if(gespeichertesPw){
-    api('login').then(function(r){
-      if(r.data.ok){ goToDashboard(); } else { goToLogin(); }
-    }).catch(function(){ goToLogin(); });
-  } else {
-    goToLogin();
-  }
+  // Beim Laden prüfen, ob noch eine gültige Sitzung (Cookie) besteht.
+  api('sitzung').then(function(r){
+    if(r.data.ok){ goToDashboard(); } else { goToLogin(); }
+  }).catch(function(){ goToLogin(); });
 })();
 </script>
 <!-- Verwaltungsseite: keine Besucherzaehlung -->

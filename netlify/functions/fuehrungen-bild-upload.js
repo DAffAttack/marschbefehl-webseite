@@ -17,18 +17,7 @@ const { json, errorResponse, parseBody } = require('./_lib/http');
 const ERLAUBTE_TYPEN = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 3 * 1024 * 1024; // 3 MB Originaldatei
 
-function passwortStimmt(eingabe) {
-  const erwartet = process.env.FUEHRUNGEN_ADMIN_PASSWORD;
-  if (!erwartet || typeof erwartet !== 'string' || erwartet.length === 0) {
-    return { konfiguriert: false, stimmt: false };
-  }
-  if (typeof eingabe !== 'string' || eingabe.length === 0) {
-    return { konfiguriert: true, stimmt: false };
-  }
-  const a = crypto.createHash('sha256').update(eingabe).digest();
-  const b = crypto.createHash('sha256').update(erwartet).digest();
-  return { konfiguriert: true, stimmt: crypto.timingSafeEqual(a, b) };
-}
+const { angemeldet } = require('./_lib/sitzung');
 
 exports.handler = async (event) => {
   blobsVerbinden(event);
@@ -41,15 +30,12 @@ exports.handler = async (event) => {
     return errorResponse(400, 'Ungültige Anfrage.');
   }
 
-  const pruefung = passwortStimmt(body.password);
+  const pruefung = angemeldet(event, body);
   if (!pruefung.konfiguriert) {
-    return errorResponse(
-      500,
-      'Der Verwaltungsbereich ist noch nicht eingerichtet: Die Umgebungsvariable FUEHRUNGEN_ADMIN_PASSWORD fehlt im Netlify-Projekt.'
-    );
+    return errorResponse(500, 'Der Verwaltungsbereich ist noch nicht eingerichtet: Die Umgebungsvariable FUEHRUNGEN_ADMIN_PASSWORD fehlt im Netlify-Projekt.');
   }
-  if (!pruefung.stimmt) {
-    return errorResponse(401, 'Falsches Passwort.');
+  if (!pruefung.ok) {
+    return errorResponse(401, 'Nicht angemeldet.');
   }
 
   const contentType = typeof body.contentType === 'string' ? body.contentType.trim().toLowerCase() : '';
