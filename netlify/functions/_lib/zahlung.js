@@ -191,6 +191,55 @@ async function erstatten({ buchung }) {
   return { erstattungId: r.id, betriebsart: art };
 }
 
+/**
+ * Zahlungen der letzten Zeit beim Zahlungsanbieter (für den Abgleich).
+ * Stripe: Checkout-Sitzungen + Erstattungen. Attrappe (lokal): aus
+ * website/.netlify/attrappe-zahlungen.json, falls vorhanden (Prüfläufe können dort
+ * Abweichungen einbauen), sonst aus den eigenen Buchungen abgeleitet.
+ * @returns {Promise<{sessionId:string, paymentIntent:string|null, betragCent:number, waehrung:string, bezahlt:boolean, erstattetCent:number, email:string, nummer:string, erstellt:string}[]>}
+ */
+async function zahlungenAbrufen({ seit }) {
+  const art = betriebsart();
+  if (art === 'attrappe') {
+    const fs = require('fs');
+    const path = require('path');
+    const datei = path.resolve(process.cwd(), '.netlify', 'attrappe-zahlungen.json');
+    if (fs.existsSync(datei)) {
+      return JSON.parse(fs.readFileSync(datei, 'utf8'));
+    }
+    const { readState } = require('./store');
+    const state = await readState();
+    return state.buchungen
+      .filter((b) => b.stripeSessionId && (b.status === 'bezahlt' || b.status === 'pruefen' || b.status === 'erstattet') && new Date(b.erstelltAm) >= seit)
+      .map((b) => ({ sessionId: b.stripeSessionId, paymentIntent: b.stripePaymentIntent || null, betragCent: b.betragCent, waehrung: WAEHRUNG, bezahlt: true, erstattetCent: b.status === 'erstattet' ? b.betragCent : 0, email: b.email, nummer: b.nummer, erstellt: b.erstelltAm }));
+  }
+  if (art !== 'stripe') throw new Error('Zahlung ist noch nicht eingerichtet (STRIPE_SECRET_KEY fehlt).');
+  const stripe = client();
+  const gte = Math.floor(seit.getTime() / 1000);
+  const sitzungen = await stripe.checkout.sessions.list({ created: { gte }, limit: 100, expand: ['data.payment_intent'] }).autoPagingToArray({ limit: 1000 });
+  const erstattungen = await stripe.refunds.list({ created: { gte }, limit: 100 }).autoPagingToArray({ limit: 1000 });
+  const erstattetJePi = new Map();
+  for (const r of erstattungen) {
+    if (r.status === 'succeeded' || r.status === 'pending') {
+      erstattetJePi.set(r.payment_intent, (erstattetJePi.get(r.payment_intent) || 0) + r.amount);
+    }
+  }
+  return sitzungen.map((s) => {
+    const pi = s.payment_intent && typeof s.payment_intent === 'object' ? s.payment_intent.id : s.payment_intent || null;
+    return {
+      sessionId: s.id,
+      paymentIntent: pi,
+      betragCent: s.amount_total || 0,
+      waehrung: String(s.currency || '').toLowerCase(),
+      bezahlt: s.payment_status === 'paid',
+      erstattetCent: pi ? erstattetJePi.get(pi) || 0 : 0,
+      email: (s.customer_details && s.customer_details.email) || s.customer_email || '',
+      nummer: (s.metadata && s.metadata.nummer) || '',
+      erstellt: new Date(s.created * 1000).toISOString(),
+    };
+  });
+}
+
 module.exports = {
   betriebsart,
   attrappeAktiv,
@@ -200,5 +249,6 @@ module.exports = {
   webhookEreignisLesen,
   attrappeEreignis,
   erstatten,
+  zahlungenAbrufen,
   WAEHRUNG,
 };

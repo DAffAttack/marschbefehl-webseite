@@ -541,6 +541,13 @@
     </div>
 
     <div class="panel">
+      <h2>Abgleich Zahlungen ↔ Buchungen</h2>
+      <p class="panel-sub">Läuft täglich um 6 Uhr: Was der Zahlungsanbieter kennt, gegen die Buchungsliste. Jede Abweichung mit Bedeutung und TO-DO; bei Abweichungen kommt eine Mail.</p>
+      <div id="abgleich-wrap"><div class="state-note">Wird geladen …</div></div>
+      <button type="button" class="btn-secondary" id="abgleich-btn" style="margin-top:10px;">Jetzt abgleichen</button>
+    </div>
+
+    <div class="panel">
       <h2>Protokoll</h2>
       <p class="panel-sub">Was im Buchungssystem passiert ist: Reservierungen, Zahlungen, Mails, Stornos, Webhook-Meldungen. Neueste zuerst, die letzten 300 Einträge.</p>
       <button type="button" class="btn-secondary" id="protokoll-btn">Protokoll anzeigen</button>
@@ -626,6 +633,7 @@
     loginView.style.display = 'none';
     dashView.style.display = 'block';
     ladeFuehrungen();
+    ladeAbgleich();
   }
 
   loginBtn.addEventListener('click', function(){
@@ -822,6 +830,7 @@
           '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.filter(function(b){ return !istInaktiv(b); }).length + ')</button>' +
           (t.istVergangenheit ? '' : '<button type="button" class="btn-secondary btn-toggle-edit">Bearbeiten</button>') +
           '<a class="btn-secondary" style="text-decoration:none;" href="/.netlify/functions/teilnehmerliste?terminId=' + t.id + '" target="_blank" rel="noopener" title="Teilnehmerliste als PDF (bezahlte Buchungen)">Teilnehmerliste</a>' +
+          (t.status === 'abgesagt' ? '<span class="status-badge status-storniert" title="' + escapeHtml(t.absageGrund || '') + '">abgesagt</span>' : '<button type="button" class="btn-secondary btn-cancel-termin" title="Alle Buchungen stornieren und erstatten, Termin bleibt als abgesagt stehen">Absagen</button>') +
           '<button type="button" class="btn-danger btn-delete-termin">Löschen</button>' +
         '</div>' +
       '</div>' +
@@ -843,7 +852,7 @@
         return '<div class="buchung-row" data-id="' + b.id + '">' +
           nummerText(b) + statusBadge(b) + ' ' +
           '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + '</span></span>' +
-          rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung">Stornieren</button>') +
+          rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') +
         '</div>';
       }).join('');
       buchungenListEl.querySelectorAll('.btn-cancel-buchung').forEach(function(btn){
@@ -852,7 +861,9 @@
           var buchungId = row.getAttribute('data-id');
           if(!confirm('Diese Buchung wirklich stornieren? Der Platz wird wieder freigegeben.')) return;
           btn.disabled = true;
-          api('cancel-buchung', {buchungId:buchungId}).then(function(r){
+          var wahl = stornoAbfragen(btn.getAttribute('data-status') || '');
+          if(!wahl) return;
+          api('cancel-buchung', wahl.mitId(buchungId)).then(function(r){
             if(r.status === 401){ goToLogin(); return; }
             if(!r.data.ok){ alert(r.data.error || 'Stornierung fehlgeschlagen.'); btn.disabled = false; return; }
             ladeFuehrungen();
@@ -888,8 +899,22 @@
       });
     }
 
+    var absagenBtn = wrap.querySelector('.btn-cancel-termin');
+    if(absagenBtn){
+      absagenBtn.addEventListener('click', function(){
+        var aktive = buchungenFuerTermin.filter(function(b){ return !istInaktiv(b); }).length;
+        if(!confirm('Diesen Termin absagen?\n\n' + aktive + ' aktive Buchung(en) werden storniert, bezahlte Beträge voll erstattet, jeder Gast bekommt eine Mail. Der Termin bleibt als "abgesagt" stehen.')) return;
+        var grund = prompt('Grund für die Gäste (steht in der Mail):', 'Zu wenige Teilnehmer') || '';
+        absagenBtn.disabled = true; absagenBtn.textContent = 'Sage ab …';
+        api('cancel-termin', {terminId:t.id, grund:grund}).then(function(r){
+          if(r.status === 401){ goToLogin(); return; }
+          if(!r.data.ok){ alert(r.data.error || 'Absage fehlgeschlagen.'); }
+          ladeFuehrungen();
+        });
+      });
+    }
     wrap.querySelector('.btn-delete-termin').addEventListener('click', function(){
-      if(!confirm('Diesen Termin inkl. aller zugehörigen Buchungen wirklich unwiderruflich löschen?')) return;
+      if(!confirm('Diesen Termin wirklich löschen? (Nur möglich, wenn keine Buchung mehr aktiv ist; Buchungsdaten bleiben erhalten.)')) return;
       api('delete-termin', {terminId:t.id}).then(function(r){
         if(r.status === 401){ goToLogin(); return; }
         if(!r.data.ok){ alert(r.data.error || 'Löschen fehlgeschlagen.'); return; }
@@ -1080,6 +1105,46 @@
     return wrap;
   }
 
+  // ---------- Abgleich ----------
+  var ABGLEICH_TEXT = {
+    'zahlung-ohne-buchung': 'Zahlung ohne Buchung',
+    'zahlung-buchung-unbezahlt': 'Zahlung da, Buchung nicht auf bezahlt',
+    'buchung-ohne-zahlung': 'Buchung bezahlt, aber keine Zahlung beim Anbieter',
+    'betrag-abweichung': 'Betrag weicht ab',
+    'erstattung-fehlt': 'Erstattung fehlt beim Anbieter',
+    'stripe-erstattet': 'Anbieter hat erstattet, Buchung noch bezahlt'
+  };
+  var abgleichWrap = document.getElementById('abgleich-wrap');
+  var abgleichBtn = document.getElementById('abgleich-btn');
+  function euroText(cent){ return cent == null ? '–' : (cent/100).toFixed(2).replace('.', ',') + ' €'; }
+  function renderAbgleich(a){
+    if(!a){ abgleichWrap.innerHTML = '<div class="state-note">Noch kein Abgleich gelaufen.</div>'; return; }
+    var noteFarbe = a.note === 'sehr gut' ? 'status-bezahlt' : a.note === 'prüfen' ? 'status-reserviert' : 'status-pruefen';
+    var kopf = '<div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">' +
+      '<span class="status-badge ' + noteFarbe + '" style="font-size:.9rem;" title="Note: sehr gut = keine Abweichung · prüfen = 1–2 · schlecht = mehr als 2">' + escapeHtml(a.note) + '</span>' +
+      '<span>' + escapeHtml(a.noteText) + '</span>' +
+      '<span style="color:#777; font-size:.9rem;" title="Geprüft wurden alle Zahlungen und Buchungen der letzten ' + a.zeitraumTage + ' Tage">' + a.geprueft.zahlungen + ' Zahlungen · ' + a.geprueft.buchungen + ' Buchungen · Stand ' + escapeHtml(new Date(a.zeit).toLocaleString('de-DE')) + (a.betriebsart === 'attrappe' ? ' · Attrappe (lokal)' : '') + '</span></div>';
+    if(!a.abweichungen || a.abweichungen.length === 0){ abgleichWrap.innerHTML = kopf; return; }
+    abgleichWrap.innerHTML = kopf + '<table class="uebersicht-table" style="font-size:.88rem;"><thead><tr><th>Was</th><th>Buchung</th><th>Betrag Anbieter</th><th>Betrag Buchung</th><th>TO-DO</th></tr></thead><tbody>' +
+      a.abweichungen.map(function(x){
+        return '<tr style="background:#FBE9E5;"><td>' + escapeHtml(ABGLEICH_TEXT[x.art] || x.art) + '</td>' +
+          '<td style="font-family:ui-monospace,Consolas,monospace;">' + escapeHtml(x.nummer || '–') + '<br><span style="color:#999; font-size:.75rem;">' + escapeHtml(x.sessionId || '') + '</span></td>' +
+          '<td>' + euroText(x.betragStripe) + '</td><td>' + euroText(x.betragBuchung) + '</td>' +
+          '<td style="color:#444;">' + escapeHtml(x.todo || '') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  function ladeAbgleich(){
+    api('abgleich').then(function(r){ if(r.data.ok){ renderAbgleich(r.data.abgleich); } });
+  }
+  abgleichBtn.addEventListener('click', function(){
+    abgleichBtn.disabled = true; abgleichBtn.textContent = 'Gleiche ab …';
+    api('abgleich-jetzt').then(function(r){
+      abgleichBtn.disabled = false; abgleichBtn.textContent = 'Jetzt abgleichen';
+      if(!r.data.ok){ alert(r.data.error || 'Abgleich fehlgeschlagen.'); return; }
+      renderAbgleich(r.data.abgleich);
+    }).catch(function(){ abgleichBtn.disabled = false; abgleichBtn.textContent = 'Jetzt abgleichen'; });
+  });
+
   // ---------- Protokoll ----------
   var PROTOKOLL_TEXT = {
     'buchung-reserviert':'Platz reserviert', 'bezahlsitzung-angelegt':'Bezahlseite geöffnet', 'bezahlsitzung-fehlgeschlagen':'Bezahlseite fehlgeschlagen',
@@ -1088,7 +1153,9 @@
     'reservierung-abgelaufen':'Reservierung abgelaufen', 'buchung-storniert':'Storniert', 'rechnung-nummer':'Rechnungsnummer vergeben',
     'mail-bestaetigung':'Bestätigungsmail gesendet', 'mail-bestaetigung-erneut':'Bestätigungsmail erneut gesendet', 'mail-fehlgeschlagen':'Mail fehlgeschlagen',
     'mail-erinnerung':'Erinnerung gesendet', 'mail-erinnerung-fehlgeschlagen':'Erinnerung fehlgeschlagen',
-    'webhook-ohne-buchung':'Webhook ohne passende Buchung', 'webhook-sitzung-fremd':'Webhook mit fremder Sitzung'
+    'webhook-ohne-buchung':'Webhook ohne passende Buchung', 'webhook-sitzung-fremd':'Webhook mit fremder Sitzung',
+    'buchung-erstattet':'Storniert und erstattet', 'buchung-abgesagt':'Termin abgesagt, Buchung erstattet', 'erstattung-fehlgeschlagen':'Erstattung fehlgeschlagen',
+    'mail-storno':'Storno-Mail gesendet', 'mail-absage':'Absage-Mail gesendet', 'termin-abgesagt':'Termin abgesagt', 'termin-absage-teilweise':'Termin-Absage mit Fehlern', 'abgleich':'Abgleich gelaufen'
   };
   var protokollBtn = document.getElementById('protokoll-btn');
   var protokollWrap = document.getElementById('protokoll-wrap');
@@ -1117,6 +1184,18 @@
     return '<span class="status-badge status-' + s + '" title="' + (s === 'reserviert' && b.reserviertBis ? 'reserviert bis ' + new Date(b.reserviertBis).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr' : s === 'pruefen' ? 'Zahlung eingegangen, Betrag weicht ab' : '') + '">' + (STATUS_TEXT[s] || s) + '</span>';
   }
   function istInaktiv(b){ var s = b.status || 'bezahlt'; return s === 'abgelaufen' || s === 'storniert' || s === 'erstattet'; }
+  // Storno-Rückfrage: bei bezahlten Buchungen mit oder ohne Erstattung (Teilnahmebedingungen),
+  // dazu ein optionaler Grund, der in der Mail an den Gast steht.
+  function stornoAbfragen(status){
+    var bezahlt = (status === 'bezahlt' || status === 'pruefen');
+    if(!confirm(bezahlt ? 'Diese bezahlte Buchung stornieren? Der Platz wird freigegeben, der Gast bekommt eine Mail.' : 'Diese Buchung stornieren? Der Platz wird freigegeben.')) return null;
+    var erstatten = false;
+    if(bezahlt){
+      erstatten = confirm('Betrag ERSTATTEN?\n\nOK = ja, voll erstatten (z. B. Absage durch dich, Storno fristgerecht)\nAbbrechen = nein, keine Erstattung (z. B. Storno nach Frist laut Teilnahmebedingungen)');
+    }
+    var grund = prompt('Grund für den Gast (optional, steht in der Mail):', '') || '';
+    return { mitId: function(id){ return { buchungId:id, erstatten:erstatten, grund:grund }; } };
+  }
   function rechnungLink(b){
     if(!b.rechnungsnummer || !b.nummer || !b.stripeSessionId) return '';
     return '<a class="btn-secondary" style="text-decoration:none;" href="/.netlify/functions/rechnung-pdf?nr=' + encodeURIComponent(b.nummer) + '&s=' + encodeURIComponent(b.stripeSessionId) + '" target="_blank" rel="noopener" title="Rechnung als PDF öffnen">' + escapeHtml(b.rechnungsnummer) + '</a>';
@@ -1185,7 +1264,7 @@
           '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
           '<td>' + escapeHtml(b.email) + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
           '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
-          '<td style="white-space:nowrap;">' + rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht">Stornieren</button>') + '</td>' +
+          '<td style="white-space:nowrap;">' + rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</td>' +
         '</tr>';
       }).join('') +
       '</tbody></table>';
@@ -1196,9 +1275,10 @@
       btn.addEventListener('click', function(){
         var row = btn.closest('tr');
         var buchungId = row.getAttribute('data-buchung-id');
-        if(!confirm('Diese Buchung wirklich stornieren? Der Platz wird wieder freigegeben.')) return;
+        var wahl = stornoAbfragen(btn.getAttribute('data-status') || '');
+        if(!wahl) return;
         btn.disabled = true;
-        api('cancel-buchung', {buchungId:buchungId}).then(function(r){
+        api('cancel-buchung', wahl.mitId(buchungId)).then(function(r){
           if(r.status === 401){ goToLogin(); return; }
           if(!r.data.ok){ alert(r.data.error || 'Stornierung fehlgeschlagen.'); btn.disabled = false; return; }
           ladeFuehrungen();

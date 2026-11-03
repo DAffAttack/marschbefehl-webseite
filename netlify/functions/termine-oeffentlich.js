@@ -27,6 +27,7 @@ exports.handler = async (event) => {
 
     const termine = state.termine
       .filter((t) => !fuehrungId || t.fuehrungId === fuehrungId)
+      .filter((t) => t.status !== 'abgesagt')
       .map((t) => {
         const belegt = belegtePersonen(state, t.id);
         const frei = Math.max(0, t.maxPersonen - belegt);

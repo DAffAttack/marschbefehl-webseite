@@ -152,7 +152,12 @@
           actions.innerHTML = '<a class="btn secondary" href="' + location.href + '">Erneut prüfen</a>';
           return;
         }
-        // abgelaufen, storniert, erstattet
+        if(d.status === 'erstattet' || d.status === 'storniert'){
+          zeige('is-bad', 'Buchung storniert', d.status === 'erstattet' ? 'Diese Buchung wurde storniert, der Betrag wird erstattet. Die Details stehen in der Mail dazu.' : 'Diese Buchung wurde storniert. Die Details stehen in der Mail dazu.', d);
+          actions.innerHTML = '<a class="btn" href="/fuehrungen.html">Zu den Führungen</a>';
+          return;
+        }
+        // abgelaufen
         zeige('is-bad', 'Zahlung nicht abgeschlossen', 'Für diese Buchung ist keine Zahlung eingegangen, der reservierte Platz wurde wieder freigegeben. Die Buchung kann jederzeit neu gestartet werden.', d);
         actions.innerHTML = '<a class="btn" href="' + (d.fuehrungId ? '/fuehrung.html?id=' + encodeURIComponent(d.fuehrungId) : '/fuehrungen.html') + '">Erneut buchen</a>';
       })

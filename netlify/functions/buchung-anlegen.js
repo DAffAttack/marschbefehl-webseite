@@ -88,6 +88,7 @@ exports.handler = async (event) => {
     angelegt = await withState((state) => {
       const termin = state.termine.find((t) => t.id === terminId);
       if (!termin) return { ok: false, status: 404, error: 'Dieser Termin existiert nicht mehr.' };
+      if (termin.status === 'abgesagt') return { ok: false, status: 400, error: 'Dieser Termin wurde abgesagt.' };
       if (terminDatumZeit(termin).getTime() < Date.now()) {
         return { ok: false, status: 400, error: 'Dieser Termin liegt bereits in der Vergangenheit.' };
       }

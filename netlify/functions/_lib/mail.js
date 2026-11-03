@@ -179,4 +179,34 @@ function neueBuchungMail({ buchung, fuehrung, termin }) {
   return { betreff, text, html };
 }
 
-module.exports = { betriebsart, mailSenden, bestaetigungsMail, erinnerungsMail, neueBuchungMail, absender, antwortAn, kopieAn, attrappeOrdner };
+function stornoMail({ buchung, fuehrung, termin, grund, erstattet }) {
+  const wann = termin ? datumLesbar(termin.datumIso, termin.uhrzeit) : '';
+  const betreff = 'Buchung ' + buchung.nummer + ' storniert' + (erstattet ? ', Betrag wird erstattet' : '');
+  const geld = erstattet
+    ? 'Der Betrag von ' + euro(buchung.betragCent) + ' wird über den Zahlungsanbieter erstattet und erscheint je nach Bank innerhalb von 5 bis 10 Werktagen auf dem Konto bzw. der Karte, mit der bezahlt wurde.'
+    : (buchung.status === 'storniert' && buchung.bezahltAm ? 'Eine Erstattung erfolgt laut Teilnahmebedingungen nicht.' : 'Es war noch keine Zahlung eingegangen, es ist nichts zu erstatten.');
+  const text = 'Hallo ' + buchung.name + ',\n\ndie Buchung ' + buchung.nummer + (fuehrung ? ' für "' + fuehrung.titel + '"' : '') + (wann ? ' am ' + wann : '') + ' wurde storniert.' + (grund ? '\nGrund: ' + grund : '') + '\n\n' + geld + '\n\nBei Fragen einfach auf diese Mail antworten.\n\nViele Grüße\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
+  const html = htmlRahmen('Buchung storniert', '<p>Hallo ' + esc(buchung.name) + ',</p><p>die Buchung <strong>' + esc(buchung.nummer) + '</strong>' + (fuehrung ? ' für „' + esc(fuehrung.titel) + '“' : '') + (wann ? ' am ' + esc(wann) : '') + ' wurde storniert.' + (grund ? '<br>Grund: ' + esc(grund) : '') + '</p><p>' + esc(geld) + '</p><p>Bei Fragen einfach auf diese Mail antworten.</p><p>Viele Grüße<br>Enrico Holland<br>Zeitreise Seelower Höhen · <a href="https://marschbefehl.com" style="color:#6F8F2E;">marschbefehl.com</a></p>');
+  return { betreff, text, html };
+}
+
+function absageMail({ buchung, fuehrung, termin, grund, erstattet }) {
+  const wann = termin ? datumLesbar(termin.datumIso, termin.uhrzeit) : '';
+  const betreff = 'Termin abgesagt: ' + (fuehrung ? fuehrung.titel : 'Führung') + (wann ? ' am ' + wann : '') + ' (Buchung ' + buchung.nummer + ')';
+  const geld = erstattet
+    ? 'Der volle Betrag von ' + euro(buchung.betragCent) + ' wird automatisch erstattet und erscheint je nach Bank innerhalb von 5 bis 10 Werktagen auf dem Konto bzw. der Karte, mit der bezahlt wurde.'
+    : 'Es war noch keine Zahlung eingegangen, es ist nichts zu erstatten.';
+  const text = 'Hallo ' + buchung.name + ',\n\nleider muss die Führung' + (fuehrung ? ' "' + fuehrung.titel + '"' : '') + (wann ? ' am ' + wann : '') + ' abgesagt werden.' + (grund ? '\nGrund: ' + grund : '') + '\n\n' + geld + '\n\nNeue Termine stehen auf https://marschbefehl.com/fuehrungen.html. Es tut mir leid für die Umstände.\n\nViele Grüße\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
+  const html = htmlRahmen('Termin abgesagt', '<p>Hallo ' + esc(buchung.name) + ',</p><p>leider muss die Führung' + (fuehrung ? ' „' + esc(fuehrung.titel) + '“' : '') + (wann ? ' am <strong>' + esc(wann) + '</strong>' : '') + ' abgesagt werden.' + (grund ? '<br>Grund: ' + esc(grund) : '') + '</p><p>' + esc(geld) + '</p><p>Neue Termine stehen auf <a href="https://marschbefehl.com/fuehrungen.html" style="color:#6F8F2E;">marschbefehl.com/fuehrungen</a>. Es tut mir leid für die Umstände.</p><p>Viele Grüße<br>Enrico Holland<br>Zeitreise Seelower Höhen</p>');
+  return { betreff, text, html };
+}
+
+function abgleichMail(e) {
+  const betreff = 'Abgleich Buchungen: ' + e.abweichungen.length + ' Abweichung(en) – ' + e.note;
+  const zeilen = e.abweichungen.map((a) => '- ' + a.art + ' | Buchung ' + (a.nummer || '–') + ' | Sitzung ' + a.sessionId + ' | Stripe ' + (a.betragStripe != null ? euro(a.betragStripe) : '–') + ' | Buchung ' + (a.betragBuchung != null ? euro(a.betragBuchung) : '–') + '\n  TO-DO: ' + a.todo);
+  const text = 'Abgleich vom ' + new Date(e.zeit).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' }) + ' (' + e.geprueft.zahlungen + ' Zahlungen, ' + e.geprueft.buchungen + ' Buchungen, letzte ' + e.zeitraumTage + ' Tage)\nNote: ' + e.note + ' – ' + e.noteText + '\n\n' + zeilen.join('\n') + '\n\nVerwaltung: https://marschbefehl.com/fuehrungen-verwaltung.html (Abschnitt Abgleich)\n';
+  const html = htmlRahmen('Abgleich: ' + esc(e.note), '<pre style="white-space:pre-wrap;font:inherit;">' + esc(text) + '</pre>');
+  return { betreff, text, html };
+}
+
+module.exports = { betriebsart, mailSenden, bestaetigungsMail, erinnerungsMail, neueBuchungMail, stornoMail, absageMail, abgleichMail, absender, antwortAn, kopieAn, attrappeOrdner };

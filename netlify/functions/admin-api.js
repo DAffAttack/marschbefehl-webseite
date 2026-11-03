@@ -29,6 +29,8 @@ const {
   UHRZEIT_RE,
 } = require('./_lib/http');
 const { nachZahlung } = require('./_lib/nachzahlung');
+const { buchungStornieren, terminAbsagen, aktiv: buchungAktiv } = require('./_lib/storno');
+const { abgleichDurchfuehren } = require('./_lib/abgleich');
 
 const KURZBESCHREIBUNG_MAX = 100;
 const LANGBESCHREIBUNG_MAX = 5000;
@@ -53,6 +55,9 @@ function terminAdminFeld(t, state) {
     belegtePersonen: belegt,
     freiePlaetze: Math.max(0, t.maxPersonen - belegt),
     istVergangenheit: terminDatumZeit(t).getTime() < Date.now(),
+    status: t.status || 'offen',
+    absageGrund: t.absageGrund || '',
+    abgesagtAm: t.abgesagtAm || null,
   };
 }
 
@@ -110,6 +115,15 @@ exports.handler = async (event) => {
   if (action === 'sitzung') {
     return json(200, { ok: true, weg: anmeldung.weg });
   }
+  if (action === 'abgleich') {
+      const state = await readState();
+      return json(200, { ok: true, abgleich: state.abgleich || null });
+    }
+    if (action === 'abgleich-jetzt') {
+      const r = await abgleichDurchfuehren();
+      if (!r.ok) return errorResponse(400, r.error);
+      return json(200, { ok: true, abgleich: r });
+    }
   if (action === 'protokoll') {
     const state = await readState();
     const eintraege = state.ereignisse.slice(-300).reverse();
@@ -170,6 +184,10 @@ exports.handler = async (event) => {
           mailBestaetigungAm: b.mailBestaetigungAm || null,
           erinnertAm: b.erinnertAm || null,
           stripeSessionId: b.stripeSessionId || null,
+          erstattungId: b.erstattungId || null,
+          erstattetAm: b.erstattetAm || null,
+          storniertAm: b.storniertAm || null,
+          stornoGrund: b.stornoGrund || '',
         }));
       return json(200, { ok: true, fuehrungen, termine, buchungen });
     }
@@ -387,6 +405,14 @@ exports.handler = async (event) => {
       return json(200, result);
     }
 
+    if (action === 'cancel-termin') {
+      const terminId = typeof body.terminId === 'string' ? body.terminId.trim() : '';
+      if (!terminId) return errorResponse(400, 'Kein Termin angegeben.');
+      const result = await terminAbsagen(terminId, { grund: typeof body.grund === 'string' ? body.grund.trim().slice(0, 300) : '' });
+      if (!result.ok) return json(result.status === 207 ? 207 : result.status || 400, result);
+      return json(200, result);
+    }
+
     if (action === 'delete-termin') {
       const terminId = typeof body.terminId === 'string' ? body.terminId.trim() : '';
       if (!terminId) return errorResponse(400, 'Kein Termin angegeben.');
@@ -394,8 +420,13 @@ exports.handler = async (event) => {
       const result = await withState((state) => {
         const idx = state.termine.findIndex((t) => t.id === terminId);
         if (idx === -1) return { ok: false, status: 404, error: 'Termin nicht gefunden.' };
+        // Seit E5: Löschen nur, wenn keine Buchung mehr aktiv ist (Geld könnte im Spiel sein).
+        // Sonst zuerst "Termin absagen" (storniert + erstattet alle Buchungen).
+        if (state.buchungen.some((b) => b.terminId === terminId && buchungAktiv(b))) {
+          return { ok: false, status: 400, error: 'Dieser Termin hat noch aktive Buchungen. Bitte zuerst den Termin absagen (Erstattung an alle), danach kann er gelöscht werden.' };
+        }
         state.termine.splice(idx, 1);
-        state.buchungen = state.buchungen.filter((b) => b.terminId !== terminId);
+        // Buchungen bleiben als Datensätze erhalten (Rechnungen, Protokoll).
         return { ok: true };
       });
       if (!result.ok) return errorResponse(result.status || 400, result.error);
@@ -415,20 +446,9 @@ exports.handler = async (event) => {
       const buchungId = typeof body.buchungId === 'string' ? body.buchungId.trim() : '';
       if (!buchungId) return errorResponse(400, 'Keine Buchung angegeben.');
 
-      const result = await withState((state) => {
-        const b = state.buchungen.find((x) => x.id === buchungId);
-        if (!b) return { ok: false, status: 404, error: 'Buchung nicht gefunden.' };
-        if (b.status === 'storniert' || b.status === 'erstattet') {
-          return { ok: false, status: 400, error: 'Diese Buchung ist bereits storniert.' };
-        }
-        // Seit E2: Datensatz bleibt erhalten (Rechnung, Protokoll), nur der Status wechselt.
-        // Bei bezahlten Buchungen folgt die Erstattung über Stripe in E5.
-        const vorher = b.status || 'bezahlt';
-        b.status = 'storniert';
-        b.storniertAm = new Date().toISOString();
-        protokoll(state, { art: 'buchung-storniert', buchungId: b.id, nummer: b.nummer, text: 'vorher: ' + vorher + ' (Verwaltung)' });
-        return { ok: true, status: b.status, warBezahlt: vorher === 'bezahlt' };
-      });
+      // Seit E5: Storno über storno.js — mit Erstattung (Vorgabe) oder ohne (body.erstatten === false),
+      // Datensatz bleibt erhalten, Gast bekommt eine Mail.
+      const result = await buchungStornieren(buchungId, { erstatten: body.erstatten !== false, grund: typeof body.grund === 'string' ? body.grund.trim().slice(0, 300) : '' });
       if (!result.ok) return errorResponse(result.status || 400, result.error);
       return json(200, result);
     }
