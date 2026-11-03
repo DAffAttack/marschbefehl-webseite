@@ -102,7 +102,7 @@ function gast(n, personen, terminId) {
 
     // 8) Storno einer bezahlten Buchung
     r = await post('admin-api', { action: 'cancel-buchung', password: PW, buchungId: b3.id });
-    pruef('Storno → Status storniert', r.j.ok && r.j.status === 'storniert', JSON.stringify(r.j));
+    pruef('Storno bezahlter Buchung → erstattet (Vorgabe seit E5)', r.j.ok && r.j.status === 'erstattet' && r.j.erstattet === true, JSON.stringify(r.j));
     r = await post('admin-api', { action: 'cancel-buchung', password: PW, buchungId: b3.id });
     pruef('Storno doppelt → abgewiesen', r.status === 400, r.j.error);
   } else if (!LOKAL) {

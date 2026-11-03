@@ -551,6 +551,7 @@
       <h2>Protokoll</h2>
       <p class="panel-sub">Was im Buchungssystem passiert ist: Reservierungen, Zahlungen, Mails, Stornos, Webhook-Meldungen. Neueste zuerst, die letzten 300 Einträge.</p>
       <button type="button" class="btn-secondary" id="protokoll-btn">Protokoll anzeigen</button>
+      <button type="button" class="btn-secondary" id="export-btn" title="Alle Führungen, Termine, Buchungen und das Protokoll als JSON-Datei herunterladen – wöchentlich ablegen">Sicherung herunterladen</button>
       <div id="protokoll-wrap" style="display:none; margin-top:12px;"></div>
     </div>
   </div>
@@ -1143,6 +1144,21 @@
       if(!r.data.ok){ alert(r.data.error || 'Abgleich fehlgeschlagen.'); return; }
       renderAbgleich(r.data.abgleich);
     }).catch(function(){ abgleichBtn.disabled = false; abgleichBtn.textContent = 'Jetzt abgleichen'; });
+  });
+
+  // ---------- Sicherung ----------
+  document.getElementById('export-btn').addEventListener('click', function(){
+    var btn = this; btn.disabled = true; btn.textContent = 'Lade …';
+    api('export').then(function(r){
+      btn.disabled = false; btn.textContent = 'Sicherung herunterladen';
+      if(!r.data.ok){ alert(r.data.error || 'Sicherung fehlgeschlagen.'); return; }
+      var blob = new Blob([JSON.stringify(r.data, null, 2)], {type:'application/json'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'buchungssystem-sicherung-' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    }).catch(function(){ btn.disabled = false; btn.textContent = 'Sicherung herunterladen'; });
   });
 
   // ---------- Protokoll ----------

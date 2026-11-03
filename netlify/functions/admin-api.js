@@ -124,6 +124,11 @@ exports.handler = async (event) => {
       if (!r.ok) return errorResponse(400, r.error);
       return json(200, { ok: true, abgleich: r });
     }
+  if (action === 'export') {
+    // Sicherung: kompletter Stand (Führungen, Termine, Buchungen, Protokoll, Abgleich) als JSON.
+    const state = await readState();
+    return json(200, { ok: true, exportiertAm: new Date().toISOString(), stand: state });
+  }
   if (action === 'protokoll') {
     const state = await readState();
     const eintraege = state.ereignisse.slice(-300).reverse();
