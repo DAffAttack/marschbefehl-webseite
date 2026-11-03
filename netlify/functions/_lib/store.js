@@ -62,6 +62,7 @@ const crypto = require('crypto');
 const STORE_NAME = 'fuehrungen';
 const STATE_KEY = 'state';
 const IMAGE_STORE_NAME = 'fuehrungen-bilder';
+const RECHNUNG_STORE_NAME = 'fuehrungen-rechnungen';
 const MAX_RETRIES = 10;
 
 // Seit E2 (03.11.2026) zusätzlich:
@@ -80,6 +81,7 @@ function stateErgaenzen(state) {
   if (!Array.isArray(state.ereignisse)) state.ereignisse = [];
   if (!Array.isArray(state.verarbeiteteEreignisse)) state.verarbeiteteEreignisse = [];
   if (!state.buchungsZaehler || typeof state.buchungsZaehler !== 'object') state.buchungsZaehler = {};
+  if (!state.rechnungsZaehler || typeof state.rechnungsZaehler !== 'object') state.rechnungsZaehler = {};
   return state;
 }
 
@@ -101,6 +103,14 @@ function neueBuchungsnummer(state, datum) {
   const n = (state.buchungsZaehler[jahr] || 0) + 1;
   state.buchungsZaehler[jahr] = n;
   return 'ZSH-' + jahr + '-' + String(n).padStart(4, '0');
+}
+
+// Rechnungsnummern fortlaufend und lückenlos je Jahr: R-2026-0001
+function neueRechnungsnummer(state, datum) {
+  const jahr = String((datum || new Date()).getFullYear());
+  const n = (state.rechnungsZaehler[jahr] || 0) + 1;
+  state.rechnungsZaehler[jahr] = n;
+  return 'R-' + jahr + '-' + String(n).padStart(4, '0');
 }
 
 function protokoll(state, eintrag) {
@@ -140,6 +150,11 @@ function getFuehrungenStore() {
   // consistency 'strong': Lesen liefert immer den zuletzt geschriebenen Stand (Blobs ist
   // sonst nur "eventually consistent"). Für Platzzählung und Bestätigung unverzichtbar.
   return getStore({ name: STORE_NAME, consistency: 'strong', ...(cfg || {}) });
+}
+
+function getRechnungenStore() {
+  const cfg = blobsConfig();
+  return getStore({ name: RECHNUNG_STORE_NAME, consistency: 'strong', ...(cfg || {}) });
 }
 
 function getBilderStore() {
@@ -276,6 +291,8 @@ module.exports = {
   getBilderStore,
   belegtPlatz,
   neueBuchungsnummer,
+  neueRechnungsnummer,
+  getRechnungenStore,
   protokoll,
   ereignisSchonVerarbeitet,
   ereignisMerken,

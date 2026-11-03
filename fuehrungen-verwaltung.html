@@ -829,7 +829,7 @@
         return '<div class="buchung-row" data-id="' + b.id + '">' +
           nummerText(b) + statusBadge(b) + ' ' +
           '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + '</span></span>' +
-          (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung">Stornieren</button>') +
+          rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung">Stornieren</button>') +
         '</div>';
       }).join('');
       buchungenListEl.querySelectorAll('.btn-cancel-buchung').forEach(function(btn){
@@ -1072,6 +1072,27 @@
     return '<span class="status-badge status-' + s + '" title="' + (s === 'reserviert' && b.reserviertBis ? 'reserviert bis ' + new Date(b.reserviertBis).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr' : s === 'pruefen' ? 'Zahlung eingegangen, Betrag weicht ab' : '') + '">' + (STATUS_TEXT[s] || s) + '</span>';
   }
   function istInaktiv(b){ var s = b.status || 'bezahlt'; return s === 'abgelaufen' || s === 'storniert' || s === 'erstattet'; }
+  function rechnungLink(b){
+    if(!b.rechnungsnummer || !b.nummer || !b.stripeSessionId) return '';
+    return '<a class="btn-secondary" style="text-decoration:none;" href="/.netlify/functions/rechnung-pdf?nr=' + encodeURIComponent(b.nummer) + '&s=' + encodeURIComponent(b.stripeSessionId) + '" target="_blank" rel="noopener" title="Rechnung als PDF öffnen">' + escapeHtml(b.rechnungsnummer) + '</a>';
+  }
+  function mailErneutKnopf(b){
+    if((b.status || 'bezahlt') !== 'bezahlt' || !b.nummer) return '';
+    var titel = b.mailBestaetigungAm ? 'Bestätigung zuletzt gesendet ' + new Date(b.mailBestaetigungAm).toLocaleString('de-DE') : 'Noch keine Bestätigung gesendet';
+    return '<button type="button" class="btn-secondary btn-mail-erneut" data-id="' + b.id + '" title="' + escapeHtml(titel) + '">' + (b.mailBestaetigungAm ? 'Mail erneut' : 'Mail senden') + '</button>';
+  }
+  function mailErneutBinden(wurzel){
+    wurzel.querySelectorAll('.btn-mail-erneut').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.disabled = true; btn.textContent = 'Sende …';
+        api('mail-erneut', {buchungId: btn.getAttribute('data-id')}).then(function(r){
+          btn.textContent = r.data.ok ? 'Gesendet' : 'Fehler';
+          btn.title = r.data.ok ? (r.data.hinweis + ', Rechnung ' + r.data.rechnungsnummer) : (r.data.error || 'Fehler');
+          if(!r.data.ok){ btn.disabled = false; }
+        }).catch(function(){ btn.textContent = 'Fehler'; btn.disabled = false; });
+      });
+    });
+  }
   function nummerText(b){ return b.nummer ? '<span class="nummer" style="font-family:ui-monospace,Consolas,monospace; font-size:.85rem; color:#777;">' + escapeHtml(b.nummer) + '</span> ' : ''; }
 
   function renderBuchungsuebersicht(fuehrungen, termine, buchungen){
@@ -1119,7 +1140,7 @@
           '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
           '<td>' + escapeHtml(b.email) + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
           '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
-          '<td>' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht">Stornieren</button>') + '</td>' +
+          '<td style="white-space:nowrap;">' + rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht">Stornieren</button>') + '</td>' +
         '</tr>';
       }).join('') +
       '</tbody></table>';

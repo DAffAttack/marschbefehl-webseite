@@ -9,3 +9,7 @@
 # Zeitgesteuert: abgelaufene Reservierungen freigeben (E2, 03.11.2026)
 [functions."aufraeumen"]
   schedule = "*/10 * * * *"
+
+# Zeitgesteuert: Erinnerungsmail 3 Tage vor dem Termin, täglich 07:00 UTC (E3, 03.11.2026)
+[functions."erinnerung"]
+  schedule = "0 7 * * *"

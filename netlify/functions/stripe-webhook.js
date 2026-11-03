@@ -15,6 +15,7 @@
 const { withState, protokoll, ereignisSchonVerarbeitet, ereignisMerken, blobsVerbinden } = require('./_lib/store');
 const { webhookEreignisLesen, WAEHRUNG } = require('./_lib/zahlung');
 const { json, errorResponse } = require('./_lib/http');
+const { nachZahlung } = require('./_lib/nachzahlung');
 
 function sitzungVerarbeiten(state, ereignis) {
   const sitzung = ereignis.data && ereignis.data.object;
@@ -52,7 +53,7 @@ function sitzungVerarbeiten(state, ereignis) {
     // Hinweis: Eine Zahlung nach Ablauf der Reservierung wird trotzdem als bezahlt
     // gebucht (das Geld ist da). Ob der Platz noch frei ist, zeigt die Verwaltung;
     // bei Überbuchung erstattet der Nutzer per Storno-Knopf.
-    return { ok: true, hinweis: 'bezahlt' };
+    return { ok: true, hinweis: 'bezahlt', buchungId: b.id };
   }
 
   if (ereignis.type === 'checkout.session.async_payment_failed' || ereignis.type === 'checkout.session.expired') {
@@ -93,7 +94,18 @@ exports.handler = async (event) => {
     }, {
       bestaetigen: (state) => ereignisSchonVerarbeitet(state, ereignis.id),
     });
-    return json(200, { ok: true, hinweis: result.hinweis || '' });
+    // Nach bestätigter Zahlung: Rechnung erzeugen und Bestätigungsmail senden. Fehler dabei
+    // ändern nichts am Status "bezahlt" (Protokoll + "Mail erneut senden" in der Verwaltung).
+    let nach = null;
+    if (result.hinweis === 'bezahlt' && result.buchungId) {
+      try {
+        nach = await nachZahlung(result.buchungId);
+      } catch (err) {
+        console.error('stripe-webhook: Nachbereitung fehlgeschlagen:', err);
+        nach = { ok: false, error: String(err && err.message) };
+      }
+    }
+    return json(200, { ok: true, hinweis: result.hinweis || '', nach: nach ? { ok: nach.ok, hinweis: nach.hinweis || nach.error || '', rechnungsnummer: nach.rechnungsnummer || null } : undefined });
   } catch (err) {
     console.error('stripe-webhook Fehler:', err);
     // 500 -> Stripe versucht es später erneut (Idempotenz fängt Doppelungen ab).

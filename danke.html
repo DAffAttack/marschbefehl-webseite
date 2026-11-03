@@ -132,8 +132,13 @@
           return;
         }
         if(d.status === 'bezahlt'){
-          zeige('is-ok', 'Buchung bestätigt', 'Vielen Dank! Die Zahlung ist eingegangen und der Platz ist fest gebucht. Eine Bestätigung mit allen Angaben zum Treffpunkt folgt per E-Mail.', d);
-          actions.innerHTML = '<a class="btn" href="/fuehrungen.html">Zu den Führungen</a>';
+          // Rechnung entsteht direkt nach der Zahlungsmeldung — kurz nachfragen, falls sie noch fehlt.
+          if(!d.rechnungsnummer && versuche < MAX){ setTimeout(abfragen, 2000); }
+          zeige('is-ok', 'Buchung bestätigt', 'Vielen Dank! Die Zahlung ist eingegangen und der Platz ist fest gebucht. Die Bestätigung mit Rechnung und Treffpunkt ist per E-Mail unterwegs.', d);
+          var rechnungLink = d.rechnungsnummer
+            ? '<a class="btn secondary" href="/.netlify/functions/rechnung-pdf?nr=' + encodeURIComponent(nr) + '&s=' + encodeURIComponent(s) + '" target="_blank" rel="noopener">Rechnung ' + esc(d.rechnungsnummer) + ' (PDF)</a>'
+            : '<span class="btn secondary" style="opacity:.6;">Rechnung wird erstellt …</span>';
+          actions.innerHTML = '<a class="btn" href="/fuehrungen.html">Zu den Führungen</a>' + rechnungLink;
           return;
         }
         if(d.status === 'pruefen'){

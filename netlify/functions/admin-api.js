@@ -28,6 +28,7 @@ const {
   DATUM_RE,
   UHRZEIT_RE,
 } = require('./_lib/http');
+const { nachZahlung } = require('./_lib/nachzahlung');
 
 const KURZBESCHREIBUNG_MAX = 100;
 const LANGBESCHREIBUNG_MAX = 5000;
@@ -155,6 +156,10 @@ exports.handler = async (event) => {
           reserviertBis: b.reserviertBis || null,
           bezahltAm: b.bezahltAm || null,
           erstelltAm: b.erstelltAm,
+          rechnungsnummer: b.rechnungsnummer || null,
+          mailBestaetigungAm: b.mailBestaetigungAm || null,
+          erinnertAm: b.erinnertAm || null,
+          stripeSessionId: b.stripeSessionId || null,
         }));
       return json(200, { ok: true, fuehrungen, termine, buchungen });
     }
@@ -389,6 +394,13 @@ exports.handler = async (event) => {
 
     // ---------------- Buchungen ----------------
 
+    if (action === 'mail-erneut') {
+      const buchungId = typeof body.buchungId === 'string' ? body.buchungId.trim() : '';
+      if (!buchungId) return errorResponse(400, 'Keine Buchung angegeben.');
+      const r = await nachZahlung(buchungId, { erneut: true });
+      if (!r.ok) return errorResponse(r.status || 400, r.error);
+      return json(200, { ok: true, hinweis: r.hinweis, rechnungsnummer: r.rechnungsnummer });
+    }
     if (action === 'cancel-buchung') {
       const buchungId = typeof body.buchungId === 'string' ? body.buchungId.trim() : '';
       if (!buchungId) return errorResponse(400, 'Keine Buchung angegeben.');

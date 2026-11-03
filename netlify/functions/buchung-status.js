@@ -30,6 +30,7 @@ exports.handler = async (event) => {
       termin: termin ? { datumIso: termin.datumIso, uhrzeit: termin.uhrzeit } : null,
       fuehrungTitel: fuehrung ? fuehrung.titel : null,
       fuehrungId: b.fuehrungId,
+      rechnungsnummer: b.rechnungsnummer || null,
     });
   } catch (err) {
     console.error('buchung-status Fehler:', err);
