@@ -246,6 +246,21 @@
     color:var(--ink);
   }
   .booking-form input:focus{ outline:none; border-color:var(--green-dark); }
+  .booking-form select{
+    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:9px;
+    font:inherit; background:#fff; color:var(--ink);
+  }
+  .booking-form select:focus{ outline:none; border-color:var(--green-dark); }
+  .booking-form .check{ display:flex; gap:10px; align-items:flex-start; font-size:.92rem; line-height:1.45; color:var(--muted); }
+  .booking-form .check input{ width:auto; margin-top:3px; flex:0 0 auto; }
+  .booking-form .check a{ color:var(--green-dark); font-weight:600; }
+  .booking-form .hinweis{ font-size:.85rem; color:var(--muted); line-height:1.45; margin:0; }
+  .booking-form .honig{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  .booking-summe{ font-weight:700; font-size:1.05rem; }
+  .abbruch-hinweis{
+    background:#FFF6DE; border:1px solid #F0D58A; border-radius:10px; padding:12px 16px;
+    margin:0 0 18px; color:#6b4f12; font-size:.95rem; line-height:1.5;
+  }
   .booking-form-actions{
     grid-column:1 / -1;
     display:flex;
@@ -383,7 +398,7 @@
       <div class="state-note" id="termin-state">Termine werden geladen …</div>
     </div>
 
-    <p class="note-storno">Diese Buchung ist derzeit kostenlos anzufragen — eine automatische Bestätigungsmail gibt es noch nicht, die Buchung ist aber sofort gültig und im System hinterlegt. Eine Stornierung ist derzeit nur über <a href="/kontakt.html" style="color:var(--green-dark); font-weight:600;">Kontakt</a> möglich.</p>
+    <p class="note-storno">Bezahlt wird sicher im Voraus über unseren Zahlungsanbieter (Karte, Apple Pay, Google Pay, PayPal). Die Buchung gilt mit Zahlungseingang und wird per E-Mail bestätigt. Stornierung laut <a href="/agb.html" style="color:var(--green-dark); font-weight:600;">Teilnahmebedingungen</a>, bei Fragen gern über <a href="/kontakt.html" style="color:var(--green-dark); font-weight:600;">Kontakt</a>.</p>
 
     <div class="cta-box">
       <h2>Fragen zu dieser Führung?</h2>
@@ -484,10 +499,16 @@
           '<form class="booking-form" novalidate>' +
             '<div class="full"><label>Name</label><input type="text" name="name" required maxlength="120" autocomplete="name"></div>' +
             '<div><label>E-Mail</label><input type="email" name="email" required maxlength="200" autocomplete="email"></div>' +
+            '<div><label>Telefon (für Rückfragen am Tourtag)</label><input type="tel" name="telefon" required maxlength="30" autocomplete="tel"></div>' +
             '<div><label>Personen</label><input type="number" name="personen" required min="1" max="30" value="1"></div>' +
+            '<div><label>Anreise</label><select name="fahrzeug"><option value="">Bitte wählen …</option><option value="eigen">Mit eigenem Fahrzeug (Kolonnenfahrt)</option><option value="mitfahrer">Ich fahre bei jemandem mit</option></select></div>' +
+            '<div class="full booking-summe">Gesamt: <span class="summe">' + formatPreis(t.preisProPerson) + '</span> &euro;</div>' +
+            '<div class="full"><label class="check"><input type="checkbox" name="agb"> <span>Ich habe die <a href="/agb.html" target="_blank" rel="noopener">Teilnahmebedingungen</a> gelesen und akzeptiere sie.</span></label></div>' +
+            '<p class="full hinweis">Hinweis: Für Führungen mit festem Termin besteht kein gesetzliches Widerrufsrecht (§ 312g Abs. 2 Nr. 9 BGB). Die Stornoregel steht in den Teilnahmebedingungen. Der Platz bleibt 15 Minuten reserviert, bis die Zahlung abgeschlossen ist.</p>' +
+            '<div class="honig" aria-hidden="true"><label>Firma<input type="text" name="firma" tabindex="-1" autocomplete="off"></label></div>' +
             '<div class="booking-error"></div>' +
             '<div class="booking-form-actions">' +
-              '<button type="submit" class="btn-book">Verbindlich buchen</button>' +
+              '<button type="submit" class="btn-book">Zahlungspflichtig buchen</button>' +
               '<button type="button" class="btn-cancel-form">Abbrechen</button>' +
             '</div>' +
           '</form>' +
@@ -503,6 +524,12 @@
       var errorEl = card.querySelector('.booking-error');
       var successEl = card.querySelector('.booking-success');
       var isOpen = false;
+
+      form.elements.personen.addEventListener('input', function(){
+        var n = parseInt(form.elements.personen.value, 10);
+        var summeEl = form.querySelector('.summe');
+        if(summeEl){ summeEl.textContent = formatPreis((n > 0 ? n : 0) * t.preisProPerson); }
+      });
 
       bookBtn.addEventListener('click', function(){
         isOpen = !isOpen;
@@ -520,53 +547,55 @@
 
         var name = form.elements.name.value.trim();
         var email = form.elements.email.value.trim();
+        var telefon = form.elements.telefon.value.trim();
         var personen = parseInt(form.elements.personen.value, 10);
+        var fahrzeug = form.elements.fahrzeug.value;
+        var agb = form.elements.agb.checked;
+        var firma = form.elements.firma.value;
 
-        if(!name){ errorEl.textContent = 'Bitte einen Namen angeben.'; errorEl.classList.add('is-visible'); return; }
-        if(!email){ errorEl.textContent = 'Bitte eine E-Mail-Adresse angeben.'; errorEl.classList.add('is-visible'); return; }
-        if(!personen || personen < 1){ errorEl.textContent = 'Bitte eine gültige Personenzahl angeben.'; errorEl.classList.add('is-visible'); return; }
+        function fehler(msg){ errorEl.textContent = msg; errorEl.classList.add('is-visible'); }
+        if(!name){ fehler('Bitte einen Namen angeben.'); return; }
+        if(!email){ fehler('Bitte eine E-Mail-Adresse angeben.'); return; }
+        if(!telefon){ fehler('Bitte eine Telefonnummer angeben (für Rückfragen am Tourtag).'); return; }
+        if(!personen || personen < 1){ fehler('Bitte eine gültige Personenzahl angeben.'); return; }
+        if(!fahrzeug){ fehler('Bitte angeben, ob ein eigenes Fahrzeug dabei ist.'); return; }
+        if(!agb){ fehler('Bitte die Teilnahmebedingungen bestätigen.'); return; }
 
         var submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Wird gesendet …';
+        submitBtn.textContent = 'Platz wird reserviert …';
 
-        fetch('/.netlify/functions/buchung-erstellen', {
+        fetch('/.netlify/functions/buchung-anlegen', {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({terminId:t.id, name:name, email:email, personen:personen})
+          body:JSON.stringify({terminId:t.id, name:name, email:email, telefon:telefon, personen:personen, fahrzeug:fahrzeug, agb:agb, firma:firma})
         })
         .then(function(res){ return res.json().then(function(data){ return {status:res.status, data:data}; }); })
         .then(function(r){
-          if(!r.data.ok){
+          if(!r.data.ok || !r.data.url){
             errorEl.textContent = r.data.error || 'Die Buchung konnte nicht angelegt werden.';
             errorEl.classList.add('is-visible');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Verbindlich buchen';
+            submitBtn.textContent = 'Zahlungspflichtig buchen';
             return;
           }
+          // Platz ist reserviert — weiter zur Bezahlseite des Zahlungsanbieters.
+          submitBtn.textContent = 'Weiter zur Bezahlseite …';
           form.style.display = 'none';
           successEl.innerHTML =
             '<div class="ok-row">' +
               '<span class="ok-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
-              '<h3>Buchung bestätigt</h3>' +
+              '<h3>Platz reserviert</h3>' +
             '</div>' +
-            '<p>' + personen + ' Platz/Plätze für ' + escapeHtml(formatDatum(t.datumIso, t.uhrzeit)) + ' um ' + escapeHtml(t.uhrzeit) + ' Uhr sind reserviert. Es gibt aktuell keine automatische Bestätigungsmail — bitte den Termin selbst notieren.</p>';
+            '<p>Buchung ' + escapeHtml(r.data.nummer) + ' ist für 15 Minuten reserviert. Du wirst jetzt zur Bezahlseite weitergeleitet.</p>';
           successEl.classList.add('is-visible');
-
-          var statusDanach = r.data.verfuegbarkeitDanach || 'frei';
-          var labelEl = card.querySelector('.capacity-label');
-          if(labelEl){ labelEl.innerHTML = verfuegbarkeitsBadge(statusDanach); }
-          if(statusDanach === 'ausgebucht'){
-            card.classList.add('is-full');
-            bookBtn.disabled = true;
-            bookBtn.textContent = 'Ausgebucht';
-          }
+          window.location.href = r.data.url;
         })
         .catch(function(){
           errorEl.textContent = 'Verbindung fehlgeschlagen. Bitte später erneut versuchen.';
           errorEl.classList.add('is-visible');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Verbindlich buchen';
+          submitBtn.textContent = 'Zahlungspflichtig buchen';
         });
       });
     }
@@ -592,6 +621,13 @@
         }
 
         listWrap.innerHTML = '';
+        var abbruchNr = new URLSearchParams(location.search).get('abbruch');
+        if(abbruchNr){
+          var hinweis = document.createElement('div');
+          hinweis.className = 'abbruch-hinweis';
+          hinweis.textContent = 'Die Zahlung für Buchung ' + abbruchNr + ' wurde abgebrochen. Der Platz bleibt noch kurz reserviert und wird danach automatisch freigegeben. Zum Buchen einfach erneut einen Termin wählen.';
+          listWrap.appendChild(hinweis);
+        }
         var list = document.createElement('div');
         list.className = 'termin-list';
         termine.forEach(function(t){

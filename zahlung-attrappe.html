@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zahlungs-Attrappe (nur lokal)</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  body{ margin:0; font-family:"Segoe UI", system-ui, sans-serif; background:#1b1f24; color:#e8e8e8; }
+  main{ max-width:560px; margin:0 auto; padding:56px 20px; }
+  .box{ background:#262b33; border:1px solid #3a414b; border-radius:14px; padding:28px; }
+  .tag{ display:inline-block; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; background:#b8860b; color:#111; padding:4px 10px; border-radius:999px; font-weight:700; margin-bottom:14px; }
+  h1{ font-size:1.4rem; margin:0 0 6px; }
+  p{ color:#b7bcc4; line-height:1.5; }
+  dl{ display:grid; grid-template-columns:auto 1fr; gap:8px 18px; margin:18px 0 24px; }
+  dt{ color:#8f97a3; } dd{ margin:0; font-weight:600; }
+  button{ display:block; width:100%; padding:14px; margin-top:10px; border:0; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; }
+  .ok{ background:#A1C74F; color:#111; } .bad{ background:#3a414b; color:#e8e8e8; } .warn{ background:#6b4f12; color:#ffe9b3; }
+  .hint{ font-size:.85rem; color:#8f97a3; margin-top:18px; }
+  .err{ color:#ff8a7a; }
+</style>
+</head>
+<body>
+<main>
+  <div class="box">
+    <span class="tag">Attrappe · nur lokal</span>
+    <h1>Hier wäre jetzt die Stripe-Bezahlseite</h1>
+    <p>Auf der echten Seite gibt der Gast hier Karte oder PayPal ein. Lokal ohne Stripe-Schlüssel simuliert diese Seite das Ergebnis und schickt es durch denselben Webhook wie Stripe.</p>
+    <dl>
+      <dt>Buchung</dt><dd id="nr">–</dd>
+      <dt>Sitzung</dt><dd id="s" style="font-family:monospace; font-size:.85rem;">–</dd>
+    </dl>
+    <button class="ok" data-ergebnis="bezahlt">Zahlung erfolgreich simulieren</button>
+    <button class="bad" data-ergebnis="abgebrochen">Zahlung abbrechen (Sitzung läuft ab)</button>
+    <button class="warn" data-ergebnis="betrag-falsch">Prüffall: Zahlung mit falschem Betrag</button>
+    <p class="hint" id="hint"></p>
+  </div>
+</main>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var nr = q.get('nr') || '', s = q.get('s') || '';
+  document.getElementById('nr').textContent = nr || '–';
+  document.getElementById('s').textContent = s || '–';
+  var hint = document.getElementById('hint');
+  document.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('button').forEach(function(x){ x.disabled = true; });
+      hint.textContent = 'Ereignis wird gesendet …';
+      fetch('/.netlify/functions/attrappe-bezahlen', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nr:nr, s:s, ergebnis:b.getAttribute('data-ergebnis') })
+      }).then(function(r){ return r.json(); }).then(function(d){
+        if(!d.ok){ hint.innerHTML = '<span class="err">' + (d.error || 'Fehler') + '</span>'; document.querySelectorAll('button').forEach(function(x){ x.disabled = false; }); return; }
+        hint.textContent = 'Webhook-Antwort: ' + d.webhookStatus + ' (' + (d.webhook.hinweis || '') + '). Weiter zur Danke-Seite …';
+        var ziel = '/danke.html?nr=' + encodeURIComponent(nr) + '&s=' + encodeURIComponent(s);
+        setTimeout(function(){ location.href = ziel; }, 900);
+      }).catch(function(){ hint.innerHTML = '<span class="err">Verbindung fehlgeschlagen.</span>'; });
+    });
+  });
+})();
+</script>
+</body>
+</html>

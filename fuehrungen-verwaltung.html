@@ -360,6 +360,12 @@
     border-top:1px solid var(--line);
   }
   .buchungen-list.is-visible{ display:block; }
+  .status-badge{ display:inline-block; padding:2px 9px; border-radius:999px; font-size:.75rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; }
+  .status-bezahlt{ background:#EEF4E0; color:#4F6B1E; }
+  .status-reserviert{ background:#FFF6DE; color:#8a5a00; }
+  .status-pruefen{ background:#FBE9E5; color:#B9402E; }
+  .status-abgelaufen, .status-storniert, .status-erstattet{ background:#ECECEC; color:#666; }
+  .buchung-row.is-inaktiv .who{ opacity:.55; text-decoration:line-through; }
   .buchung-row{
     display:flex;
     align-items:center;
@@ -800,7 +806,7 @@
           kapazitaetsBalkenHtml(t.belegtePersonen, t.maxPersonen) +
         '</div>' +
         '<div class="admin-termin-actions">' +
-          '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.length + ')</button>' +
+          '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.filter(function(b){ return !istInaktiv(b); }).length + ')</button>' +
           (t.istVergangenheit ? '' : '<button type="button" class="btn-secondary btn-toggle-edit">Bearbeiten</button>') +
           '<button type="button" class="btn-danger btn-delete-termin">Löschen</button>' +
         '</div>' +
@@ -821,8 +827,9 @@
       }
       buchungenListEl.innerHTML = buchungenFuerTermin.map(function(b){
         return '<div class="buchung-row" data-id="' + b.id + '">' +
-          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + ' &middot; ' + b.personen + ' Pers.</span></span>' +
-          '<button type="button" class="btn-secondary btn-cancel-buchung">Stornieren</button>' +
+          nummerText(b) + statusBadge(b) + ' ' +
+          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + '</span></span>' +
+          (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung">Stornieren</button>') +
         '</div>';
       }).join('');
       buchungenListEl.querySelectorAll('.btn-cancel-buchung').forEach(function(btn){
@@ -1059,6 +1066,14 @@
     return wrap;
   }
 
+  var STATUS_TEXT = { bezahlt:'bezahlt', reserviert:'reserviert', pruefen:'prüfen', abgelaufen:'abgelaufen', storniert:'storniert', erstattet:'erstattet' };
+  function statusBadge(b){
+    var s = b.status || 'bezahlt';
+    return '<span class="status-badge status-' + s + '" title="' + (s === 'reserviert' && b.reserviertBis ? 'reserviert bis ' + new Date(b.reserviertBis).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr' : s === 'pruefen' ? 'Zahlung eingegangen, Betrag weicht ab' : '') + '">' + (STATUS_TEXT[s] || s) + '</span>';
+  }
+  function istInaktiv(b){ var s = b.status || 'bezahlt'; return s === 'abgelaufen' || s === 'storniert' || s === 'erstattet'; }
+  function nummerText(b){ return b.nummer ? '<span class="nummer" style="font-family:ui-monospace,Consolas,monospace; font-size:.85rem; color:#777;">' + escapeHtml(b.nummer) + '</span> ' : ''; }
+
   function renderBuchungsuebersicht(fuehrungen, termine, buchungen){
     if(buchungen.length === 0){
       uebersichtWrap.innerHTML = '<div class="state-note">Noch keine Buchungen vorhanden.</div>';
@@ -1070,7 +1085,8 @@
     var terminById = {};
     termine.forEach(function(t){ terminById[t.id] = t; });
 
-    var gesamtPersonen = buchungen.reduce(function(sum, b){ return sum + (b.personen || 0); }, 0);
+    var aktive = buchungen.filter(function(b){ return !istInaktiv(b); });
+    var gesamtPersonen = aktive.reduce(function(sum, b){ return sum + (b.personen || 0); }, 0);
 
     // Neueste/nächste Termine zuerst -- so sieht man auf einen Blick, was
     // bald ansteht. Buchungen zu einem nicht mehr auffindbaren Termin
@@ -1089,7 +1105,7 @@
 
     var html =
       '<div class="uebersicht-summary">' +
-        '<div class="uebersicht-stat"><div class="zahl">' + buchungen.length + '</div><div class="label">Buchung' + (buchungen.length === 1 ? '' : 'en') + '</div></div>' +
+        '<div class="uebersicht-stat"><div class="zahl">' + aktive.length + '</div><div class="label">aktive Buchung' + (aktive.length === 1 ? '' : 'en') + '</div></div>' +
         '<div class="uebersicht-stat"><div class="zahl">' + gesamtPersonen + '</div><div class="label">Personen gesamt</div></div>' +
       '</div>' +
       '<table class="uebersicht-table"><thead><tr>' +
@@ -1100,10 +1116,10 @@
         return '<tr data-buchung-id="' + b.id + '">' +
           '<td class="fuehrung-name">' + (z.fuehrung ? escapeHtml(z.fuehrung.titel) : '<span class="muted">unbekannt</span>') + '</td>' +
           '<td>' + (z.termin ? formatDatum(z.termin.datumIso, z.termin.uhrzeit) : '<span class="muted">Termin gelöscht</span>') + '</td>' +
-          '<td>' + escapeHtml(b.name) + '</td>' +
-          '<td>' + escapeHtml(b.email) + '</td>' +
-          '<td>' + b.personen + '</td>' +
-          '<td><button type="button" class="btn-secondary btn-cancel-buchung-uebersicht">Stornieren</button></td>' +
+          '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
+          '<td>' + escapeHtml(b.email) + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
+          '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
+          '<td>' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht">Stornieren</button>') + '</td>' +
         '</tr>';
       }).join('') +
       '</tbody></table>';

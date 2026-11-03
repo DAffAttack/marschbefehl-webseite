@@ -5,3 +5,7 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Zeitgesteuert: abgelaufene Reservierungen freigeben (E2, 03.11.2026)
+[functions."aufraeumen"]
+  schedule = "*/10 * * * *"

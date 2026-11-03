@@ -27,7 +27,7 @@
 // geprüft. Für künftige Bump-Vorsicht: bei jeder @netlify/blobs-Versionsänderung die
 // tatsächlichen .d.cts-Typen von set()/setJSON() gegenprüfen, nicht nur der Doku vertrauen.
 
-const { getStore, connectLambda } = require('@netlify/blobs');
+const { getStore, setEnvironmentContext } = require('@netlify/blobs');
 
 // WICHTIG (03.11.2026): Functions im Lambda-Format (exports.handler) bekommen den
 // Blobs-Zugang NICHT über Umgebungsvariablen, sondern über event.blobs. Jede Function
@@ -35,8 +35,27 @@ const { getStore, connectLambda } = require('@netlify/blobs');
 // MissingBlobsEnvironmentError -- lokal unter "netlify dev" genauso wie auf Netlify.
 // Das war im August 2026 die eigentliche Ursache des Fehlers auf dem Branch-Deploy;
 // der damalige Umweg über NETLIFY_BLOBS_TOKEN ist damit nur noch Rückfall.
+// Hinweis: Das mitgelieferte connectLambda() übergibt die "uncachedEdgeURL" nicht, die
+// für Lesen mit starker Konsistenz nötig ist. Deshalb wird der Kontext hier selbst
+// gesetzt (gleiche Felder wie connectLambda, plus url_uncached).
 function blobsVerbinden(event) {
-  if (event && event.blobs) connectLambda(event);
+  if (!event || !event.blobs) return;
+  let data;
+  try {
+    data = JSON.parse(Buffer.from(event.blobs, 'base64').toString('utf8'));
+  } catch (err) {
+    console.error('blobsVerbinden: event.blobs nicht lesbar:', err);
+    return;
+  }
+  const h = event.headers || {};
+  setEnvironmentContext({
+    deployID: h['x-nf-deploy-id'],
+    siteID: h['x-nf-site-id'],
+    edgeURL: data.url,
+    uncachedEdgeURL: data.url_uncached || data.url,
+    token: data.token,
+    primaryRegion: data.primary_region,
+  });
 }
 const crypto = require('crypto');
 
@@ -45,8 +64,59 @@ const STATE_KEY = 'state';
 const IMAGE_STORE_NAME = 'fuehrungen-bilder';
 const MAX_RETRIES = 10;
 
+// Seit E2 (03.11.2026) zusätzlich:
+//   ereignisse             Protokoll (Buchung angelegt, bezahlt, abgelaufen, storniert, Webhook ...)
+//   verarbeiteteEreignisse IDs der schon verarbeiteten Stripe-Ereignisse (Idempotenz des Webhooks)
+//   buchungsZaehler        fortlaufende Nummer je Jahr für Buchungsnummern wie ZSH-2026-0001
 function emptyState() {
-  return { fuehrungen: [], termine: [], buchungen: [] };
+  return { fuehrungen: [], termine: [], buchungen: [], ereignisse: [], verarbeiteteEreignisse: [], buchungsZaehler: {} };
+}
+
+// Felder nachrüsten, die ältere Stände noch nicht kennen.
+function stateErgaenzen(state) {
+  if (!Array.isArray(state.fuehrungen)) state.fuehrungen = [];
+  if (!Array.isArray(state.termine)) state.termine = [];
+  if (!Array.isArray(state.buchungen)) state.buchungen = [];
+  if (!Array.isArray(state.ereignisse)) state.ereignisse = [];
+  if (!Array.isArray(state.verarbeiteteEreignisse)) state.verarbeiteteEreignisse = [];
+  if (!state.buchungsZaehler || typeof state.buchungsZaehler !== 'object') state.buchungsZaehler = {};
+  return state;
+}
+
+const RESERVIERUNG_MINUTEN = 15;
+const MAX_PROTOKOLL = 2000;
+const MAX_EREIGNIS_IDS = 1000;
+
+// Zählt eine Buchung als Platz belegend? Bezahlte immer; reservierte nur, solange die
+// Reservierung läuft. Buchungen ohne Status stammen aus der Zeit vor E2 und gelten als bezahlt.
+function belegtPlatz(b, jetztMs) {
+  const status = b.status || 'bezahlt';
+  if (status === 'bezahlt' || status === 'pruefen') return true;
+  if (status === 'reserviert') return !b.reserviertBis || new Date(b.reserviertBis).getTime() > jetztMs;
+  return false;
+}
+
+function neueBuchungsnummer(state, datum) {
+  const jahr = String((datum || new Date()).getFullYear());
+  const n = (state.buchungsZaehler[jahr] || 0) + 1;
+  state.buchungsZaehler[jahr] = n;
+  return 'ZSH-' + jahr + '-' + String(n).padStart(4, '0');
+}
+
+function protokoll(state, eintrag) {
+  state.ereignisse.push({ zeit: new Date().toISOString(), ...eintrag });
+  if (state.ereignisse.length > MAX_PROTOKOLL) state.ereignisse.splice(0, state.ereignisse.length - MAX_PROTOKOLL);
+}
+
+function ereignisSchonVerarbeitet(state, ereignisId) {
+  return state.verarbeiteteEreignisse.includes(ereignisId);
+}
+
+function ereignisMerken(state, ereignisId) {
+  state.verarbeiteteEreignisse.push(ereignisId);
+  if (state.verarbeiteteEreignisse.length > MAX_EREIGNIS_IDS) {
+    state.verarbeiteteEreignisse.splice(0, state.verarbeiteteEreignisse.length - MAX_EREIGNIS_IDS);
+  }
 }
 
 // Fallback für Umgebungen, in denen Netlify die Blobs-Zugangsdaten nicht automatisch
@@ -67,7 +137,9 @@ function blobsConfig() {
 
 function getFuehrungenStore() {
   const cfg = blobsConfig();
-  return cfg ? getStore({ name: STORE_NAME, ...cfg }) : getStore(STORE_NAME);
+  // consistency 'strong': Lesen liefert immer den zuletzt geschriebenen Stand (Blobs ist
+  // sonst nur "eventually consistent"). Für Platzzählung und Bestätigung unverzichtbar.
+  return getStore({ name: STORE_NAME, consistency: 'strong', ...(cfg || {}) });
 }
 
 function getBilderStore() {
@@ -84,8 +156,14 @@ function getBilderStore() {
  *   nicht genug freie Plätze) — kein unnötiger Schreibversuch für ungültige Anfragen.
  * @returns {Promise<{ok:true,...}|{ok:false,status:number,error:string}>}
  */
-async function withState(mutator) {
+async function withStateIntern(mutator, optionen) {
   const store = getFuehrungenStore();
+  // optionen.bestaetigen(stateNachher, result): liefert true, wenn die eigene Änderung im
+  // frisch gelesenen Stand tatsächlich enthalten ist. Sicherheitsnetz gegen verlorene
+  // Schreibvorgänge (03.11.2026: der lokale Blobs-Server prüft das ETag nicht atomar und
+  // hat bei 6 gleichzeitigen Buchungen 5 verloren; auf Netlify ist die Prüfung atomar,
+  // die Bestätigung kostet dort nur ein Lesen und fängt Restfälle ab).
+  const bestaetigen = optionen && typeof optionen.bestaetigen === 'function' ? optionen.bestaetigen : null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     let data;
@@ -107,11 +185,9 @@ async function withState(mutator) {
       etag = existing.etag;
     }
 
-    // Ältere Blobs (vor dem Führungen/Termine-Umbau) kennen noch kein "fuehrungen"-Feld —
-    // defensiv nachrüsten, damit der Mutator sich darauf verlassen kann.
-    if (!Array.isArray(data.fuehrungen)) data.fuehrungen = [];
-    if (!Array.isArray(data.termine)) data.termine = [];
-    if (!Array.isArray(data.buchungen)) data.buchungen = [];
+    // Ältere Stände kennen manche Felder noch nicht — nachrüsten, damit der Mutator
+    // sich darauf verlassen kann.
+    stateErgaenzen(data);
 
     const draft = JSON.parse(JSON.stringify(data));
     const result = mutator(draft);
@@ -122,7 +198,12 @@ async function withState(mutator) {
 
     const written = await store.setJSON(STATE_KEY, draft, { onlyIfMatch: etag });
     if (written.modified) {
-      return { ...result, ok: true };
+      if (!bestaetigen) return { ...result, ok: true };
+      const nachher = await store.get(STATE_KEY, { type: 'json' });
+      if (nachher && bestaetigen(stateErgaenzen(nachher), result)) return { ...result, ok: true };
+      // Eigene Änderung fehlt im gelesenen Stand: jemand hat dazwischen überschrieben.
+      // Nächster Durchlauf liest neu und wendet den Mutator erneut an.
+      continue;
     }
     // Schreibkonflikt: zwischen Lesen und Schreiben hat ein anderer Aufruf bereits
     // geschrieben (z.B. zwei gleichzeitige Buchungen). Nächster Durchlauf liest neu.
@@ -138,16 +219,13 @@ async function withState(mutator) {
 async function readState() {
   const store = getFuehrungenStore();
   const existing = await store.get(STATE_KEY, { type: 'json' });
-  const state = existing || emptyState();
-  if (!Array.isArray(state.fuehrungen)) state.fuehrungen = [];
-  if (!Array.isArray(state.termine)) state.termine = [];
-  if (!Array.isArray(state.buchungen)) state.buchungen = [];
-  return state;
+  return stateErgaenzen(existing || emptyState());
 }
 
 function belegtePersonen(state, terminId) {
+  const jetzt = Date.now();
   return state.buchungen
-    .filter((b) => b.terminId === terminId)
+    .filter((b) => b.terminId === terminId && belegtPlatz(b, jetzt))
     .reduce((sum, b) => sum + b.personen, 0);
 }
 
@@ -173,6 +251,19 @@ function verfuegbarkeitsStatus(frei, maxPersonen) {
   return frei <= schwelle ? 'wenige' : 'frei';
 }
 
+// Schreibvorgänge nacheinander: Auf Netlify bearbeitet eine Function-Instanz ohnehin nur
+// eine Anfrage gleichzeitig (Warteschlange ohne Wirkung). Unter netlify dev laufen alle
+// Functions in EINEM Prozess, und der lokale Blobs-Server prüft das ETag nicht atomar --
+// ohne Warteschlange gingen dort bei gleichzeitigen Buchungen Schreibvorgänge verloren
+// (03.11.2026). Produktion verlässt sich auf das atomare onlyIfMatch von Netlify Blobs;
+// das wird vor dem Livegang auf dem Branch-Deploy mit dem Prüflauf nachgewiesen (E6).
+let schreibSchlange = Promise.resolve();
+function withState(mutator, optionen) {
+  const lauf = schreibSchlange.then(() => withStateIntern(mutator, optionen));
+  schreibSchlange = lauf.catch(() => {});
+  return lauf;
+}
+
 module.exports = {
   blobsVerbinden,
   withState,
@@ -183,4 +274,10 @@ module.exports = {
   findFuehrung,
   neueId,
   getBilderStore,
+  belegtPlatz,
+  neueBuchungsnummer,
+  protokoll,
+  ereignisSchonVerarbeitet,
+  ereignisMerken,
+  RESERVIERUNG_MINUTEN,
 };

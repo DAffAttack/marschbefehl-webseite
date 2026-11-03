@@ -17,7 +17,7 @@
 //   Datum/Uhrzeit/max. Personen — kein eigenes Preisfeld mehr.
 
 const crypto = require('crypto');
-const { withState, readState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, getBilderStore, blobsVerbinden } = require('./_lib/store');
+const { withState, readState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, getBilderStore, blobsVerbinden, protokoll } = require('./_lib/store');
 const {
   json,
   errorResponse,
@@ -143,10 +143,17 @@ exports.handler = async (event) => {
         .sort((a, b) => new Date(b.erstelltAm) - new Date(a.erstelltAm))
         .map((b) => ({
           id: b.id,
+          nummer: b.nummer || null,
           terminId: b.terminId,
           name: b.name,
           email: b.email,
+          telefon: b.telefon || '',
           personen: b.personen,
+          fahrzeug: b.fahrzeug || '',
+          status: b.status || 'bezahlt',
+          betragCent: typeof b.betragCent === 'number' ? b.betragCent : null,
+          reserviertBis: b.reserviertBis || null,
+          bezahltAm: b.bezahltAm || null,
           erstelltAm: b.erstelltAm,
         }));
       return json(200, { ok: true, fuehrungen, termine, buchungen });
@@ -387,10 +394,18 @@ exports.handler = async (event) => {
       if (!buchungId) return errorResponse(400, 'Keine Buchung angegeben.');
 
       const result = await withState((state) => {
-        const idx = state.buchungen.findIndex((b) => b.id === buchungId);
-        if (idx === -1) return { ok: false, status: 404, error: 'Buchung nicht gefunden.' };
-        state.buchungen.splice(idx, 1);
-        return { ok: true };
+        const b = state.buchungen.find((x) => x.id === buchungId);
+        if (!b) return { ok: false, status: 404, error: 'Buchung nicht gefunden.' };
+        if (b.status === 'storniert' || b.status === 'erstattet') {
+          return { ok: false, status: 400, error: 'Diese Buchung ist bereits storniert.' };
+        }
+        // Seit E2: Datensatz bleibt erhalten (Rechnung, Protokoll), nur der Status wechselt.
+        // Bei bezahlten Buchungen folgt die Erstattung über Stripe in E5.
+        const vorher = b.status || 'bezahlt';
+        b.status = 'storniert';
+        b.storniertAm = new Date().toISOString();
+        protokoll(state, { art: 'buchung-storniert', buchungId: b.id, nummer: b.nummer, text: 'vorher: ' + vorher + ' (Verwaltung)' });
+        return { ok: true, status: b.status, warBezahlt: vorher === 'bezahlt' };
       });
       if (!result.ok) return errorResponse(result.status || 400, result.error);
       return json(200, result);
