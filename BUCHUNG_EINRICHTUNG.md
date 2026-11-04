@@ -14,6 +14,8 @@ Stand 04.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut, lokal
 
 ## 2. Stripe einrichten (Betreiber)
 
+✅ 04.11.2026: Stripe-Konto angelegt, Testmodus; `STRIPE_SECRET_KEY` (sk_test) und `STRIPE_WEBHOOK_SECRET` per Doppelklick auf `werkzeug\2 START Stripe-Schluessel eintragen.cmd` (Desktop-Verknüpfung „Stripe-Schluessel eintragen“) für den Kontext `branch:buchung` gesetzt. Die Datei fragt beide Werte ab und prüft die Form (sk_…, whsec_…). Für den Livegang dieselbe Datei mit Live-Werten und `--alle` (Webhook dann auf marschbefehl.com, Punkt 3).
+
 1. Konto bei stripe.com anlegen (Gewerbe, IBAN, Ausweis). Für den Testmodus reicht die Anmeldung.
 2. **Developers → API keys**: `Secret key` (sk_test_… / später sk_live_…) → Netlify-Variable `STRIPE_SECRET_KEY`.
 3. **Developers → Webhooks → Add endpoint**: Adresse `https://marschbefehl.com/.netlify/functions/stripe-webhook` (für den Branch-Test: `https://buchung--zeitreise-seelower-hoehen.netlify.app/.netlify/functions/stripe-webhook`). Ereignisse: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`. Den angezeigten `Signing secret` (whsec_…) → `STRIPE_WEBHOOK_SECRET`.
@@ -45,9 +47,9 @@ Site configuration → Environment variables. Liste und Erklärung in `.env.exam
    node werkzeug/buchung-pruefen.js https://buchung--zeitreise-seelower-hoehen.netlify.app
    node werkzeug/verwaltung-pruefen.js https://buchung--zeitreise-seelower-hoehen.netlify.app
    ```
-   Stand 04.11.2026: `verwaltung-pruefen` **12 von 12 bestanden** (Login, Cookie, Teilnehmerliste-PDF, Protokoll, Abmelden, Sperre nach 5 Fehlversuchen). `buchung-pruefen` 2 von 7 – die 5 übrigen scheitern gewollt an „Zahlung noch nicht freigeschaltet“ (503), weil kein `STRIPE_SECRET_KEY` da ist; **der Gleichzeitigkeits-Test (6 Buchungen auf einmal, kein Überbuchen) läuft also erst mit dem Stripe-Testschlüssel** → nach Abschnitt 2 und 4 wiederholen. Die Skripte stornieren ihre Reservierungen am Ende selbst; `verwaltung-pruefen` sperrt zum Schluss den Login für 15 Minuten.
-5. Mit Stripe-Testschlüsseln: eine Testbuchung mit Testkarte komplett durchspielen (Buchen → Bezahlseite → Danke-Seite „bestätigt“ → Mail mit Rechnung im echten Postfach), danach Schritt 4 wiederholen.
-6. In der Verwaltung: Termin anlegen, Teilnehmerliste öffnen, Storno mit Erstattung an einer Testbuchung (Erstattung im Stripe-Dashboard sichtbar), „Jetzt abgleichen“ → Note „sehr gut“.
+   ✅ Stand 04.11.2026 abends: `verwaltung-pruefen` **12 von 12**, `buchung-pruefen` mit Stripe-Testschlüssel **7 von 7** – darunter 6 Buchungen gleichzeitig: alle 6 durch, genau 12 von 20 belegt, nichts verloren, nichts überbucht. **Damit ist die Schreibsperre von Netlify Blobs im Echtbetrieb nachgewiesen.** Die Skripte stornieren ihre Reservierungen am Ende selbst; `verwaltung-pruefen` sperrt zum Schluss den Login für 15 Minuten.
+5. ✅ **Testbuchung mit Testkarte (04.11.2026, Nutzer):** ZSH-2026-0007, 1 Person, 1,00 €, Stripe-Webhook kam an, Status „bezahlt“, Rechnung R-2026-0001 erzeugt (PDF abrufbar), Protokoll vollständig (reserviert → Bezahlsitzung → Zahlung eingegangen → Rechnungsnummer). Mail gewollt fehlgeschlagen („RESEND_API_KEY fehlt“, Eintrag im Protokoll) → nach Abschnitt 3 in der Verwaltung „Mail erneut“ drücken. Abgleich „Jetzt abgleichen“ gegen Stripe: **Note „sehr gut“, 0 Abweichungen.** Nach Resend: Testbuchung wiederholen, Mail mit Rechnung im Postfach prüfen.
+6. In der Verwaltung (`/fuehrungen-verwaltung.html` auf dem Branch-Deploy): Teilnehmerliste öffnen, **Storno mit Erstattung an ZSH-2026-0007** (Erstattung im Stripe-Dashboard sichtbar, Status „erstattet“), danach „Jetzt abgleichen“ → weiterhin „sehr gut“.
 7. Stripe → Webhooks: alle Zustellungen 200.
 
 ## 6. Livegang
