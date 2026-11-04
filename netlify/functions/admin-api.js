@@ -156,6 +156,7 @@ exports.handler = async (event) => {
             kurzbeschreibung: f.kurzbeschreibung,
             langbeschreibung: f.langbeschreibung,
             ort: f.ort || '',
+            treffpunkt: f.treffpunkt || '',
             preisProPerson: f.preisProPerson,
             bildUebersichtId: f.bildUebersichtId || null,
             bildDetailId: f.bildDetailId || null,
@@ -204,6 +205,7 @@ exports.handler = async (event) => {
       const kurzbeschreibung = typeof body.kurzbeschreibung === 'string' ? body.kurzbeschreibung.trim() : '';
       const langbeschreibung = typeof body.langbeschreibung === 'string' ? body.langbeschreibung.trim() : '';
       const ort = typeof body.ort === 'string' ? body.ort.trim() : '';
+      const treffpunkt = typeof body.treffpunkt === 'string' ? body.treffpunkt.trim() : '';
       const preisProPerson = Number(body.preisProPerson);
       const bildUebersichtId = typeof body.bildUebersichtId === 'string' ? body.bildUebersichtId.trim() : '';
       const bildDetailId = typeof body.bildDetailId === 'string' ? body.bildDetailId.trim() : '';
@@ -215,7 +217,8 @@ exports.handler = async (event) => {
       if (!isNichtLeererText(langbeschreibung, LANGBESCHREIBUNG_MAX)) {
         return errorResponse(400, `Langbeschreibung fehlt oder ist zu lang (max. ${LANGBESCHREIBUNG_MAX} Zeichen).`);
       }
-      if (!isNichtLeererText(ort, ORT_MAX)) return errorResponse(400, `Bitte einen Treffpunkt/Ort angeben (max. ${ORT_MAX} Zeichen).`);
+      if (!isNichtLeererText(ort, ORT_MAX)) return errorResponse(400, `Bitte einen Ort angeben (max. ${ORT_MAX} Zeichen).`);
+      if (treffpunkt.length > ORT_MAX) return errorResponse(400, `Der genaue Treffpunkt ist zu lang (max. ${ORT_MAX} Zeichen).`);
       if (!gueltigerPreis(preisProPerson)) return errorResponse(400, 'Ungültiger Preis pro Person.');
       if (!istGueltigeId(bildUebersichtId)) return errorResponse(400, 'Bitte ein Übersichtsbild hochladen.');
       if (!istGueltigeId(bildDetailId)) return errorResponse(400, 'Bitte ein Detailbild hochladen.');
@@ -227,6 +230,7 @@ exports.handler = async (event) => {
           kurzbeschreibung,
           langbeschreibung,
           ort,
+          treffpunkt,
           preisProPerson,
           bildUebersichtId,
           bildDetailId,
@@ -245,6 +249,8 @@ exports.handler = async (event) => {
       const kurzbeschreibung = typeof body.kurzbeschreibung === 'string' ? body.kurzbeschreibung.trim() : '';
       const langbeschreibung = typeof body.langbeschreibung === 'string' ? body.langbeschreibung.trim() : '';
       const ort = typeof body.ort === 'string' ? body.ort.trim() : '';
+      // Ohne Angabe bleibt der bisherige Treffpunkt; ein leerer Text löscht ihn.
+      const treffpunkt = typeof body.treffpunkt === 'string' ? body.treffpunkt.trim() : null;
       const preisProPerson = Number(body.preisProPerson);
       // Bild-IDs sind beim Bearbeiten OPTIONAL — nur mitschicken, wenn der Admin ein
       // neues Bild hochgeladen hat. Ohne Angabe bleibt das bisherige Bild bestehen.
@@ -263,7 +269,8 @@ exports.handler = async (event) => {
       if (!isNichtLeererText(langbeschreibung, LANGBESCHREIBUNG_MAX)) {
         return errorResponse(400, `Langbeschreibung fehlt oder ist zu lang (max. ${LANGBESCHREIBUNG_MAX} Zeichen).`);
       }
-      if (!isNichtLeererText(ort, ORT_MAX)) return errorResponse(400, `Bitte einen Treffpunkt/Ort angeben (max. ${ORT_MAX} Zeichen).`);
+      if (!isNichtLeererText(ort, ORT_MAX)) return errorResponse(400, `Bitte einen Ort angeben (max. ${ORT_MAX} Zeichen).`);
+      if (treffpunkt !== null && treffpunkt.length > ORT_MAX) return errorResponse(400, `Der genaue Treffpunkt ist zu lang (max. ${ORT_MAX} Zeichen).`);
       if (!gueltigerPreis(preisProPerson)) return errorResponse(400, 'Ungültiger Preis pro Person.');
       if (neuesBildUebersichtId && !istGueltigeId(neuesBildUebersichtId)) return errorResponse(400, 'Ungültiges Übersichtsbild.');
       if (neuesBildDetailId && !istGueltigeId(neuesBildDetailId)) return errorResponse(400, 'Ungültiges Detailbild.');
@@ -279,6 +286,7 @@ exports.handler = async (event) => {
         fuehrung.kurzbeschreibung = kurzbeschreibung;
         fuehrung.langbeschreibung = langbeschreibung;
         fuehrung.ort = ort;
+        if (treffpunkt !== null) fuehrung.treffpunkt = treffpunkt;
         fuehrung.preisProPerson = preisProPerson;
 
         if (neuesBildUebersichtId && neuesBildUebersichtId !== fuehrung.bildUebersichtId) {

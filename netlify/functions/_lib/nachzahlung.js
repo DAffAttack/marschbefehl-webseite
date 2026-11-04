@@ -11,6 +11,7 @@
 const { withState, readState, findFuehrung, protokoll, neueRechnungsnummer, getRechnungenStore } = require('./store');
 const { rechnungPdf } = require('./rechnung');
 const { mailSenden, bestaetigungsMail, neueBuchungMail, kopieAn } = require('./mail');
+const { zelloAnhang } = require('./zello');
 
 async function rechnungSicherstellen(buchungId) {
   // 1) Nummer vergeben (atomar) und Daten holen
@@ -54,7 +55,7 @@ async function nachZahlung(buchungId, opt) {
   const m = bestaetigungsMail({ buchung: r.buchung, fuehrung: r.fuehrung, termin: r.termin, rechnungsnummer: r.buchung.rechnungsnummer });
   let ergebnis;
   try {
-    ergebnis = await mailSenden({ an: r.buchung.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: [{ dateiname: 'Rechnung-' + r.buchung.rechnungsnummer + '.pdf', inhalt: r.pdf, typ: 'application/pdf' }] });
+    ergebnis = await mailSenden({ an: r.buchung.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: [{ dateiname: 'Rechnung-' + r.buchung.rechnungsnummer + '.pdf', inhalt: r.pdf, typ: 'application/pdf' }].concat(await zelloAnhang()) });
   } catch (err) {
     console.error('nachZahlung: Bestätigungsmail fehlgeschlagen:', err.message);
     await withState((state) => {

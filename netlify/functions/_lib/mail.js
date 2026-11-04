@@ -11,7 +11,8 @@
 const fs = require('fs');
 const path = require('path');
 const { datumLesbar } = require('./zahlung');
-const { euro } = require('./rechnung');
+const { euro, treffpunktVon } = require('./rechnung');
+const { zelloBlock } = require('./zello');
 
 function betriebsart() {
   if (process.env.RESEND_API_KEY) return 'resend';
@@ -114,7 +115,7 @@ function bestaetigungsMail({ buchung, fuehrung, termin, rechnungsnummer }) {
     ['Buchungsnummer', buchung.nummer],
     ['Führung', fuehrung.titel],
     ['Termin', wann],
-    ['Treffpunkt', fuehrung.ort || 'wird noch mitgeteilt'],
+    ['Treffpunkt', treffpunktVon(fuehrung) || 'wird noch mitgeteilt'],
     ['Personen', String(buchung.personen)],
     ['Anreise', buchung.fahrzeug === 'eigen' ? 'mit eigenem Fahrzeug (Kolonnenfahrt)' : 'als Mitfahrer'],
     ['Betrag', euro(buchung.betragCent) + ' (bezahlt)'],
@@ -123,19 +124,23 @@ function bestaetigungsMail({ buchung, fuehrung, termin, rechnungsnummer }) {
   const hinweise = [
     'Festes Schuhwerk und wetterfeste Kleidung mitbringen, wir sind den ganzen Tag im Gelände.',
     'Die Stationen werden in Kolonnenfahrt mit den eigenen Fahrzeugen angefahren; an jeder Station sammeln wir uns kurz.',
+    'Die Erklärungen während der Fahrt hören Sie über die kostenlose App Zello. Bitte richten Sie sie vor dem Termin ein. Die Anleitung steht unten und hängt zusätzlich als PDF an.',
     'Drei Tage vor dem Termin kommt eine Erinnerung mit den letzten Hinweisen.',
     'Stornierung laut Teilnahmebedingungen (https://marschbefehl.com/agb.html). Bei Fragen einfach auf diese Mail antworten.',
   ];
+  const zello = zelloBlock({ mitfahrer: buchung.fahrzeug !== 'eigen' });
   const text =
     'Hallo ' + buchung.name + ',\n\nvielen Dank, die Buchung ist bestätigt und bezahlt.\n\n' +
     daten.map(([k, v]) => k + ': ' + v).join('\n') +
     '\n\nHinweise:\n' + hinweise.map((h) => '- ' + h).join('\n') +
+    '\n\n' + zello.text +
     '\n\nBis bald im Oderbruch\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
   const html = htmlRahmen(
     'Buchung bestätigt',
     '<p>Hallo ' + esc(buchung.name) + ',</p><p>vielen Dank, die Buchung ist bestätigt und bezahlt. Die Rechnung hängt als PDF an.</p>' +
       tabelle(daten.map(([k, v]) => [esc(k), esc(v)])) +
       '<p style="font-weight:600;margin-bottom:6px;">Hinweise</p><ul style="padding-left:18px;color:#444;">' + hinweise.map((h) => '<li style="margin-bottom:6px;">' + esc(h) + '</li>').join('') + '</ul>' +
+      zello.html +
       '<p>Bis bald im Oderbruch<br>Enrico Holland<br>Zeitreise Seelower Höhen · <a href="https://marschbefehl.com" style="color:#6F8F2E;">marschbefehl.com</a></p>'
   );
   return { betreff, text, html };
@@ -146,7 +151,7 @@ function erinnerungsMail({ buchung, fuehrung, termin }) {
   const betreff = 'Erinnerung: ' + fuehrung.titel + ' am ' + wann + ' (Buchung ' + buchung.nummer + ')';
   const daten = [
     ['Termin', wann],
-    ['Treffpunkt', fuehrung.ort || 'wird noch mitgeteilt'],
+    ['Treffpunkt', treffpunktVon(fuehrung) || 'wird noch mitgeteilt'],
     ['Personen', String(buchung.personen)],
     ['Buchungsnummer', buchung.nummer],
   ];
@@ -155,17 +160,21 @@ function erinnerungsMail({ buchung, fuehrung, termin }) {
     'Festes Schuhwerk, wetterfeste Kleidung, etwas zu trinken und eine Kleinigkeit zu essen mitnehmen.',
     'Tank voll und Handy geladen; die Telefonnummer aus der Buchung ist für kurzfristige Rückfragen hinterlegt.',
     'Bei Unwetter oder Sperrungen melden wir uns spätestens am Vorabend per Mail und Telefon.',
+    'Bitte richten Sie jetzt die App Zello ein, falls noch nicht geschehen. Die Anleitung steht unten und hängt zusätzlich als PDF an.',
   ];
+  const zello = zelloBlock({ mitfahrer: buchung.fahrzeug !== 'eigen' });
   const text =
     'Hallo ' + buchung.name + ',\n\nin drei Tagen ist es so weit. Hier die letzten Hinweise:\n\n' +
     daten.map(([k, v]) => k + ': ' + v).join('\n') +
     '\n\n' + hinweise.map((h) => '- ' + h).join('\n') +
+    '\n\n' + zello.text +
     '\n\nBis bald im Oderbruch\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
   const html = htmlRahmen(
     'In drei Tagen geht es los',
     '<p>Hallo ' + esc(buchung.name) + ',</p><p>in drei Tagen ist es so weit. Hier die letzten Hinweise:</p>' +
       tabelle(daten.map(([k, v]) => [esc(k), esc(v)])) +
       '<ul style="padding-left:18px;color:#444;">' + hinweise.map((h) => '<li style="margin-bottom:6px;">' + esc(h) + '</li>').join('') + '</ul>' +
+      zello.html +
       '<p>Bis bald im Oderbruch<br>Enrico Holland<br>Zeitreise Seelower Höhen · <a href="https://marschbefehl.com" style="color:#6F8F2E;">marschbefehl.com</a></p>'
   );
   return { betreff, text, html };

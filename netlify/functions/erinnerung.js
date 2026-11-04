@@ -8,6 +8,7 @@
 
 const { readState, withState, findFuehrung, protokoll, blobsVerbinden } = require('./_lib/store');
 const { mailSenden, erinnerungsMail } = require('./_lib/mail');
+const { zelloAnhang } = require('./_lib/zello');
 
 const VORLAUF_TAGE = 3;
 
@@ -43,7 +44,7 @@ exports.handler = async (event) => {
       if (!termin || !fuehrung) continue;
       const m = erinnerungsMail({ buchung: b, fuehrung, termin });
       try {
-        const erg = await mailSenden({ an: b.email, betreff: m.betreff, text: m.text, html: m.html });
+        const erg = await mailSenden({ an: b.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: await zelloAnhang() });
         await withState((st) => {
           const x = st.buchungen.find((y) => y.id === b.id);
           if (x) {

@@ -668,7 +668,9 @@
 
     var ortBlock = document.getElementById('f-ort-block');
     if(f.ort){
-      document.getElementById('f-ort-text').textContent = f.ort;
+      document.getElementById('f-ort-text').textContent = f.treffpunktNachBuchung
+        ? f.ort + '. Den genauen Treffpunkt erhalten Sie mit der Buchungsbestätigung.'
+        : f.ort;
       // Keine eingebettete Karte eines Drittanbieters (Datenschutz): Link öffnet den Treffpunkt
       // auf OpenStreetMap erst mit dem Klick (E6, 03.11.2026).
       document.getElementById('f-ort-map').innerHTML =
@@ -676,6 +678,7 @@
           '<span class="ort-link-icon" aria-hidden="true">&#9906;</span>' +
           '<span><strong>Treffpunkt auf der Karte öffnen</strong><br><small>OpenStreetMap, öffnet in einem neuen Fenster. Für die Navigation die Adresse oben ins Navi übernehmen.</small></span>' +
         '</a>';
+      if(f.treffpunktNachBuchung) document.getElementById('f-ort-map').style.display = 'none';
     } else {
       ortBlock.style.display = 'none';
     }

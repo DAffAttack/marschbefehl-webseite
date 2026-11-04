@@ -493,9 +493,15 @@
       </div>
 
       <div class="field">
-        <label>Treffpunkt / Ort</label>
-        <input type="text" id="nf-ort" maxlength="200" placeholder="z. B. Parkplatz Gedenkstätte Seelower Höhen, 15306 Seelow">
-        <span class="hint">Wird auf der Detailseite als Adresse und eingebettete Karte angezeigt.</span>
+        <label>Ort, öffentlich sichtbar</label>
+        <input type="text" id="nf-ort" maxlength="200" placeholder="z. B. Raum Seelow">
+        <span class="hint">Steht für alle auf der Detailseite.</span>
+      </div>
+
+      <div class="field">
+        <label>Genauer Treffpunkt, erst nach der Buchung</label>
+        <input type="text" id="nf-treffpunkt" maxlength="200" placeholder="z. B. Parkplatz Gedenkstätte Seelower Höhen, 15306 Seelow">
+        <span class="hint">Nur in Bestätigung, Erinnerung, Rechnung und Teilnehmerliste. Leer lassen: Dort steht der öffentliche Ort, und die Detailseite zeigt ihn als Treffpunkt mit Kartenlink.</span>
       </div>
 
       <div class="form-row">
@@ -763,7 +769,7 @@
     if(!titel){ showMsg(nfMsg, 'Bitte einen Namen angeben.', false); return; }
     if(!kurz || kurz.length > 100){ showMsg(nfMsg, 'Kurzbeschreibung fehlt oder ist zu lang (max. 100 Zeichen).', false); return; }
     if(!lang){ showMsg(nfMsg, 'Bitte eine Langbeschreibung angeben.', false); return; }
-    if(!ort){ showMsg(nfMsg, 'Bitte einen Treffpunkt/Ort angeben.', false); return; }
+    if(!ort){ showMsg(nfMsg, 'Bitte einen Ort angeben.', false); return; }
     if(isNaN(preis) || preis < 0){ showMsg(nfMsg, 'Ungültiger Preis.', false); return; }
     if(!nfBildUebersichtId){ showMsg(nfMsg, 'Bitte ein Übersichtsbild hochladen.', false); return; }
     if(!nfBildDetailId){ showMsg(nfMsg, 'Bitte ein Detailbild hochladen.', false); return; }
@@ -774,6 +780,7 @@
       kurzbeschreibung: kurz,
       langbeschreibung: lang,
       ort: ort,
+      treffpunkt: document.getElementById('nf-treffpunkt').value.trim(),
       preisProPerson: preis,
       bildUebersichtId: nfBildUebersichtId,
       bildDetailId: nfBildDetailId
@@ -782,7 +789,7 @@
       if(r.status === 401){ goToLogin(); return; }
       if(!r.data.ok){ showMsg(nfMsg, r.data.error || 'Führung konnte nicht angelegt werden.', false); return; }
       showMsg(nfMsg, 'Führung angelegt.', true);
-      nfTitel.value = ''; nfKurz.value = ''; nfLang.value = ''; nfOrt.value = ''; nfPreis.value = '';
+      nfTitel.value = ''; nfKurz.value = ''; nfLang.value = ''; nfOrt.value = ''; document.getElementById('nf-treffpunkt').value = ''; nfPreis.value = '';
       nfKurzCounter.textContent = '0 / 100';
       nfKurzCounter.classList.remove('is-near-limit');
       nfBildUebersichtId = null; nfBildDetailId = null;
@@ -959,7 +966,8 @@
         '<div class="field"><label>Name der Führung</label><input type="text" class="ef-titel" maxlength="150" value="' + escapeHtml(f.titel) + '"></div>' +
         '<div class="field"><label>Kurzbeschreibung</label><input type="text" class="ef-kurz" maxlength="100" value="' + escapeHtml(f.kurzbeschreibung) + '"><div class="char-counter ef-kurz-counter">' + f.kurzbeschreibung.length + ' / 100</div></div>' +
         '<div class="field"><label>Langbeschreibung</label><textarea class="ef-lang" rows="6">' + escapeHtml(f.langbeschreibung) + '</textarea></div>' +
-        '<div class="field"><label>Treffpunkt / Ort</label><input type="text" class="ef-ort" maxlength="200" value="' + escapeHtml(f.ort || '') + '"></div>' +
+        '<div class="field"><label>Ort, öffentlich sichtbar</label><input type="text" class="ef-ort" maxlength="200" value="' + escapeHtml(f.ort || '') + '"></div>' +
+        '<div class="field"><label>Genauer Treffpunkt, erst nach der Buchung</label><input type="text" class="ef-treffpunkt" maxlength="200" value="' + escapeHtml(f.treffpunkt || '') + '"><span class="hint">Nur in Bestätigung, Erinnerung, Rechnung und Teilnehmerliste. Leer lassen: Dort steht der öffentliche Ort, und die Detailseite zeigt ihn als Treffpunkt mit Kartenlink.</span></div>' +
         '<div class="form-row">' +
           '<div class="field"><label>Bild Übersicht ersetzen (optional)</label><div class="image-upload">' +
             '<div class="preview ef-bild-uebersicht-preview"' + thumbStyle + '></div>' +
@@ -1031,7 +1039,7 @@
       if(!titel){ showMsg(efMsg, 'Bitte einen Namen angeben.', false); return; }
       if(!kurz || kurz.length > 100){ showMsg(efMsg, 'Kurzbeschreibung fehlt oder ist zu lang (max. 100 Zeichen).', false); return; }
       if(!lang){ showMsg(efMsg, 'Bitte eine Langbeschreibung angeben.', false); return; }
-      if(!ort){ showMsg(efMsg, 'Bitte einen Treffpunkt/Ort angeben.', false); return; }
+      if(!ort){ showMsg(efMsg, 'Bitte einen Ort angeben.', false); return; }
       if(isNaN(preis) || preis < 0){ showMsg(efMsg, 'Ungültiger Preis.', false); return; }
 
       var payload = {
@@ -1040,6 +1048,7 @@
         kurzbeschreibung: kurz,
         langbeschreibung: lang,
         ort: ort,
+        treffpunkt: wrap.querySelector('.ef-treffpunkt').value.trim(),
         preisProPerson: preis
       };
       if(efBildUebersichtId) payload.bildUebersichtId = efBildUebersichtId;

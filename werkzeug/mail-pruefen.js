@@ -19,7 +19,7 @@ function dateien() { try { return fs.readdirSync(AUSGANG); } catch { return []; 
   const liste = (await post('admin-api', { action: 'list', password: PW })).j;
   const termin = liste.termine.find((t) => !t.istVergangenheit && t.freiePlaetze >= 2);
   console.log('     Termin', termin.datumIso, '| frei', termin.freiePlaetze);
-  const vorher = dateien().length;
+  const vorher = new Set(dateien());
 
   // 1) Buchen + zahlen
   const b = await post('buchung-anlegen', { terminId: termin.id, name: 'Mail Prüfgast', email: 'mail-pruef@example.com', telefon: '0170 9999999', personen: 2, fahrzeug: 'eigen', agb: true, firma: '' });
@@ -43,12 +43,16 @@ function dateien() { try { return fs.readdirSync(AUSGANG); } catch { return []; 
   pruef('Rechnung ohne passende Sitzung → 404', r2.status === 404);
 
   // 4) Mail-Attrappe: Dateien im Ausgang (Bestätigung + Kopie, falls MAIL_KOPIE_AN gesetzt)
-  const neu = dateien().slice(vorher);
+  const neu = dateien().filter((d) => !vorher.has(d));
   const best = neu.filter((d) => d.includes('bestaetigt'));
   pruef('Bestätigungsmail im Ausgang (html, txt, json, pdf)', best.some((d) => d.endsWith('.html')) && best.some((d) => d.endsWith('.txt')) && best.some((d) => d.endsWith('.pdf')), best.join(', '));
   const txt = best.find((d) => d.endsWith('.txt'));
   const inhalt = txt ? fs.readFileSync(path.join(AUSGANG, txt), 'utf8') : '';
   pruef('Mailtext enthält Nummer, Termin, Treffpunkt, Rechnung', inhalt.includes(b.j.nummer) && inhalt.includes('Treffpunkt') && inhalt.includes(rnr) && inhalt.includes('An: mail-pruef@example.com'));
+
+  pruef('Bestätigungsmail enthält die ganze Zello-Anleitung', inhalt.includes('Führung im Auto hören') && inhalt.includes('Vor der Tour') && inhalt.includes('Am Treffpunkt') && inhalt.includes('Während der Fahrt') && inhalt.includes('Hört nichts?') && inhalt.includes('Funkprobe'));
+  const anhang = best.find((d) => d.endsWith('Fuehrung-im-Auto-hoeren-Zello.pdf'));
+  pruef('Bestätigungsmail hat Rechnung + Zello-PDF', !!anhang && fs.readFileSync(path.join(AUSGANG, anhang)).slice(0, 4).toString() === '%PDF' && best.some((d) => d.endsWith('Rechnung-' + rnr + '.pdf')), anhang);
 
   // 5) Erneute Zahlungsmeldung → keine zweite Mail, gleiche Rechnungsnummer
   const vor2 = dateien().length;
@@ -80,6 +84,7 @@ function dateien() { try { return fs.readdirSync(AUSGANG); } catch { return []; 
   const erinn = dateien().filter((d) => d.includes('erinnerung') && d.endsWith('.txt'));
   const et = erinn.length ? fs.readFileSync(path.join(AUSGANG, erinn[erinn.length - 1]), 'utf8') : '';
   pruef('Erinnerungstext enthält Treffpunkt und Uhrzeit', et.includes('Treffpunkt') && et.includes(termin.uhrzeit), erinn[erinn.length - 1]);
+  pruef('Erinnerung enthält Zello-Anleitung + PDF', et.includes('Führung im Auto hören') && et.includes('Funkprobe') && dateien().some((d) => d.includes('erinnerung') && d.endsWith('Fuehrung-im-Auto-hoeren-Zello.pdf')));
 
   console.log('     Mail-Ausgang:', AUSGANG, '(' + dateien().length + ' Dateien)');
   console.log(fehler === 0 ? '\nALLE PRÜFPUNKTE BESTANDEN' : '\n' + fehler + ' PRÜFPUNKT(E) FEHLGESCHLAGEN');

@@ -23,6 +23,8 @@ function oeffentlichesDetailFeld(f) {
     kurzbeschreibung: f.kurzbeschreibung,
     langbeschreibung: f.langbeschreibung,
     ort: f.ort || '',
+    // Nur der Hinweis, nie die Adresse selbst: "treffpunkt" bleibt für Gäste nach der Buchung.
+    treffpunktNachBuchung: Boolean(f.treffpunkt),
     preisProPerson: f.preisProPerson,
     bildUebersichtId: f.bildUebersichtId || null,
     bildDetailId: f.bildDetailId || null,

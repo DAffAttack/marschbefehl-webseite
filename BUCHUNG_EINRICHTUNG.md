@@ -32,7 +32,7 @@ Stand 04.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut, lokal
 
 ## 4. Netlify-Variablen setzen
 
-Site configuration → Environment variables. Liste und Erklärung in `.env.example`. Pflicht: `FUEHRUNGEN_ADMIN_PASSWORD`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `MAIL_KOPIE_AN`. Empfohlen: `ADMIN_SITZUNG_GEHEIMNIS` (langer Zufallswert), `RECHNUNG_STEUERNUMMER` sobald vorhanden. Scope: alle Deploy-Kontexte (Branch-Deploys brauchen dieselben Werte, im Testmodus mit sk_test).
+Site configuration → Environment variables. Liste und Erklärung in `.env.example`. Pflicht: `FUEHRUNGEN_ADMIN_PASSWORD`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `MAIL_KOPIE_AN`. Empfohlen: `ADMIN_SITZUNG_GEHEIMNIS` (langer Zufallswert), `RECHNUNG_STEUERNUMMER` sobald vorhanden, `ZELLO_KANAL` und `ZELLO_PASSWORT` sobald der Kanal steht (bis dahin steht in den Mails: „am Treffpunkt“). Scope: alle Deploy-Kontexte (Branch-Deploys brauchen dieselben Werte, im Testmodus mit sk_test).
 
 ## 5. Probelauf auf dem Branch-Deploy (vor dem Livegang, Pflicht)
 

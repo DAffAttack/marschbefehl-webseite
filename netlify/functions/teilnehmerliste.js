@@ -7,6 +7,7 @@ const { readState, findFuehrung, blobsVerbinden } = require('./_lib/store');
 const { angemeldet } = require('./_lib/sitzung');
 const { errorResponse, istGueltigeId } = require('./_lib/http');
 const { datumLesbar } = require('./_lib/zahlung');
+const { treffpunktVon } = require('./_lib/rechnung');
 
 exports.handler = async (event) => {
   blobsVerbinden(event);
@@ -43,7 +44,7 @@ exports.handler = async (event) => {
 
     const kopf = () => {
       text(fuehrung.titel, rand, y - 12, { size: 15, fett: true, farbe: gruen });
-      text('Teilnehmerliste · ' + datumLesbar(termin.datumIso, termin.uhrzeit) + (fuehrung.ort ? ' · Treffpunkt ' + fuehrung.ort : ''), rand, y - 28, { size: 10, farbe: grau });
+      text('Teilnehmerliste · ' + datumLesbar(termin.datumIso, termin.uhrzeit) + (treffpunktVon(fuehrung) ? ' · Treffpunkt ' + treffpunktVon(fuehrung) : ''), rand, y - 28, { size: 10, farbe: grau });
       y -= 50;
       seite.drawLine({ start: { x: rand, y: y + 6 }, end: { x: B - rand, y: y + 6 }, thickness: 0.8, color: gruen });
       y -= 8;

@@ -17,6 +17,13 @@ function absender() {
   };
 }
 
+// Genauer Treffpunkt für Gäste nach der Buchung (Mails, Rechnung, Teilnehmerliste). Führungen
+// ohne eigenen Treffpunkt nutzen weiter das öffentliche Feld "ort". "treffpunkt" nie in
+// öffentliche Antworten geben.
+function treffpunktVon(fuehrung) {
+  return (fuehrung && (fuehrung.treffpunkt || fuehrung.ort)) || '';
+}
+
 function euro(cent) {
   return (cent / 100).toFixed(2).replace('.', ',') + ' €';
 }
@@ -112,7 +119,7 @@ async function rechnungPdf({ rechnungsnummer, rechnungsdatum, buchung, fuehrung,
   seite.drawLine({ start: { x: rand, y }, end: { x: 595.28 - rand, y }, thickness: 0.4, color: grau });
   y -= 16;
 
-  const leistung = 'Geführte Tour "' + fuehrung.titel + '" am ' + datumLesbar(termin.datumIso, termin.uhrzeit) + (fuehrung.ort ? ', Treffpunkt ' + fuehrung.ort : '');
+  const leistung = 'Geführte Tour "' + fuehrung.titel + '" am ' + datumLesbar(termin.datumIso, termin.uhrzeit) + (treffpunktVon(fuehrung) ? ', Treffpunkt ' + treffpunktVon(fuehrung) : '');
   const zeilen = umbrechen(normal, leistung, 10, spalten.anz - rand - 12);
   zeilen.forEach((z, i) => zeichne(z, spalten.pos, y - i * 13, { size: 10 }));
   zeichne(String(buchung.personen) + ' Pers.', spalten.anz, y, { size: 10 });
@@ -146,8 +153,8 @@ async function rechnungPdf({ rechnungsnummer, rechnungsdatum, buchung, fuehrung,
   // Treffpunkt / Dank
   zeichne('Vielen Dank für die Buchung. Wir freuen uns auf die gemeinsame Tour.', rand, y, { size: 10 });
   y -= 14;
-  if (fuehrung.ort) {
-    for (const z of umbrechen(normal, 'Treffpunkt: ' + fuehrung.ort + ' · Beginn ' + termin.uhrzeit + ' Uhr', 10, breite)) {
+  if (treffpunktVon(fuehrung)) {
+    for (const z of umbrechen(normal, 'Treffpunkt: ' + treffpunktVon(fuehrung) + ' · Beginn ' + termin.uhrzeit + ' Uhr', 10, breite)) {
       zeichne(z, rand, y, { size: 10 });
       y -= 13;
     }
@@ -161,4 +168,4 @@ async function rechnungPdf({ rechnungsnummer, rechnungsdatum, buchung, fuehrung,
   return doc.save();
 }
 
-module.exports = { rechnungPdf, absender, euro, datumDe };
+module.exports = { rechnungPdf, absender, euro, datumDe, umbrechen, treffpunktVon };
