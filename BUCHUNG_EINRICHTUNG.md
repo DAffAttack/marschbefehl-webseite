@@ -1,6 +1,6 @@
 # Buchungssystem marschbefehl.com – Einrichtung und Livegang
 
-Stand 03.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut und lokal mit Attrappen für Zahlung und Mail durchgespielt. Dieses Blatt führt Schritt für Schritt vom lokalen Stand zum Livegang. Alles, was ein Konto oder einen Schlüssel braucht, muss der Betreiber selbst anlegen.
+Stand 04.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut, lokal mit Attrappen für Zahlung und Mail durchgespielt und seit 04.11.2026 als Branch-Deploy unter https://buchung--zeitreise-seelower-hoehen.netlify.app erreichbar (Zahlung dort noch „nicht freigeschaltet“, Verwaltung wartet auf die Variablen). Dieses Blatt führt Schritt für Schritt vom lokalen Stand zum Livegang. Alles, was ein Konto oder einen Schlüssel braucht, muss der Betreiber selbst anlegen.
 
 ## 1. Was läuft wo
 
@@ -34,16 +34,25 @@ Site configuration → Environment variables. Liste und Erklärung in `.env.exam
 
 ## 5. Probelauf auf dem Branch-Deploy (vor dem Livegang, Pflicht)
 
-1. Branch `buchung` pushen → Netlify baut `https://buchung--zeitreise-seelower-hoehen.netlify.app`.
-2. Mit Stripe-Testschlüsseln: eine Testbuchung mit Testkarte komplett durchspielen (Buchen → Bezahlseite → Danke-Seite „bestätigt“ → Mail mit Rechnung im echten Postfach).
-3. Prüfläufe gegen den Deploy, weil die Schreibsperre von Netlify Blobs nur dort echt ist:
+1. ✅ Branch `buchung` gepusht (04.11.2026) → Netlify baut `https://buchung--zeitreise-seelower-hoehen.netlify.app`. Seiten und Functions antworten; Verwaltung meldet „FUEHRUNGEN_ADMIN_PASSWORD fehlt“, Buchen meldet „Zahlung nicht freigeschaltet“ (503) – beides gewollt, solange die Variablen fehlen.
+2. **Variablen setzen (Betreiber, im Ordner `website`):** liest das Passwort aus `.env` und setzt es nur für den Kontext `branch:buchung`, dazu `BUCHUNG_BREMSE_JE_STUNDE=1000` für die Prüfläufe. Danach in Netlify → Deploys → „Trigger deploy“ für den Branch, sonst sehen die Functions die Variablen nicht.
+   ```
+   node werkzeug/netlify-variablen-setzen.js
+   ```
+   (Vor dem Livegang dasselbe mit `--alle` für alle Kontexte. Stripe- und Resend-Schlüssel kommen von Hand in Netlify, Abschnitt 4.)
+3. **Testdaten anlegen:** Führung „Prüf-Führung (TEST)“ zu 1,00 € je Person mit Termin 13.02.2027, 20 Plätze (läuft mehrfach ohne Doppelung):
+   ```
+   node werkzeug/testdaten-anlegen.js https://buchung--zeitreise-seelower-hoehen.netlify.app
+   ```
+4. Prüfläufe gegen den Deploy, weil die Schreibsperre von Netlify Blobs nur dort echt ist:
    ```
    node werkzeug/buchung-pruefen.js https://buchung--zeitreise-seelower-hoehen.netlify.app
    node werkzeug/verwaltung-pruefen.js https://buchung--zeitreise-seelower-hoehen.netlify.app
    ```
-   (Passwort aus `.env`; die Zahlungs-Prüfpunkte überspringt das Skript dort, weil es keine Attrappe gibt. Es storniert seine Reservierungen am Ende selbst.)
-4. In der Verwaltung: Termin anlegen, Teilnehmerliste öffnen, Storno mit Erstattung an einer Testbuchung (Erstattung im Stripe-Dashboard sichtbar), „Jetzt abgleichen“ → Note „sehr gut“.
-5. Stripe → Webhooks: alle Zustellungen 200.
+   (Passwort aus `.env`; die Zahlungs-Prüfpunkte überspringt das Skript dort, weil es keine Attrappe gibt. Es storniert seine Reservierungen am Ende selbst. `verwaltung-pruefen` sperrt zum Schluss den Login für 15 Minuten.)
+5. Mit Stripe-Testschlüsseln: eine Testbuchung mit Testkarte komplett durchspielen (Buchen → Bezahlseite → Danke-Seite „bestätigt“ → Mail mit Rechnung im echten Postfach).
+6. In der Verwaltung: Termin anlegen, Teilnehmerliste öffnen, Storno mit Erstattung an einer Testbuchung (Erstattung im Stripe-Dashboard sichtbar), „Jetzt abgleichen“ → Note „sehr gut“.
+7. Stripe → Webhooks: alle Zustellungen 200.
 
 ## 6. Livegang
 
