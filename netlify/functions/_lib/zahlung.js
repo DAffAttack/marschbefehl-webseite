@@ -84,10 +84,19 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
   }
 
   const stripe = client();
+  function zahlungsarten() {
+    const liste = String(process.env.ZAHLUNGSARTEN || 'card,paypal').split(',').map((s) => s.trim()).filter(Boolean);
+    return liste.length ? liste : ['card'];
+  }
   const session = await stripe.checkout.sessions.create(
     {
       mode: 'payment',
       locale: 'de',
+      // Feste Liste statt Stripe-Vorgaben (Entscheidung 04.11.2026): Karte (dazu automatisch
+      // Apple Pay und Google Pay) und PayPal. Kein Klarna, keine Lastschrift, keine Überweisung –
+      // die Bestätigung käme erst nach Tagen, die Reservierung hält nur 15 Minuten.
+      // Über ZAHLUNGSARTEN änderbar, z. B. "card" solange PayPal im Live-Konto nicht aktiv ist.
+      payment_method_types: zahlungsarten(),
       customer_email: buchung.email,
       line_items: [
         {
