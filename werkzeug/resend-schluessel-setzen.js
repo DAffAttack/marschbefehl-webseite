@@ -25,11 +25,21 @@ function setzen(name, wert, geheim) {
   return ok;
 }
 
+// Liegt der Schlüssel schon in der Zwischenablage (Kopier-Knopf bei Resend), reicht Enter.
+function ausZwischenablage() {
+  if (process.platform !== 'win32') return '';
+  const r = spawnSync('powershell', ['-NoProfile', '-Command', 'Get-Clipboard -Raw'], { encoding: 'utf8' });
+  const t = (r.stdout || '').trim();
+  return /^re_[A-Za-z0-9_]{10,}$/.test(t) ? t : '';
+}
+
 (async () => {
   console.log('');
   let key = '';
+  const vorgabe = ausZwischenablage();
+  if (vorgabe) console.log('Ein Resend-Schluessel liegt in der Zwischenablage (re_' + '*'.repeat(8) + ').');
   while (!/^re_[A-Za-z0-9_]{10,}$/.test(key)) {
-    key = await frage('1) Resend API Key (beginnt mit re_), einfuegen + Enter: ');
+    key = (await frage(vorgabe ? '1) Resend API Key [Enter = aus der Zwischenablage]: ' : '1) Resend API Key (beginnt mit re_), einfuegen + Enter: ')) || vorgabe;
     if (!key) { console.log('   Abgebrochen.'); rl.close(); process.exit(2); }
     if (!key.startsWith('re_')) console.log('   Das sieht nicht nach einem Resend-Schluessel aus (muss mit re_ beginnen).');
   }
