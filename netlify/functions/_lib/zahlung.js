@@ -88,12 +88,15 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
   const grund = {
     mode: 'payment',
     locale: 'de',
-    // Feste Liste statt Stripe-Vorgaben (Entscheidung 04.11.2026): Karte (dazu automatisch
+    // Filterliste statt Stripe-Vorgaben (Entscheidung 04.11.2026): Karte (dazu automatisch
     // Apple Pay und Google Pay), PayPal, Klarna (= Sofortüberweisung) und Banküberweisung
     // (customer_balance, E7). Die Banküberweisung fällt weg, wenn der Termin näher als
-    // UEBERWEISUNG_MIN_VORLAUF_TAGE liegt. Über ZAHLUNGSARTEN änderbar, z. B. "card",
-    // solange PayPal/Klarna/Überweisung im Live-Konto noch nicht aktiv sind.
-    payment_method_types: arten,
+    // UEBERWEISUNG_MIN_VORLAUF_TAGE liegt. Über ZAHLUNGSARTEN änderbar.
+    // Seit Stripe-API 2026-09-30 gibt es "payment_method_types" für Checkout nicht mehr;
+    // "allowed_payment_method_types" filtert die im Dashboard aktiven Zahlarten – eine dort
+    // nicht aktive Zahlart (z. B. Banküberweisung noch nicht freigeschaltet) wird still
+    // weggelassen statt die Buchung zu blockieren.
+    allowed_payment_method_types: arten,
     customer_email: buchung.email,
   };
   if (arten.includes('customer_balance')) {
@@ -112,15 +115,15 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
     // Typischer Fall: eine Zahlart ist im Stripe-Konto (noch) nicht freigeschaltet. Dann
     // lieber nur mit Karte buchen lassen als gar nicht – und das im Protokoll festhalten.
     const text = String(err && err.message || '');
-    if (!/payment_method_types|payment method|customer_balance|paypal|klarna/i.test(text)) throw err;
-    console.error('checkoutAnlegen: Zahlarten ' + arten.join(',') + ' abgelehnt, Rückfall auf card:', text);
-    zahlungsartenHinweis = 'Rückfall auf Karte: ' + text.slice(0, 160);
+    if (!/payment_method_types|payment method|customer_balance|customer_creation|paypal|klarna/i.test(text)) throw err;
+    console.error('checkoutAnlegen: Zahlarten ' + arten.join(',') + ' abgelehnt, Rückfall auf Stripe-Vorgaben:', text);
+    zahlungsartenHinweis = 'Rückfall auf Stripe-Vorgaben: ' + text.slice(0, 160);
     delete grund.customer_creation;
     delete grund.payment_method_options;
-    grund.payment_method_types = ['card'];
+    delete grund.allowed_payment_method_types;
     session = await stripe.checkout.sessions.create(sitzungsDaten(grund), { idempotencyKey: 'checkout-card-' + buchung.id });
   }
-  return { sessionId: session.id, url: session.url, betriebsart: art, zahlungsarten: zahlungsartenHinweis ? ['card'] : arten, zahlungsartenHinweis };
+  return { sessionId: session.id, url: session.url, betriebsart: art, zahlungsarten: zahlungsartenHinweis ? (session.payment_method_types || ['card']) : arten, zahlungsartenHinweis };
 
   function sitzungsDaten(basisDaten) {
     return {
