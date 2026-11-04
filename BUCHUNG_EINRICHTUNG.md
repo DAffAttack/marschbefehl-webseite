@@ -19,9 +19,16 @@ Stand 04.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut, lokal
 1. Konto bei stripe.com anlegen (Gewerbe, IBAN, Ausweis). Für den Testmodus reicht die Anmeldung.
 2. **Developers → API keys**: `Secret key` (sk_test_… / später sk_live_…) → Netlify-Variable `STRIPE_SECRET_KEY`.
 3. **Developers → Webhooks → Add endpoint**: Adresse `https://marschbefehl.com/.netlify/functions/stripe-webhook` (für den Branch-Test: `https://buchung--zeitreise-seelower-hoehen.netlify.app/.netlify/functions/stripe-webhook`). Ereignisse: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`. Den angezeigten `Signing secret` (whsec_…) → `STRIPE_WEBHOOK_SECRET`.
-4. **Einstellungen → Zahlungen → Zahlungsmethoden**: Karten, Apple Pay, Google Pay, PayPal an (je Zeile „···“ → Aktivieren). ✅ In der Sandbox am 04.11.2026 erledigt. **Im Live-Konto wiederholen** (Sandbox und Live haben getrennte Einstellungen). Entschieden: kein Klarna, keine SEPA-Lastschrift, keine Banküberweisung – die Bestätigung kommt dort erst nach Tagen, die Reservierung hält aber nur 15 Minuten.
+4. **Einstellungen → Zahlungen → Zahlungsmethoden**: Karten, Apple Pay, Google Pay, PayPal, **Klarna** und **Banküberweisung** (im Dashboard „Bank transfer“/„Banküberweisung“, Typ customer_balance) an (je Zeile „···“ → Aktivieren). ✅ Sandbox 04.11.2026: Karten, Apple Pay, Google Pay, PayPal, Klarna aktiv; **Banküberweisung in der Sandbox noch freischalten** (sonst fehlt sie auf der Bezahlseite, die Buchung läuft trotzdem). **Im Live-Konto alles wiederholen** (Sandbox und Live haben getrennte Einstellungen). Was die Bezahlseite zeigt, steuert zusätzlich `ZAHLUNGSARTEN` (Vorgabe `card,paypal,klarna,customer_balance`) als Filter: Stripe zeigt nur, was dort steht UND im Dashboard aktiv ist – Satispay, MB WAY & Co. erscheinen damit nicht mehr. Entschieden: keine SEPA-Lastschrift. Banküberweisung = Etappe 7 (Platz 5 Tage gehalten, nur bei Termin ≥ 10 Tage).
 5. **Settings → Branding**: Logo und Grün (#A1C74F) für die Bezahlseite.
 6. Test: Testkarte 4242 4242 4242 4242, beliebiges Datum in der Zukunft, beliebige drei Ziffern.
+
+### 2a. Banküberweisung und Klarna (Etappe 7, gebaut 04.11.2026)
+
+- **Klarna** ist die Sofortüberweisung: sofort bestätigt, läuft wie Karte/PayPal.
+- **Banküberweisung:** Stripe stellt je Buchung eine IBAN mit Verwendungszweck; der Gast sieht sie auf der Danke-Seite und in der Mail. Die Buchung steht auf „Überweisung offen“ (Verwaltung: blaues Abzeichen), der Platz ist **5 Tage** gehalten, längstens bis 3 Tage vor dem Termin; angeboten nur bei Termin **≥ 10 Tage**. Geldeingang meldet Stripe → bezahlt, Rechnung, Bestätigung. Nach 2 Tagen ohne Eingang eine Erinnerung; nach der Frist gibt `aufraeumen` den Platz frei, bricht die Zahlung bei Stripe ab und mailt „verfallen“. Kommt Geld danach doch, wird die Buchung trotzdem bezahlt (Protokoll „zahlung-nach-ablauf“) – dann in der Verwaltung prüfen, ob der Platz noch frei ist. Storno vor Eingang bricht die Zahlung ab.
+- Prüflauf lokal: `node werkzeug/ueberweisung-pruefen.js` (33 Punkte, Attrappe mit „Überweisung gewählt / eingegangen / Frist vorbei“).
+- Teilnahmebedingungen Punkt 2 enthält die Frist.
 
 ## 3. Resend einrichten (Betreiber)
 
