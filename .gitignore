@@ -12,3 +12,6 @@ _site/
 
 # Von netlify dev automatisch erzeugt (Edge-Functions-Laufzeit), nicht versionieren
 deno.lock
+
+# Sitzungsprotokolle der Claude-App (lokal)
+protokolle/
