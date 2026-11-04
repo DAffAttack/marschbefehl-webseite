@@ -9,6 +9,7 @@
 const { readState, withState, findFuehrung, protokoll, blobsVerbinden } = require('./_lib/store');
 const { mailSenden, erinnerungsMail } = require('./_lib/mail');
 const { zelloAnhang } = require('./_lib/zello');
+const { ueberweisungErinnern, ERINNERUNG_NACH_TAGEN } = require('./_lib/ueberweisung');
 
 const VORLAUF_TAGE = 3;
 
@@ -64,7 +65,19 @@ exports.handler = async (event) => {
         });
       }
     }
-    console.log(`erinnerung (${heute} → ${ziel}): ${gesendet} gesendet, ${fehlgeschlagen} fehlgeschlagen, ${faellig.length} fällig`);
+    // Überweisung (E7): nach ERINNERUNG_NACH_TAGEN ohne Geldeingang einmal erinnern,
+    // solange die Frist noch läuft.
+    let ueberweisungErinnert = 0;
+    const heuteMs = new Date(heute + 'T12:00:00Z').getTime();
+    const offene = state.buchungen.filter((b) =>
+      b.status === 'wartet-ueberweisung' && !b.ueberweisungErinnertAm && b.ueberweisungGewaehltAm && b.ueberweisungFrist
+      && new Date(b.ueberweisungFrist).getTime() > Date.now()
+      && heuteMs - new Date(b.ueberweisungGewaehltAm.slice(0, 10) + 'T12:00:00Z').getTime() >= ERINNERUNG_NACH_TAGEN * 24 * 60 * 60 * 1000);
+    for (const b of offene) {
+      const r = await ueberweisungErinnern(b.id);
+      if (r.ok) ueberweisungErinnert++; else fehlgeschlagen++;
+    }
+    console.log(`erinnerung (${heute} → ${ziel}): ${gesendet} gesendet, ${fehlgeschlagen} fehlgeschlagen, ${faellig.length} fällig, ${ueberweisungErinnert} Überweisungs-Erinnerung(en)`);
     // Zeitgesteuerte Functions geben keine Antwort an einen Aufrufer zurück (Ergebnis steht im Log).
     return { statusCode: 200 };
   } catch (err) {

@@ -26,7 +26,7 @@ exports.handler = async (event) => {
     if (!termin) return errorResponse(404, 'Termin nicht gefunden.');
     const fuehrung = findFuehrung(state, termin.fuehrungId) || { titel: 'Führung', ort: '' };
     const teilnehmer = state.buchungen
-      .filter((b) => b.terminId === terminId && ((b.status || 'bezahlt') === 'bezahlt' || b.status === 'pruefen'))
+      .filter((b) => b.terminId === terminId && ((b.status || 'bezahlt') === 'bezahlt' || b.status === 'pruefen' || b.status === 'wartet-ueberweisung'))
       .sort((x, y) => x.name.localeCompare(y.name, 'de'));
 
     const doc = await PDFDocument.create();
@@ -79,7 +79,7 @@ exports.handler = async (event) => {
       text(b.telefon || '–', sp.tel, y);
       text(b.fahrzeug === 'eigen' ? 'eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? 'Mitfahrer' : '–', sp.anreise, y);
       text(b.nummer || '–', sp.buchung, y);
-      text(b.status === 'pruefen' ? 'PRÜFEN (Betrag)' : 'bezahlt', sp.status, y, { farbe: b.status === 'pruefen' ? rgb(0.73, 0.25, 0.18) : grau });
+      text(b.status === 'pruefen' ? 'PRÜFEN (Betrag)' : b.status === 'wartet-ueberweisung' ? 'ÜBERW. OFFEN' : 'bezahlt', sp.status, y, { farbe: b.status === 'pruefen' ? rgb(0.73, 0.25, 0.18) : b.status === 'wartet-ueberweisung' ? rgb(0.12, 0.31, 0.47) : grau });
       // Kästchen zum Abhaken
       seite.drawRectangle({ x: sp.anw + 10, y: y - 3, width: 11, height: 11, borderWidth: 0.8, borderColor: grau });
       gesamtPersonen += b.personen;

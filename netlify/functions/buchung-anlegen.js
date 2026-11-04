@@ -178,7 +178,8 @@ exports.handler = async (event) => {
       if (!b) return { ok: false, status: 500, error: 'Buchung verschwunden.' };
       b.stripeSessionId = sitzung.sessionId;
       b.zahlungsart = sitzung.betriebsart;
-      protokoll(state, { art: 'bezahlsitzung-angelegt', buchungId: b.id, nummer: b.nummer, text: sitzung.sessionId });
+      protokoll(state, { art: 'bezahlsitzung-angelegt', buchungId: b.id, nummer: b.nummer, text: sitzung.sessionId + (sitzung.zahlungsarten ? ' [' + sitzung.zahlungsarten.join(',') + ']' : '') });
+      if (sitzung.zahlungsartenHinweis) protokoll(state, { art: 'zahlungsarten-rueckfall', buchungId: b.id, nummer: b.nummer, text: sitzung.zahlungsartenHinweis });
       return { ok: true };
     });
   } catch (err) {
@@ -186,5 +187,5 @@ exports.handler = async (event) => {
     return errorResponse(500, 'Buchung konnte nicht gespeichert werden. Bitte später erneut versuchen.');
   }
 
-  return json(200, { ok: true, nummer: buchung.nummer, url: sitzung.url, reserviertBis: buchung.reserviertBis });
+  return json(200, { ok: true, nummer: buchung.nummer, url: sitzung.url, reserviertBis: buchung.reserviertBis, zahlungsarten: sitzung.zahlungsarten || null });
 };

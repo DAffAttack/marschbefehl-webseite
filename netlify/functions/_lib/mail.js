@@ -218,4 +218,85 @@ function abgleichMail(e) {
   return { betreff, text, html };
 }
 
-module.exports = { betriebsart, mailSenden, bestaetigungsMail, erinnerungsMail, neueBuchungMail, stornoMail, absageMail, abgleichMail, absender, antwortAn, kopieAn, attrappeOrdner };
+// --- Überweisung (E7) -------------------------------------------------------------------
+function fristLesbar(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Berlin' });
+}
+
+function ueberweisungZeilen(buchung) {
+  const u = buchung.ueberweisung || {};
+  return [
+    ['Betrag', euro(typeof u.betragCent === 'number' && u.betragCent > 0 ? u.betragCent : buchung.betragCent)],
+    ['Empfänger', u.empfaenger || 'siehe Zahlungsanweisung'],
+    ['IBAN', u.iban || 'siehe Zahlungsanweisung'],
+    ['BIC', u.bic || '–'],
+    ['Verwendungszweck', u.referenz || buchung.nummer],
+    ['Überweisen bis', fristLesbar(buchung.ueberweisungFrist)],
+  ];
+}
+
+function ueberweisungMail({ buchung, fuehrung, termin }) {
+  const wann = datumLesbar(termin.datumIso, termin.uhrzeit);
+  const betreff = 'Buchung ' + buchung.nummer + ': bitte überweisen bis ' + fristLesbar(buchung.ueberweisungFrist) + ' – ' + fuehrung.titel + ' am ' + wann;
+  const daten = [['Buchungsnummer', buchung.nummer], ['Führung', fuehrung.titel], ['Termin', wann], ['Personen', String(buchung.personen)]].concat(ueberweisungZeilen(buchung));
+  const u = buchung.ueberweisung || {};
+  const hinweise = [
+    'Der Verwendungszweck muss genau so angegeben werden, sonst kann die Zahlung nicht zugeordnet werden.',
+    'Der Platz ist bis ' + fristLesbar(buchung.ueberweisungFrist) + ' gehalten. Geht der Betrag bis dahin nicht ein, wird er wieder freigegeben und die Buchung verfällt.',
+    'Sobald das Geld eingegangen ist (in der Regel 1 bis 2 Werktage), kommt die Bestätigung mit Rechnung und Treffpunkt per E-Mail.',
+  ];
+  const text =
+    'Hallo ' + buchung.name + ',\n\nvielen Dank für die Buchung. Sie haben Banküberweisung gewählt – bitte überweisen Sie den Betrag mit genau diesen Angaben:\n\n' +
+    daten.map(([k, v]) => k + ': ' + v).join('\n') +
+    (u.hostedUrl ? '\n\nZahlungsanweisung des Zahlungsanbieters: ' + u.hostedUrl : '') +
+    '\n\nHinweise:\n' + hinweise.map((h) => '- ' + h).join('\n') +
+    '\n\nBei Fragen einfach auf diese Mail antworten.\n\nViele Grüße\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
+  const html = htmlRahmen(
+    'Bitte überweisen',
+    '<p>Hallo ' + esc(buchung.name) + ',</p><p>vielen Dank für die Buchung. Sie haben Banküberweisung gewählt – bitte überweisen Sie den Betrag mit genau diesen Angaben:</p>' +
+      tabelle(daten.map(([k, v]) => [esc(k), esc(v)])) +
+      (u.hostedUrl ? '<p><a href="' + esc(u.hostedUrl) + '" style="color:#6F8F2E;">Zahlungsanweisung des Zahlungsanbieters öffnen</a></p>' : '') +
+      '<ul style="padding-left:18px;color:#444;">' + hinweise.map((h) => '<li style="margin-bottom:6px;">' + esc(h) + '</li>').join('') + '</ul>' +
+      '<p>Bei Fragen einfach auf diese Mail antworten.</p><p>Viele Grüße<br>Enrico Holland<br>Zeitreise Seelower Höhen · <a href="https://marschbefehl.com" style="color:#6F8F2E;">marschbefehl.com</a></p>'
+  );
+  return { betreff, text, html };
+}
+
+function ueberweisungErinnerungMail({ buchung, fuehrung, termin }) {
+  const wann = datumLesbar(termin.datumIso, termin.uhrzeit);
+  const betreff = 'Erinnerung: Überweisung für Buchung ' + buchung.nummer + ' noch offen (bis ' + fristLesbar(buchung.ueberweisungFrist) + ')';
+  const daten = [['Buchungsnummer', buchung.nummer], ['Führung', fuehrung.titel], ['Termin', wann]].concat(ueberweisungZeilen(buchung));
+  const u = buchung.ueberweisung || {};
+  const text =
+    'Hallo ' + buchung.name + ',\n\nfür die Buchung ' + buchung.nummer + ' ist bisher keine Überweisung eingegangen. Der Platz ist noch bis ' + fristLesbar(buchung.ueberweisungFrist) + ' gehalten. Falls Sie schon überwiesen haben, ist diese Mail gegenstandslos – Überweisungen brauchen 1 bis 2 Werktage.\n\n' +
+    daten.map(([k, v]) => k + ': ' + v).join('\n') +
+    (u.hostedUrl ? '\n\nZahlungsanweisung: ' + u.hostedUrl : '') +
+    '\n\nViele Grüße\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
+  const html = htmlRahmen(
+    'Überweisung noch offen',
+    '<p>Hallo ' + esc(buchung.name) + ',</p><p>für die Buchung <strong>' + esc(buchung.nummer) + '</strong> ist bisher keine Überweisung eingegangen. Der Platz ist noch bis <strong>' + esc(fristLesbar(buchung.ueberweisungFrist)) + '</strong> gehalten. Falls Sie schon überwiesen haben, ist diese Mail gegenstandslos – Überweisungen brauchen 1 bis 2 Werktage.</p>' +
+      tabelle(daten.map(([k, v]) => [esc(k), esc(v)])) +
+      (u.hostedUrl ? '<p><a href="' + esc(u.hostedUrl) + '" style="color:#6F8F2E;">Zahlungsanweisung öffnen</a></p>' : '') +
+      '<p>Viele Grüße<br>Enrico Holland<br>Zeitreise Seelower Höhen</p>'
+  );
+  return { betreff, text, html };
+}
+
+function ueberweisungVerfallenMail({ buchung, fuehrung, termin }) {
+  const wann = termin ? datumLesbar(termin.datumIso, termin.uhrzeit) : '';
+  const betreff = 'Buchung ' + buchung.nummer + ' verfallen: keine Überweisung eingegangen';
+  const text =
+    'Hallo ' + buchung.name + ',\n\nfür die Buchung ' + buchung.nummer + (fuehrung ? ' für "' + fuehrung.titel + '"' : '') + (wann ? ' am ' + wann : '') + ' ist bis zur Frist keine Überweisung eingegangen. Der Platz wurde wieder freigegeben, die Buchung ist verfallen.\n\n' +
+    'Falls Sie den Betrag inzwischen doch überwiesen haben, antworten Sie bitte kurz auf diese Mail – wir klären das und erstatten den Betrag oder buchen Sie neu ein, sofern noch Plätze frei sind.\n\n' +
+    'Neu buchen: https://marschbefehl.com/fuehrungen.html (mit Sofort-Zahlart ist der Platz sofort fest).\n\nViele Grüße\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
+  const html = htmlRahmen(
+    'Buchung verfallen',
+    '<p>Hallo ' + esc(buchung.name) + ',</p><p>für die Buchung <strong>' + esc(buchung.nummer) + '</strong>' + (fuehrung ? ' für „' + esc(fuehrung.titel) + '“' : '') + (wann ? ' am ' + esc(wann) : '') + ' ist bis zur Frist keine Überweisung eingegangen. Der Platz wurde wieder freigegeben, die Buchung ist verfallen.</p>' +
+      '<p>Falls Sie den Betrag inzwischen doch überwiesen haben, antworten Sie bitte kurz auf diese Mail – wir klären das und erstatten den Betrag oder buchen Sie neu ein, sofern noch Plätze frei sind.</p>' +
+      '<p><a href="https://marschbefehl.com/fuehrungen.html" style="color:#6F8F2E;">Neu buchen</a> (mit Sofort-Zahlart ist der Platz sofort fest).</p><p>Viele Grüße<br>Enrico Holland<br>Zeitreise Seelower Höhen</p>'
+  );
+  return { betreff, text, html };
+}
+
+module.exports = { betriebsart, mailSenden, bestaetigungsMail, erinnerungsMail, neueBuchungMail, stornoMail, absageMail, abgleichMail, ueberweisungMail, ueberweisungErinnerungMail, ueberweisungVerfallenMail, absender, antwortAn, kopieAn, attrappeOrdner };

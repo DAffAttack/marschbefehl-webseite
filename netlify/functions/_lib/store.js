@@ -89,12 +89,38 @@ const RESERVIERUNG_MINUTEN = 15;
 const MAX_PROTOKOLL = 2000;
 const MAX_EREIGNIS_IDS = 1000;
 
+// Überweisung (E7, 04.11.2026): Der Platz bleibt nach der Wahl „Banküberweisung“ für
+// UEBERWEISUNG_TAGE gehalten, aber nie länger als bis UEBERWEISUNG_PUFFER_TAGE vor dem Termin.
+// Angeboten wird die Überweisung nur, wenn der Termin mindestens UEBERWEISUNG_MIN_VORLAUF_TAGE
+// entfernt ist – sonst bleiben nur die Sofort-Zahlarten.
+const UEBERWEISUNG_TAGE = 5;
+const UEBERWEISUNG_PUFFER_TAGE = 3;
+const UEBERWEISUNG_MIN_VORLAUF_TAGE = 10;
+const TAG_MS = 24 * 60 * 60 * 1000;
+
+function terminZeitMs(termin) {
+  return new Date(termin.datumIso + 'T' + (termin.uhrzeit || '10:00') + ':00').getTime();
+}
+
+function ueberweisungMoeglich(termin, jetztMs) {
+  const jetzt = typeof jetztMs === 'number' ? jetztMs : Date.now();
+  return terminZeitMs(termin) - jetzt >= UEBERWEISUNG_MIN_VORLAUF_TAGE * TAG_MS;
+}
+
+function ueberweisungFrist(termin, jetztMs) {
+  const jetzt = typeof jetztMs === 'number' ? jetztMs : Date.now();
+  const spaetestens = terminZeitMs(termin) - UEBERWEISUNG_PUFFER_TAGE * TAG_MS;
+  return new Date(Math.min(jetzt + UEBERWEISUNG_TAGE * TAG_MS, spaetestens)).toISOString();
+}
+
 // Zählt eine Buchung als Platz belegend? Bezahlte immer; reservierte nur, solange die
-// Reservierung läuft. Buchungen ohne Status stammen aus der Zeit vor E2 und gelten als bezahlt.
+// Reservierung läuft; Buchungen mit offener Überweisung bis zur Überweisungsfrist.
+// Buchungen ohne Status stammen aus der Zeit vor E2 und gelten als bezahlt.
 function belegtPlatz(b, jetztMs) {
   const status = b.status || 'bezahlt';
   if (status === 'bezahlt' || status === 'pruefen') return true;
   if (status === 'reserviert') return !b.reserviertBis || new Date(b.reserviertBis).getTime() > jetztMs;
+  if (status === 'wartet-ueberweisung') return !b.ueberweisungFrist || new Date(b.ueberweisungFrist).getTime() > jetztMs;
   return false;
 }
 
@@ -297,4 +323,9 @@ module.exports = {
   ereignisSchonVerarbeitet,
   ereignisMerken,
   RESERVIERUNG_MINUTEN,
+  UEBERWEISUNG_TAGE,
+  UEBERWEISUNG_PUFFER_TAGE,
+  UEBERWEISUNG_MIN_VORLAUF_TAGE,
+  ueberweisungMoeglich,
+  ueberweisungFrist,
 };

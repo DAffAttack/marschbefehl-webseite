@@ -194,6 +194,11 @@ exports.handler = async (event) => {
           erstattetAm: b.erstattetAm || null,
           storniertAm: b.storniertAm || null,
           stornoGrund: b.stornoGrund || '',
+          // Überweisung (E7)
+          ueberweisungFrist: b.ueberweisungFrist || null,
+          ueberweisungGewaehltAm: b.ueberweisungGewaehltAm || null,
+          ueberweisungErinnertAm: b.ueberweisungErinnertAm || null,
+          ueberweisung: b.ueberweisung ? { referenz: b.ueberweisung.referenz || '', iban: b.ueberweisung.iban || '', hostedUrl: b.ueberweisung.hostedUrl || '' } : null,
         }));
       return json(200, { ok: true, fuehrungen, termine, buchungen });
     }

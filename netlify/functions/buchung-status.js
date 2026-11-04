@@ -31,6 +31,16 @@ exports.handler = async (event) => {
       fuehrungTitel: fuehrung ? fuehrung.titel : null,
       fuehrungId: b.fuehrungId,
       rechnungsnummer: b.rechnungsnummer || null,
+      // Überweisung (E7): Daten für die Danke-Seite, nur solange die Zahlung offen ist.
+      ueberweisung: b.status === 'wartet-ueberweisung' && b.ueberweisung ? {
+        frist: b.ueberweisungFrist || null,
+        hostedUrl: b.ueberweisung.hostedUrl || '',
+        empfaenger: b.ueberweisung.empfaenger || '',
+        iban: b.ueberweisung.iban || '',
+        bic: b.ueberweisung.bic || '',
+        referenz: b.ueberweisung.referenz || b.nummer,
+        betragCent: typeof b.ueberweisung.betragCent === 'number' && b.ueberweisung.betragCent > 0 ? b.ueberweisung.betragCent : b.betragCent,
+      } : null,
     });
   } catch (err) {
     console.error('buchung-status Fehler:', err);

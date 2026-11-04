@@ -363,6 +363,7 @@
   .status-badge{ display:inline-block; padding:2px 9px; border-radius:999px; font-size:.75rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; }
   .status-bezahlt{ background:#EEF4E0; color:#4F6B1E; }
   .status-reserviert{ background:#FFF6DE; color:#8a5a00; }
+  .status-wartet-ueberweisung{ background:#E3EEF9; color:#1F4E79; }
   .status-pruefen{ background:#FBE9E5; color:#B9402E; }
   .status-abgelaufen, .status-storniert, .status-erstattet{ background:#ECECEC; color:#666; }
   .buchung-row.is-inaktiv .who{ opacity:.55; text-decoration:line-through; }
@@ -1203,10 +1204,13 @@
     }).catch(function(){ protokollBtn.disabled = false; protokollBtn.textContent = 'Protokoll anzeigen'; });
   });
 
-  var STATUS_TEXT = { bezahlt:'bezahlt', reserviert:'reserviert', pruefen:'prüfen', abgelaufen:'abgelaufen', storniert:'storniert', erstattet:'erstattet' };
+  var STATUS_TEXT = { bezahlt:'bezahlt', reserviert:'reserviert', 'wartet-ueberweisung':'Überweisung offen', pruefen:'prüfen', abgelaufen:'abgelaufen', storniert:'storniert', erstattet:'erstattet' };
   function statusBadge(b){
     var s = b.status || 'bezahlt';
-    return '<span class="status-badge status-' + s + '" title="' + (s === 'reserviert' && b.reserviertBis ? 'reserviert bis ' + new Date(b.reserviertBis).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr' : s === 'pruefen' ? 'Zahlung eingegangen, Betrag weicht ab' : '') + '">' + (STATUS_TEXT[s] || s) + '</span>';
+    var titel = s === 'reserviert' && b.reserviertBis ? 'reserviert bis ' + new Date(b.reserviertBis).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr'
+      : s === 'wartet-ueberweisung' ? 'Gast hat Überweisung gewählt, Platz gehalten bis ' + (b.ueberweisungFrist ? new Date(b.ueberweisungFrist).toLocaleDateString('de-DE') : '–') + (b.ueberweisung && b.ueberweisung.referenz ? ' · Verwendungszweck ' + b.ueberweisung.referenz : '') + '. Geldeingang meldet Stripe automatisch; danach bezahlt + Rechnung.'
+      : s === 'pruefen' ? 'Zahlung eingegangen, Betrag weicht ab' : '';
+    return '<span class="status-badge status-' + s + '" title="' + escapeHtml(titel) + '">' + (STATUS_TEXT[s] || s) + '</span>';
   }
   function istInaktiv(b){ var s = b.status || 'bezahlt'; return s === 'abgelaufen' || s === 'storniert' || s === 'erstattet'; }
   // Storno-Rückfrage: bei bezahlten Buchungen mit oder ohne Erstattung (Teilnahmebedingungen),

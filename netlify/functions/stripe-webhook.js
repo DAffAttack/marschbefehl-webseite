@@ -12,12 +12,15 @@
 // Rückgabe immer 200 nach erfolgreicher Verarbeitung, auch wenn wir das Ereignis nicht
 // brauchen — sonst versucht Stripe es tagelang erneut.
 
-const { withState, protokoll, ereignisSchonVerarbeitet, ereignisMerken, blobsVerbinden } = require('./_lib/store');
-const { webhookEreignisLesen, WAEHRUNG } = require('./_lib/zahlung');
+const { withState, protokoll, ereignisSchonVerarbeitet, ereignisMerken, blobsVerbinden, ueberweisungFrist } = require('./_lib/store');
+const { webhookEreignisLesen, ueberweisungDetails, WAEHRUNG } = require('./_lib/zahlung');
 const { json, errorResponse } = require('./_lib/http');
 const { nachZahlung } = require('./_lib/nachzahlung');
+const { nachUeberweisungGewaehlt } = require('./_lib/ueberweisung');
 
-function sitzungVerarbeiten(state, ereignis) {
+// ueberweisung: Überweisungsdaten (IBAN, Verwendungszweck …), wenn der Gast Banküberweisung
+// gewählt hat – vorher außerhalb des Speicherzugriffs bei Stripe abgefragt (E7).
+function sitzungVerarbeiten(state, ereignis, ueberweisung) {
   const sitzung = ereignis.data && ereignis.data.object;
   if (!sitzung || sitzung.object !== 'checkout.session') return { ok: true, hinweis: 'kein Checkout-Objekt' };
 
@@ -57,7 +60,7 @@ function sitzungVerarbeiten(state, ereignis) {
   }
 
   if (ereignis.type === 'checkout.session.async_payment_failed' || ereignis.type === 'checkout.session.expired') {
-    if (b.status === 'reserviert') {
+    if (b.status === 'reserviert' || b.status === 'wartet-ueberweisung') {
       b.status = 'abgelaufen';
       protokoll(state, { art: ereignis.type === 'checkout.session.expired' ? 'bezahlsitzung-abgelaufen' : 'zahlung-fehlgeschlagen', buchungId: b.id, nummer: b.nummer });
     }
@@ -65,8 +68,21 @@ function sitzungVerarbeiten(state, ereignis) {
   }
 
   if (ereignis.type === 'checkout.session.completed') {
-    // completed mit payment_status "unpaid": Zahlung läuft noch (z. B. Lastschrift) —
-    // warten auf async_payment_succeeded. Reservierung bleibt bis zum Ablauf.
+    if (ueberweisung && b.status === 'reserviert') {
+      // Banküberweisung gewählt (E7): Platz bleibt bis zur Überweisungsfrist gehalten,
+      // die Zahlung kommt später per async_payment_succeeded.
+      const termin = state.termine.find((t) => t.id === b.terminId);
+      b.status = 'wartet-ueberweisung';
+      b.ueberweisungGewaehltAm = new Date().toISOString();
+      b.ueberweisungFrist = termin ? ueberweisungFrist(termin, Date.now()) : new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+      b.ueberweisung = ueberweisung;
+      b.stripePaymentIntent = typeof sitzung.payment_intent === 'string' ? sitzung.payment_intent : b.stripePaymentIntent;
+      protokoll(state, { art: 'ueberweisung-gewaehlt', buchungId: b.id, nummer: b.nummer, text: 'Frist ' + b.ueberweisungFrist.slice(0, 10) + (ueberweisung.referenz ? ', Zweck ' + ueberweisung.referenz : '') });
+      return { ok: true, hinweis: 'ueberweisung-wartet', buchungId: b.id };
+    }
+    if (b.status === 'wartet-ueberweisung') return { ok: true, hinweis: 'ueberweisung-wartet (schon vermerkt)' };
+    // completed mit payment_status "unpaid" ohne Überweisungsanweisung: Zahlung läuft noch
+    // (z. B. Lastschrift) — warten auf async_payment_succeeded. Reservierung bleibt bis zum Ablauf.
     protokoll(state, { art: 'zahlung-ausstehend', buchungId: b.id, nummer: b.nummer, text: sitzung.payment_status });
     return { ok: true, hinweis: 'ausstehend' };
   }
@@ -87,10 +103,21 @@ exports.handler = async (event) => {
   }
 
   try {
+    // Überweisung gewählt? Nur bei "abgeschlossen, aber unbezahlt" nachsehen (Stripe-Abfrage
+    // außerhalb des Speicherzugriffs; bei Fehlern gilt die Zahlung als "ausstehend").
+    let ueberweisung = null;
+    const s0 = ereignis.data && ereignis.data.object;
+    if (ereignis.type === 'checkout.session.completed' && s0 && s0.payment_status !== 'paid') {
+      try {
+        ueberweisung = await ueberweisungDetails({ paymentIntentId: typeof s0.payment_intent === 'string' ? s0.payment_intent : null, sitzung: s0 });
+      } catch (err) {
+        console.error('stripe-webhook: Überweisungsdaten nicht abrufbar:', err.message);
+      }
+    }
     const result = await withState((state) => {
       if (ereignisSchonVerarbeitet(state, ereignis.id)) return { ok: true, hinweis: 'schon verarbeitet' };
       ereignisMerken(state, ereignis.id);
-      return sitzungVerarbeiten(state, ereignis);
+      return sitzungVerarbeiten(state, ereignis, ueberweisung);
     }, {
       bestaetigen: (state) => ereignisSchonVerarbeitet(state, ereignis.id),
     });
@@ -102,6 +129,14 @@ exports.handler = async (event) => {
         nach = await nachZahlung(result.buchungId);
       } catch (err) {
         console.error('stripe-webhook: Nachbereitung fehlgeschlagen:', err);
+        nach = { ok: false, error: String(err && err.message) };
+      }
+    }
+    if (result.hinweis === 'ueberweisung-wartet' && result.buchungId) {
+      try {
+        nach = await nachUeberweisungGewaehlt(result.buchungId);
+      } catch (err) {
+        console.error('stripe-webhook: Überweisungsmail fehlgeschlagen:', err);
         nach = { ok: false, error: String(err && err.message) };
       }
     }

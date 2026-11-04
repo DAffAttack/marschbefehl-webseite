@@ -146,6 +146,20 @@
           actions.innerHTML = '<a class="btn secondary" href="/kontakt.html">Kontakt</a>';
           return;
         }
+        if(d.status === 'wartet-ueberweisung'){
+          var u = d.ueberweisung || {};
+          var frist = u.frist ? new Date(u.frist).toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'}) : '';
+          zeige('is-wait', 'Bitte überweisen – der Platz ist gehalten', 'Vielen Dank! Sie haben Banküberweisung gewählt. Der Platz bleibt bis ' + frist + ' für Sie reserviert. Bitte überweisen Sie mit genau diesen Angaben; sobald das Geld eingegangen ist (1 bis 2 Werktage), kommt die Bestätigung mit Rechnung per E-Mail. Die Angaben stehen auch in der Mail, die gerade unterwegs ist.', d);
+          facts.innerHTML +=
+            '<li><span>Betrag</span><span class="nummer">' + euro(u.betragCent || d.betragCent) + '</span></li>' +
+            (u.empfaenger ? '<li><span>Empfänger</span><span>' + esc(u.empfaenger) + '</span></li>' : '') +
+            (u.iban ? '<li><span>IBAN</span><span class="nummer">' + esc(u.iban) + '</span></li>' : '') +
+            (u.bic ? '<li><span>BIC</span><span>' + esc(u.bic) + '</span></li>' : '') +
+            '<li><span>Verwendungszweck</span><span class="nummer">' + esc(u.referenz || d.nummer) + '</span></li>' +
+            (frist ? '<li><span>Überweisen bis</span><span>' + esc(frist) + '</span></li>' : '');
+          actions.innerHTML = (u.hostedUrl ? '<a class="btn" href="' + esc(u.hostedUrl) + '" target="_blank" rel="noopener">Zahlungsanweisung öffnen</a>' : '') + '<a class="btn secondary" href="/fuehrungen.html">Zu den Führungen</a>';
+          return;
+        }
         if(d.status === 'reserviert'){
           if(versuche < MAX){ setTimeout(abfragen, 2000); return; }
           zeige('is-wait', 'Zahlung noch nicht bestätigt', 'Der Zahlungsanbieter hat die Zahlung noch nicht gemeldet. Das kann bei manchen Zahlarten einige Minuten dauern. Diese Seite kann später erneut geöffnet werden; die Buchungsnummer bitte notieren.', d);

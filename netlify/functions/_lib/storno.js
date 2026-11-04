@@ -12,12 +12,12 @@
 // Der Termin bleibt erhalten (Protokoll, Rechnungen), erscheint aber nicht mehr öffentlich.
 
 const { withState, readState, findFuehrung, protokoll } = require('./store');
-const { erstatten } = require('./zahlung');
+const { erstatten, zahlungAbbrechen } = require('./zahlung');
 const { mailSenden, stornoMail, absageMail } = require('./mail');
 
 function aktiv(b) {
   const s = b.status || 'bezahlt';
-  return s === 'reserviert' || s === 'bezahlt' || s === 'pruefen';
+  return s === 'reserviert' || s === 'bezahlt' || s === 'pruefen' || s === 'wartet-ueberweisung';
 }
 
 /**
@@ -51,6 +51,13 @@ async function buchungStornieren(buchungId, opt) {
     }
   }
 
+  // Offene Überweisung (E7): die wartende Zahlung bei Stripe abbrechen, damit ein später
+  // überwiesener Betrag nicht mehr dieser Buchung zugeordnet wird.
+  let abbruch = null;
+  if (b.status === 'wartet-ueberweisung') {
+    try { abbruch = await zahlungAbbrechen({ buchung: b }); } catch (err) { abbruch = { ok: false, error: String(err.message) }; }
+  }
+
   const neuerStatus = sollErstatten ? 'erstattet' : 'storniert';
   const r = await withState((st) => {
     const x = st.buchungen.find((y) => y.id === buchungId);
@@ -68,14 +75,14 @@ async function buchungStornieren(buchungId, opt) {
       art: o.absage ? 'buchung-abgesagt' : sollErstatten ? 'buchung-erstattet' : 'buchung-storniert',
       buchungId: x.id,
       nummer: x.nummer,
-      text: 'vorher: ' + vorher + (erstattung ? ', Erstattung ' + erstattung.erstattungId + ' (' + x.betragCent / 100 + ' €)' : warBezahlt ? ', ohne Erstattung' : '') + (o.grund ? ' – ' + o.grund : ''),
+      text: 'vorher: ' + vorher + (erstattung ? ', Erstattung ' + erstattung.erstattungId + ' (' + x.betragCent / 100 + ' €)' : warBezahlt ? ', ohne Erstattung' : '') + (abbruch ? (abbruch.ok ? ', offene Zahlung abgebrochen' : ', Abbruch der offenen Zahlung fehlgeschlagen: ' + abbruch.error) : '') + (o.grund ? ' – ' + o.grund : ''),
     });
     return { ok: true, buchung: JSON.parse(JSON.stringify(x)) };
   }, { bestaetigen: (st) => st.buchungen.some((y) => y.id === buchungId && y.status === neuerStatus) });
   if (!r.ok) return r;
 
-  // Mail an den Gast (nur wenn die Buchung je eine E-Mail bekommen hätte: bezahlt/pruefen)
-  if (warBezahlt || b.status === 'reserviert') {
+  // Mail an den Gast (nur wenn die Buchung je eine E-Mail bekommen hätte: bezahlt/pruefen/Überweisung offen)
+  if (warBezahlt || b.status === 'reserviert' || b.status === 'wartet-ueberweisung') {
     try {
       const m = o.absage
         ? absageMail({ buchung: r.buchung, fuehrung, termin, grund: o.grund, erstattet: sollErstatten })

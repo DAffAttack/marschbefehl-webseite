@@ -77,27 +77,54 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
   if (art === 'attrappe') {
     const sessionId = 'cs_attrappe_' + buchung.id.replace(/-/g, '').slice(0, 24);
     const url = basis + '/zahlung-attrappe.html?nr=' + encodeURIComponent(buchung.nummer) + '&s=' + sessionId;
-    return { sessionId, url, betriebsart: art };
+    return { sessionId, url, betriebsart: art, zahlungsarten: zahlungsarten(termin), zahlungsartenHinweis: '' };
   }
   if (art !== 'stripe') {
     throw new Error('Zahlung ist noch nicht eingerichtet (STRIPE_SECRET_KEY fehlt).');
   }
 
   const stripe = client();
-  function zahlungsarten() {
-    const liste = String(process.env.ZAHLUNGSARTEN || 'card,paypal').split(',').map((s) => s.trim()).filter(Boolean);
-    return liste.length ? liste : ['card'];
+  const arten = zahlungsarten(termin);
+  const grund = {
+    mode: 'payment',
+    locale: 'de',
+    // Feste Liste statt Stripe-Vorgaben (Entscheidung 04.11.2026): Karte (dazu automatisch
+    // Apple Pay und Google Pay), PayPal, Klarna (= Sofortüberweisung) und Banküberweisung
+    // (customer_balance, E7). Die Banküberweisung fällt weg, wenn der Termin näher als
+    // UEBERWEISUNG_MIN_VORLAUF_TAGE liegt. Über ZAHLUNGSARTEN änderbar, z. B. "card",
+    // solange PayPal/Klarna/Überweisung im Live-Konto noch nicht aktiv sind.
+    payment_method_types: arten,
+    customer_email: buchung.email,
+  };
+  if (arten.includes('customer_balance')) {
+    // Banküberweisung: Stripe stellt je Zahlung eine eigene IBAN mit Verwendungszweck und
+    // meldet den Eingang per Webhook (async_payment_succeeded). Braucht einen Stripe-Kunden.
+    grund.customer_creation = 'always';
+    grund.payment_method_options = {
+      customer_balance: { funding_type: 'bank_transfer', bank_transfer: { type: 'eu_bank_transfer', eu_bank_transfer: { country: 'DE' } } },
+    };
   }
-  const session = await stripe.checkout.sessions.create(
-    {
-      mode: 'payment',
-      locale: 'de',
-      // Feste Liste statt Stripe-Vorgaben (Entscheidung 04.11.2026): Karte (dazu automatisch
-      // Apple Pay und Google Pay) und PayPal. Kein Klarna, keine Lastschrift, keine Überweisung –
-      // die Bestätigung käme erst nach Tagen, die Reservierung hält nur 15 Minuten.
-      // Über ZAHLUNGSARTEN änderbar, z. B. "card" solange PayPal im Live-Konto nicht aktiv ist.
-      payment_method_types: zahlungsarten(),
-      customer_email: buchung.email,
+  let zahlungsartenHinweis = '';
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create(sitzungsDaten(grund), { idempotencyKey: 'checkout-' + buchung.id });
+  } catch (err) {
+    // Typischer Fall: eine Zahlart ist im Stripe-Konto (noch) nicht freigeschaltet. Dann
+    // lieber nur mit Karte buchen lassen als gar nicht – und das im Protokoll festhalten.
+    const text = String(err && err.message || '');
+    if (!/payment_method_types|payment method|customer_balance|paypal|klarna/i.test(text)) throw err;
+    console.error('checkoutAnlegen: Zahlarten ' + arten.join(',') + ' abgelehnt, Rückfall auf card:', text);
+    zahlungsartenHinweis = 'Rückfall auf Karte: ' + text.slice(0, 160);
+    delete grund.customer_creation;
+    delete grund.payment_method_options;
+    grund.payment_method_types = ['card'];
+    session = await stripe.checkout.sessions.create(sitzungsDaten(grund), { idempotencyKey: 'checkout-card-' + buchung.id });
+  }
+  return { sessionId: session.id, url: session.url, betriebsart: art, zahlungsarten: zahlungsartenHinweis ? ['card'] : arten, zahlungsartenHinweis };
+
+  function sitzungsDaten(basisDaten) {
+    return {
+      ...basisDaten,
       line_items: [
         {
           quantity: buchung.personen,
@@ -121,11 +148,75 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       success_url: erfolgUrl,
       cancel_url: abbruchUrl,
-    },
-    // Idempotenz: dieselbe Buchung erzeugt nie zwei Sitzungen.
-    { idempotencyKey: 'checkout-' + buchung.id }
-  );
-  return { sessionId: session.id, url: session.url, betriebsart: art };
+    };
+  }
+}
+
+/**
+ * Zahlarten für eine Bezahlsitzung: ZAHLUNGSARTEN (Vorgabe card,paypal,klarna,customer_balance),
+ * ohne customer_balance, wenn der Termin zu nah ist (store.ueberweisungMoeglich).
+ */
+function zahlungsarten(termin) {
+  const { ueberweisungMoeglich } = require('./store');
+  let liste = String(process.env.ZAHLUNGSARTEN || 'card,paypal,klarna,customer_balance').split(',').map((s) => s.trim()).filter(Boolean);
+  if (termin && !ueberweisungMoeglich(termin)) liste = liste.filter((a) => a !== 'customer_balance');
+  return liste.length ? liste : ['card'];
+}
+
+/**
+ * Überweisungsdaten einer offenen Zahlung (E7): IBAN, BIC, Empfänger, Verwendungszweck,
+ * Betrag und die Anleitungsseite von Stripe. Liefert null, wenn die Zahlung keine
+ * Banküberweisung ist (z. B. Karte noch in Bearbeitung).
+ */
+async function ueberweisungDetails({ paymentIntentId, sitzung }) {
+  const art = betriebsart();
+  if (art === 'attrappe') {
+    const arten = (sitzung && sitzung.payment_method_types) || [];
+    if (!arten.includes('customer_balance')) return null;
+    return {
+      hostedUrl: '',
+      empfaenger: 'Stripe Payments Europe (Attrappe)',
+      iban: 'DE00 0000 0000 0000 0000 00',
+      bic: 'ATTRDE00',
+      referenz: 'ATTRAPPE-' + ((sitzung && sitzung.metadata && sitzung.metadata.nummer) || ''),
+      betragCent: sitzung ? sitzung.amount_total : 0,
+    };
+  }
+  if (art !== 'stripe' || !paymentIntentId) return null;
+  const stripe = client();
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  const na = pi.next_action;
+  if (!na || na.type !== 'display_bank_transfer_instructions') return null;
+  const d = na.display_bank_transfer_instructions || {};
+  const adr = (d.financial_addresses || []).find((a) => a.type === 'iban') || (d.financial_addresses || [])[0] || {};
+  const iban = adr.iban || {};
+  return {
+    hostedUrl: d.hosted_instructions_url || '',
+    empfaenger: iban.account_holder_name || '',
+    iban: iban.iban || '',
+    bic: iban.bic || '',
+    referenz: d.reference || '',
+    betragCent: typeof d.amount_remaining === 'number' ? d.amount_remaining : pi.amount,
+  };
+}
+
+/**
+ * Bricht eine noch offene Zahlung ab (Überweisungsfrist verstrichen, Storno vor Zahlung).
+ * Danach kann ein später überwiesener Betrag nicht mehr der Buchung zugeordnet werden – er
+ * landet als Guthaben beim Kunden bei Stripe und wird dort manuell erstattet.
+ */
+async function zahlungAbbrechen({ buchung }) {
+  const art = betriebsart();
+  if (art !== 'stripe') return { ok: true, betriebsart: art, hinweis: 'keine Stripe-Zahlung' };
+  if (!buchung.stripePaymentIntent) return { ok: true, betriebsart: art, hinweis: 'kein PaymentIntent' };
+  const stripe = client();
+  try {
+    const pi = await stripe.paymentIntents.cancel(buchung.stripePaymentIntent, { cancellation_reason: 'abandoned' });
+    return { ok: true, betriebsart: art, status: pi.status };
+  } catch (err) {
+    // schon bezahlt oder schon abgebrochen: nichts zu tun
+    return { ok: false, betriebsart: art, error: String(err && err.message).slice(0, 200) };
+  }
 }
 
 function rohBody(event) {
@@ -152,7 +243,7 @@ function webhookEreignisLesen(event) {
 /**
  * Nur für die lokale Attrappe: erzeugt ein signiertes Ereignis im Stripe-Format.
  */
-function attrappeEreignis({ typ, sessionId, buchung, betragCent, zahlungsstatus }) {
+function attrappeEreignis({ typ, sessionId, buchung, betragCent, zahlungsstatus, zahlungsart }) {
   if (!attrappeAktiv()) throw new Error('Attrappe ist nur lokal verfügbar.');
   const stripe = new Stripe('sk_test_attrappe');
   const ereignis = {
@@ -168,7 +259,8 @@ function attrappeEreignis({ typ, sessionId, buchung, betragCent, zahlungsstatus 
         object: 'checkout.session',
         mode: 'payment',
         status: typ === 'checkout.session.expired' ? 'expired' : 'complete',
-        payment_status: zahlungsstatus || (typ === 'checkout.session.completed' ? 'paid' : 'unpaid'),
+        payment_method_types: [zahlungsart || 'card'],
+        payment_status: zahlungsstatus || (typ === 'checkout.session.completed' ? 'paid' : typ === 'checkout.session.async_payment_succeeded' ? 'paid' : 'unpaid'),
         amount_total: typeof betragCent === 'number' ? betragCent : buchung.betragCent,
         currency: WAEHRUNG,
         customer_email: buchung.email,
@@ -255,6 +347,9 @@ module.exports = {
   basisUrl,
   datumLesbar,
   checkoutAnlegen,
+  zahlungsarten,
+  ueberweisungDetails,
+  zahlungAbbrechen,
   webhookEreignisLesen,
   attrappeEreignis,
   erstatten,

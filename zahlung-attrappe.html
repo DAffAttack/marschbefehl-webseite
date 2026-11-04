@@ -30,9 +30,12 @@
       <dt>Buchung</dt><dd id="nr">–</dd>
       <dt>Sitzung</dt><dd id="s" style="font-family:monospace; font-size:.85rem;">–</dd>
     </dl>
-    <button class="ok" data-ergebnis="bezahlt">Zahlung erfolgreich simulieren</button>
+    <button class="ok" data-ergebnis="bezahlt">Zahlung erfolgreich simulieren (Karte/PayPal/Klarna)</button>
+    <button class="ok" data-ergebnis="ueberweisung-gewaehlt" style="background:#7aa6d8;">Überweisung gewählt (Platz gehalten, Geld kommt später)</button>
+    <button class="ok" data-ergebnis="ueberweisung-eingegangen" style="background:#5f8f3a;color:#fff;">Überweisung eingegangen (Geld ist da)</button>
     <button class="bad" data-ergebnis="abgebrochen">Zahlung abbrechen (Sitzung läuft ab)</button>
     <button class="warn" data-ergebnis="betrag-falsch">Prüffall: Zahlung mit falschem Betrag</button>
+    <button class="warn" data-ergebnis="ueberweisung-frist-vorbei">Prüffall: Überweisungsfrist verstreichen lassen</button>
     <p class="hint" id="hint"></p>
   </div>
 </main>
