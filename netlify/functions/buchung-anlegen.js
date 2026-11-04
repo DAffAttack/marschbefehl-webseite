@@ -177,6 +177,7 @@ exports.handler = async (event) => {
       const b = state.buchungen.find((x) => x.id === buchung.id);
       if (!b) return { ok: false, status: 500, error: 'Buchung verschwunden.' };
       b.stripeSessionId = sitzung.sessionId;
+      b.stripeCustomerId = sitzung.stripeCustomerId || null;
       b.zahlungsart = sitzung.betriebsart;
       protokoll(state, { art: 'bezahlsitzung-angelegt', buchungId: b.id, nummer: b.nummer, text: sitzung.sessionId + (sitzung.zahlungsarten ? ' [' + sitzung.zahlungsarten.join(',') + ']' : '') });
       if (sitzung.zahlungsartenHinweis) protokoll(state, { art: 'zahlungsarten-rueckfall', buchungId: b.id, nummer: b.nummer, text: sitzung.zahlungsartenHinweis });

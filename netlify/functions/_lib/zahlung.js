@@ -99,10 +99,19 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
     allowed_payment_method_types: arten,
     customer_email: buchung.email,
   };
+  let stripeCustomerId = null;
   if (arten.includes('customer_balance')) {
     // Banküberweisung: Stripe stellt je Zahlung eine eigene IBAN mit Verwendungszweck und
-    // meldet den Eingang per Webhook (async_payment_succeeded). Braucht einen Stripe-Kunden.
-    grund.customer_creation = 'always';
+    // meldet den Eingang per Webhook (async_payment_succeeded). Laut Stripe-Anleitung nur
+    // für Sitzungen mit einem VORHANDENEN Kunden – customer_creation reicht nicht. Deshalb
+    // wird der Gast vorher als Stripe-Kunde angelegt (idempotent je Buchung).
+    const kunde = await stripe.customers.create(
+      { email: buchung.email, name: buchung.name, metadata: { buchungId: buchung.id, nummer: buchung.nummer } },
+      { idempotencyKey: 'kunde-' + buchung.id }
+    );
+    stripeCustomerId = kunde.id;
+    grund.customer = kunde.id;
+    delete grund.customer_email; // nicht zusammen mit customer erlaubt
     grund.payment_method_options = {
       customer_balance: { funding_type: 'bank_transfer', bank_transfer: { type: 'eu_bank_transfer', eu_bank_transfer: { country: 'DE' } } },
     };
@@ -118,12 +127,11 @@ async function checkoutAnlegen({ buchung, fuehrung, termin, event }) {
     if (!/payment_method_types|payment method|customer_balance|customer_creation|paypal|klarna/i.test(text)) throw err;
     console.error('checkoutAnlegen: Zahlarten ' + arten.join(',') + ' abgelehnt, Rückfall auf Stripe-Vorgaben:', text);
     zahlungsartenHinweis = 'Rückfall auf Stripe-Vorgaben: ' + text.slice(0, 160);
-    delete grund.customer_creation;
     delete grund.payment_method_options;
     delete grund.allowed_payment_method_types;
     session = await stripe.checkout.sessions.create(sitzungsDaten(grund), { idempotencyKey: 'checkout-card-' + buchung.id });
   }
-  return { sessionId: session.id, url: session.url, betriebsart: art, zahlungsarten: zahlungsartenHinweis ? (session.payment_method_types || ['card']) : arten, zahlungsartenHinweis };
+  return { sessionId: session.id, url: session.url, betriebsart: art, stripeCustomerId, zahlungsarten: zahlungsartenHinweis ? (session.payment_method_types || ['card']) : arten, zahlungsartenHinweis };
 
   function sitzungsDaten(basisDaten) {
     return {
