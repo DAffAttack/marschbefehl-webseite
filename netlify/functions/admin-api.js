@@ -18,6 +18,7 @@
 
 const crypto = require('crypto');
 const { withState, readState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, getBilderStore, blobsVerbinden, protokoll } = require('./_lib/store');
+const { testUeberweisungEingang } = require('./_lib/zahlung');
 const {
   json,
   errorResponse,
@@ -453,6 +454,22 @@ exports.handler = async (event) => {
 
     // ---------------- Buchungen ----------------
 
+    if (action === 'test-ueberweisung-eingang') {
+      // Nur Stripe-Testmodus (E7-Probelauf): Geldeingang einer Banküberweisung simulieren.
+      const buchungId = typeof body.buchungId === 'string' ? body.buchungId.trim() : '';
+      if (!buchungId) return errorResponse(400, 'Keine Buchung angegeben.');
+      const state = await readState();
+      const b = state.buchungen.find((x) => x.id === buchungId);
+      if (!b) return errorResponse(404, 'Buchung nicht gefunden.');
+      if (b.status !== 'wartet-ueberweisung') return errorResponse(400, 'Buchung wartet nicht auf eine Überweisung (' + b.status + ').');
+      try {
+        const r = await testUeberweisungEingang({ buchung: b });
+        await withState((st) => { const x = st.buchungen.find((y) => y.id === buchungId); if (x) protokoll(st, { art: 'test-ueberweisung-eingang', buchungId: x.id, nummer: x.nummer, text: r.transaktion }); return { ok: true }; });
+        return json(200, { ok: true, ...r });
+      } catch (err) {
+        return errorResponse(400, String(err && err.message));
+      }
+    }
     if (action === 'mail-erneut') {
       const buchungId = typeof body.buchungId === 'string' ? body.buchungId.trim() : '';
       if (!buchungId) return errorResponse(400, 'Keine Buchung angegeben.');

@@ -204,6 +204,26 @@ async function ueberweisungDetails({ paymentIntentId, sitzung }) {
 }
 
 /**
+ * NUR TESTMODUS (sk_test_…): simuliert den Geldeingang einer Banküberweisung, indem das
+ * Kundenguthaben bei Stripe aufgefüllt wird – Stripe ordnet es der offenen Zahlung zu und
+ * meldet async_payment_succeeded per Webhook. Mit Live-Schlüssel lehnt Stripe den Aufruf ab.
+ */
+async function testUeberweisungEingang({ buchung }) {
+  const art = betriebsart();
+  if (art !== 'stripe') throw new Error('Nur mit Stripe-Testschlüssel möglich.');
+  const key = stripeSchluessel();
+  if (!key.startsWith('sk_test_')) throw new Error('Nur im Testmodus (sk_test_) erlaubt.');
+  if (!buchung.stripeSessionId) throw new Error('Keine Bezahlsitzung an der Buchung.');
+  const stripe = client();
+  const s = await stripe.checkout.sessions.retrieve(buchung.stripeSessionId);
+  const kunde = typeof s.customer === 'string' ? s.customer : s.customer && s.customer.id;
+  if (!kunde) throw new Error('Die Sitzung hat keinen Stripe-Kunden (Überweisung noch nicht gewählt?).');
+  const referenz = buchung.ueberweisung && buchung.ueberweisung.referenz ? buchung.ueberweisung.referenz : undefined;
+  const r = await stripe.testHelpers.customers.fundCashBalance(kunde, { amount: buchung.betragCent, currency: WAEHRUNG, ...(referenz ? { reference: referenz } : {}) });
+  return { ok: true, kunde, transaktion: r.id, betragCent: buchung.betragCent };
+}
+
+/**
  * Bricht eine noch offene Zahlung ab (Überweisungsfrist verstrichen, Storno vor Zahlung).
  * Danach kann ein später überwiesener Betrag nicht mehr der Buchung zugeordnet werden – er
  * landet als Guthaben beim Kunden bei Stripe und wird dort manuell erstattet.
@@ -353,6 +373,7 @@ module.exports = {
   zahlungsarten,
   ueberweisungDetails,
   zahlungAbbrechen,
+  testUeberweisungEingang,
   webhookEreignisLesen,
   attrappeEreignis,
   erstatten,
