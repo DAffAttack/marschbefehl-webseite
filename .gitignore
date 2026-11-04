@@ -15,3 +15,4 @@ deno.lock
 
 # Sitzungsprotokolle der Claude-App (lokal)
 protokolle/
+werkzeug/letzter_lauf.txt
