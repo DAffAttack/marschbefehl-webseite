@@ -19,7 +19,7 @@ Stand 04.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut, lokal
 1. Konto bei stripe.com anlegen (Gewerbe, IBAN, Ausweis). Für den Testmodus reicht die Anmeldung.
 2. **Developers → API keys**: `Secret key` (sk_test_… / später sk_live_…) → Netlify-Variable `STRIPE_SECRET_KEY`.
 3. **Developers → Webhooks → Add endpoint**: Adresse `https://marschbefehl.com/.netlify/functions/stripe-webhook` (für den Branch-Test: `https://buchung--zeitreise-seelower-hoehen.netlify.app/.netlify/functions/stripe-webhook`). Ereignisse: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`. Den angezeigten `Signing secret` (whsec_…) → `STRIPE_WEBHOOK_SECRET`.
-4. **Settings → Payment methods**: Karten, Apple Pay, Google Pay an; PayPal aktivieren, falls für das Konto angeboten; SEPA-Lastschrift aus lassen (Zahlung muss sofort bestätigt sein).
+4. **Einstellungen → Zahlungen → Zahlungsmethoden**: Karten, Apple Pay, Google Pay, PayPal an (je Zeile „···“ → Aktivieren). ✅ In der Sandbox am 04.11.2026 erledigt. **Im Live-Konto wiederholen** (Sandbox und Live haben getrennte Einstellungen). Entschieden: kein Klarna, keine SEPA-Lastschrift, keine Banküberweisung – die Bestätigung kommt dort erst nach Tagen, die Reservierung hält aber nur 15 Minuten.
 5. **Settings → Branding**: Logo und Grün (#A1C74F) für die Bezahlseite.
 6. Test: Testkarte 4242 4242 4242 4242, beliebiges Datum in der Zukunft, beliebige drei Ziffern.
 
@@ -56,7 +56,7 @@ Site configuration → Environment variables. Liste und Erklärung in `.env.exam
 
 1. Rechtstexte freigegeben: `agb.html` (Stornoregel!), `datenschutz.html` Abschnitt 9, Hinweis „kein Widerrufsrecht“ im Formular, Impressum mit Kleinunternehmer-Hinweis sobald Steuernummer da.
 2. Testdaten löschen: Führung „… (TEST)“ und Prüf-Führungen in der Verwaltung entfernen (Termine zuerst absagen/löschen). Blobs-Stores auf Netlify sind je Site, Branch-Deploy und Produktion teilen sie sich → Testbuchungen vom Branch-Test vor dem Livegang stornieren.
-3. Stripe-Konto freischalten (Live), `STRIPE_SECRET_KEY` auf sk_live, Webhook für die Live-Adresse anlegen, `STRIPE_WEBHOOK_SECRET` tauschen.
+3. Stripe-Konto freischalten (Live), im Live-Konto PayPal und Google Pay aktivieren (Abschnitt 2 Punkt 4), Webhook für die Live-Adresse anlegen, dann die Live-Werte eintragen – für alle Kontexte im Ordner `website`: `node werkzeug/stripe-schluessel-setzen.js --alle` (der Doppelklick auf `2 START …` setzt nur den Branch).
 4. `buchung` → `vorschau` → `main` mergen; Deploy abwarten; erste echte Führung in der Verwaltung anlegen.
 5. EVENTIM.Light-Konto ruhen lassen (nichts mehr eingebunden).
 6. Nach dem ersten echten Termin: Abgleich-Mail und Protokoll ansehen.
