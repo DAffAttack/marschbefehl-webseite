@@ -602,8 +602,6 @@
 })();
 
 (function(){
-  var YT_API_KEY = 'AIzaSyDdcH0hDhnXCB8ESPcTEasdWsNy-N-ce-0'; // Google Cloud Console -> YouTube Data API v3 -> API-Schlüssel (mit HTTP-Referrer-Einschränkung auf diese Domain)
-  var YT_CHANNEL_ID = 'UCS66v6xykvKupyUme3wpMwA';
   var MAX_VIDEOS = 6;
   var grid = document.getElementById('video-grid');
   if(!grid) return;
@@ -642,19 +640,13 @@
   }
 
   function loadVideos(){
-    if(!YT_API_KEY || YT_API_KEY === 'DEIN_YOUTUBE_API_KEY'){
-      grid.innerHTML = '<p class="video-status">Video-Vorschau noch nicht konfiguriert.</p>';
-      return;
-    }
-    fetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
+    // Serverseitiger Abruf: kein Schlüssel im Quelltext, Shorts/Reels sind schon herausgefiltert.
+    fetch('/.netlify/functions/youtube-videos')
       .then(function(r){ return r.json(); })
       .then(function(data){
-        var uploadsId = data.items && data.items[0] && data.items[0].contentDetails.relatedPlaylists.uploads;
-        if(!uploadsId) throw new Error('no uploads playlist');
-        return fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=' + MAX_VIDEOS + '&playlistId=' + uploadsId + '&key=' + YT_API_KEY);
+        if(!data.ok) throw new Error(data.error || 'Fehler beim Laden');
+        renderVideos(data.items.slice(0, MAX_VIDEOS));
       })
-      .then(function(r){ return r.json(); })
-      .then(function(data){ renderVideos(data.items); })
       .catch(function(){
         grid.innerHTML = '<p class="video-status">Videos konnten nicht geladen werden.</p>';
       });
