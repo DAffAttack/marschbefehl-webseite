@@ -56,9 +56,9 @@ Site configuration → Environment variables. Liste und Erklärung in `.env.exam
 
 ## 6. Livegang
 
-Stand 04.11.2026 abends: Abschnitt 5 komplett bestanden. Vor dem Livegang noch: Abschnitt 8 des Plans beantworten (Preis, Plätze, Mindestteilnehmer, Stornoregel), Testbuchungen ZSH-2026-0008 stornieren/erstatten, Punkte 1–6 unten.
+Stand 04.11.2026 abends: Abschnitt 5 komplett bestanden. Entschieden: **50 € je Person, 20 Plätze je Termin, keine Mindestteilnehmerzahl, Storno bis 14 Tage kostenfrei** (`agb.html` entsprechend angepasst). Vor dem Livegang noch: Testbuchung ZSH-2026-0008 stornieren/erstatten, Punkte 1–6 unten.
 
-1. Rechtstexte freigegeben: `agb.html` (Stornoregel!), `datenschutz.html` Abschnitt 9, Hinweis „kein Widerrufsrecht“ im Formular, Impressum mit Kleinunternehmer-Hinweis sobald Steuernummer da.
+1. Rechtstexte freigegeben: `agb.html` (Stornoregel bestätigt, keine Mindestzahl – Text vom Nutzer einmal ganz lesen), `datenschutz.html` Abschnitt 9, Hinweis „kein Widerrufsrecht“ im Formular, Impressum mit Kleinunternehmer-Hinweis sobald Steuernummer da.
 2. Testdaten löschen: Führung „Prüf-Führung (TEST)“ **und die Alt-Führung „Panzerkampf an der Oder“ vom August 2026 (Termin 19.09.2026, Buchung „Theo Tester“)** in der Verwaltung entfernen (Termine zuerst absagen/löschen). Hinweis: Der Rechnungszähler steht dann schon bei R-2026-0001 (Probe-Rechnung); die erste echte Rechnung wird R-2026-0002 – für das Finanzamt in Ordnung, Stornos und Proben dürfen Nummern verbrauchen, die Probe-Rechnung als PDF aufbewahren. Blobs-Stores auf Netlify sind je Site, Branch-Deploy und Produktion teilen sie sich → Testbuchungen vom Branch-Test vor dem Livegang stornieren.
 3. Stripe-Konto freischalten (Live), im Live-Konto PayPal und Google Pay aktivieren (Abschnitt 2 Punkt 4), Webhook für die Live-Adresse anlegen, dann die Live-Werte eintragen – für alle Kontexte im Ordner `website`: `node werkzeug/stripe-schluessel-setzen.js --alle` (der Doppelklick auf `2 START …` setzt nur den Branch).
 4. `buchung` → `vorschau` → `main` mergen; Deploy abwarten; erste echte Führung in der Verwaltung anlegen.
