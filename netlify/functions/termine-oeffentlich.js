@@ -7,7 +7,7 @@
 // Der Preis pro Person liegt seit dem Führungen/Termine-Umbau NICHT mehr am Termin,
 // sondern an der übergeordneten Führung — wird hier für die Anzeige mit eingeblendet.
 
-const { readState, belegtePersonen, terminDatumZeit, findFuehrung, verfuegbarkeitsStatus, blobsVerbinden } = require('./_lib/store');
+const { readState, belegtePersonen, terminDatumZeit, findFuehrung, verfuegbarkeitsStatus, blobsVerbinden, vorabAktiv } = require('./_lib/store');
 const { json, errorResponse, istGueltigeId } = require('./_lib/http');
 
 exports.handler = async (event) => {
@@ -44,6 +44,9 @@ exports.handler = async (event) => {
           // Grundlage der Kapazitätsprüfung beim Buchen (siehe buchung-erstellen.js).
           verfuegbarkeit: verfuegbarkeitsStatus(frei, t.maxPersonen),
           ausgebucht: frei <= 0,
+          // Der Vorab-Code selbst geht nie nach außen, nur dass einer nötig ist.
+          vorab: vorabAktiv(t),
+          fuerAlleAb: vorabAktiv(t) ? t.fuerAlleAb : null,
         };
       })
       .filter((t) => terminDatumZeit(t).getTime() >= jetzt)

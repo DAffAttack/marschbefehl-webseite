@@ -482,7 +482,12 @@
     return '<span class="badge-frei">Plätze verfügbar</span>';
   }
 
+  // Vorab-Buchung: Der Link aus dem Mitglieder-Beitrag bringt den Code mit (?code=…).
+  var vorabCodeAusLink = new URLSearchParams(window.location.search).get('code') || '';
+
   function buildTerminCard(t){
+    var vorab = !!t.vorab && !t.ausgebucht;
+    var vorabAb = vorab ? new Date(t.fuerAlleAb).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + ' Uhr' : '';
     var card = document.createElement('div');
     card.className = 'termin-card' + (t.ausgebucht ? ' is-full' : '');
 
@@ -495,16 +500,17 @@
         '<div class="termin-price">' + formatPreis(t.preisProPerson) + ' &euro;<span>pro Person</span></div>' +
       '</div>' +
       '<div class="termin-capacity">' +
-        '<div class="capacity-label">' + verfuegbarkeitsBadge(t.verfuegbarkeit) + '</div>' +
+        '<div class="capacity-label">' + (vorab ? '<span class="badge-wenige">Vorab-Buchung für Kanalmitglieder &middot; für alle ab ' + escapeHtml(vorabAb) + '</span>' : verfuegbarkeitsBadge(t.verfuegbarkeit)) + '</div>' +
       '</div>' +
       '<div class="termin-actions">' +
         '<button type="button" class="btn-book"' + (t.ausgebucht ? ' disabled' : '') + '>' +
-          (t.ausgebucht ? 'Ausgebucht' : 'Jetzt buchen') +
+          (t.ausgebucht ? 'Ausgebucht' : vorab ? 'Mit Vorab-Code buchen' : 'Jetzt buchen') +
         '</button>' +
       '</div>' +
       '<div class="booking-panel" style="height:0;">' +
         '<div class="booking-panel-inner">' +
           '<form class="booking-form" novalidate>' +
+            (vorab ? '<div class="full"><label>Vorab-Code</label><input type="text" name="vorabCode" required maxlength="20" autocomplete="off" value="' + escapeHtml(vorabCodeAusLink) + '"></div>' : '') +
             '<div class="full"><label>Name</label><input type="text" name="name" required maxlength="120" autocomplete="name"></div>' +
             '<div><label>E-Mail</label><input type="email" name="email" required maxlength="200" autocomplete="email"></div>' +
             '<div><label>Telefon (für Rückfragen am Tourtag)</label><input type="tel" name="telefon" required maxlength="30" autocomplete="tel"></div>' +
@@ -561,7 +567,10 @@
         var agb = form.elements.agb.checked;
         var firma = form.elements.firma.value;
 
+        var vorabCode = form.elements.vorabCode ? form.elements.vorabCode.value.trim() : '';
+
         function fehler(msg){ errorEl.textContent = msg; errorEl.classList.add('is-visible'); }
+        if(form.elements.vorabCode && !vorabCode){ fehler('Bitte den Vorab-Code angeben.'); return; }
         if(!name){ fehler('Bitte einen Namen angeben.'); return; }
         if(!email){ fehler('Bitte eine E-Mail-Adresse angeben.'); return; }
         if(!telefon){ fehler('Bitte eine Telefonnummer angeben (für Rückfragen am Tourtag).'); return; }
@@ -576,7 +585,7 @@
         fetch('/.netlify/functions/buchung-anlegen', {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({terminId:t.id, name:name, email:email, telefon:telefon, personen:personen, fahrzeug:fahrzeug, agb:agb, firma:firma})
+          body:JSON.stringify({terminId:t.id, name:name, email:email, telefon:telefon, personen:personen, fahrzeug:fahrzeug, agb:agb, firma:firma, vorabCode:vorabCode})
         })
         .then(function(res){ return res.json().then(function(data){ return {status:res.status, data:data}; }); })
         .then(function(r){

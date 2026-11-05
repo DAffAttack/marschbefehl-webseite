@@ -23,6 +23,7 @@ const {
   protokoll,
   verfuegbarkeitsStatus,
   blobsVerbinden,
+  vorabAktiv,
   RESERVIERUNG_MINUTEN,
 } = require('./_lib/store');
 const { checkoutAnlegen, betriebsart } = require('./_lib/zahlung');
@@ -74,6 +75,7 @@ exports.handler = async (event) => {
   const fahrzeug = body.fahrzeug === 'mitfahrer' ? 'mitfahrer' : body.fahrzeug === 'eigen' ? 'eigen' : '';
   const personen = Number(body.personen);
   const agb = body.agb === true;
+  const vorabCode = typeof body.vorabCode === 'string' ? body.vorabCode.trim().toUpperCase() : '';
 
   if (!terminId) return errorResponse(400, 'Kein Termin angegeben.');
   if (!isNichtLeererText(name, 120)) return errorResponse(400, 'Bitte einen Namen angeben.');
@@ -91,6 +93,19 @@ exports.handler = async (event) => {
       if (termin.status === 'abgesagt') return { ok: false, status: 400, error: 'Dieser Termin wurde abgesagt.' };
       if (terminDatumZeit(termin).getTime() < Date.now()) {
         return { ok: false, status: 400, error: 'Dieser Termin liegt bereits in der Vergangenheit.' };
+      }
+      const istVorab = vorabAktiv(termin);
+      if (istVorab && vorabCode !== termin.vorabCode) {
+        const ab = new Date(termin.fuerAlleAb).toLocaleString('de-DE', {
+          timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+        return {
+          ok: false,
+          status: 403,
+          error: vorabCode
+            ? 'Dieser Vorab-Code stimmt nicht.'
+            : `Dieser Termin ist bis ${ab} Uhr nur mit Vorab-Code buchbar.`,
+        };
       }
       const fuehrung = findFuehrung(state, termin.fuehrungId);
       if (!fuehrung || typeof fuehrung.preisProPerson !== 'number') {
@@ -125,6 +140,7 @@ exports.handler = async (event) => {
         preisCentProPerson,
         betragCent: preisCentProPerson * personen,
         status: 'reserviert',
+        ...(istVorab ? { vorab: true } : {}),
         reserviertBis: new Date(jetzt.getTime() + RESERVIERUNG_MINUTEN * 60 * 1000).toISOString(),
         stripeSessionId: null,
         stripePaymentIntent: null,

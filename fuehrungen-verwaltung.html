@@ -813,6 +813,22 @@
   // Auslastungs-Balken: Breite = Auslastung in % (Balken selbst also bei
   // wenig Belegung auch optisch kürzer), Farbe wechselt in vier Vierteln
   // von grün über gelb/orange zu rot -- kalibriert immer an t.maxPersonen.
+  // Vorab-Buchung: ISO-Zeit für das Feld datetime-local in Ortszeit umrechnen
+  function isoZuLokal(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+  function vorabZeile(t){
+    if(!t.fuerAlleAb) return '';
+    var ab = new Date(t.fuerAlleAb);
+    var zeit = ab.toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + ' Uhr';
+    if(ab.getTime() <= Date.now()) return '<div class="meta">Vorab-Phase vorbei, seit ' + escapeHtml(zeit) + ' für alle buchbar</div>';
+    var link = location.origin + '/fuehrung.html?id=' + encodeURIComponent(t.fuehrungId) + '&code=' + encodeURIComponent(t.vorabCode || '');
+    return '<div class="meta">Vorab-Phase bis ' + escapeHtml(zeit) + ' &middot; Code <b>' + escapeHtml(t.vorabCode || '') + '</b><br>Link für den Mitglieder-Beitrag: <span style="word-break:break-all;">' + escapeHtml(link) + '</span></div>';
+  }
+
   function kapazitaetsBalkenHtml(belegt, maxPersonen){
     var pct = maxPersonen > 0 ? Math.min(100, Math.round((belegt / maxPersonen) * 100)) : 0;
     var farbe;
@@ -834,6 +850,7 @@
           '<div class="when">' + escapeHtml(formatDatum(t.datumIso, t.uhrzeit)) + (t.istVergangenheit ? ' <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(vergangen)</span>' : '') + '</div>' +
           '<div class="meta">' + t.belegtePersonen + ' / ' + t.maxPersonen + ' belegt</div>' +
           kapazitaetsBalkenHtml(t.belegtePersonen, t.maxPersonen) +
+          vorabZeile(t) +
         '</div>' +
         '<div class="admin-termin-actions">' +
           '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.filter(function(b){ return !istInaktiv(b); }).length + ')</button>' +
@@ -846,6 +863,7 @@
       (t.istVergangenheit ? '' :
       '<div class="edit-row">' +
         '<div class="field"><label>Max. Personen</label><input type="number" class="edit-max" min="1" max="500" value="' + t.maxPersonen + '"></div>' +
+        '<div class="field"><label title="Bis zu diesem Zeitpunkt nur mit Vorab-Code buchbar (Mitglieder). Leer = sofort für alle.">Für alle buchbar ab (leer = sofort)</label><input type="datetime-local" class="edit-fuer-alle" value="' + isoZuLokal(t.fuerAlleAb) + '"></div>' +
         '<button type="button" class="btn-primary btn-save-edit">Speichern</button>' +
         '<button type="button" class="btn-secondary btn-cancel-edit">Abbrechen</button>' +
       '</div>') +
@@ -860,7 +878,7 @@
       buchungenListEl.innerHTML = buchungenFuerTermin.map(function(b){
         return '<div class="buchung-row" data-id="' + b.id + '">' +
           nummerText(b) + statusBadge(b) + ' ' +
-          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + '</span></span>' +
+          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + (b.vorab ? ' &middot; Vorab' : '') + '</span></span>' +
           rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') +
         '</div>';
       }).join('');
@@ -900,7 +918,8 @@
           alert('Bitte eine gültige Personenzahl angeben.');
           return;
         }
-        api('edit-termin', {terminId:t.id, maxPersonen:maxPersonen}).then(function(r){
+        var fuerAlle = wrap.querySelector('.edit-fuer-alle').value;
+        api('edit-termin', {terminId:t.id, maxPersonen:maxPersonen, fuerAlleAb:fuerAlle ? new Date(fuerAlle).toISOString() : ''}).then(function(r){
           if(r.status === 401){ goToLogin(); return; }
           if(!r.data.ok){ alert(r.data.error || 'Bearbeitung fehlgeschlagen.'); return; }
           ladeFuehrungen();
@@ -990,6 +1009,7 @@
           '<div class="field"><label>Datum</label><input type="date" class="nt-datum"></div>' +
           '<div class="field"><label>Uhrzeit</label><input type="time" class="nt-uhrzeit" value="14:00"></div>' +
           '<div class="field"><label>Max. Personen</label><input type="number" class="nt-max" min="1" max="500" value="20"></div>' +
+          '<div class="field"><label title="Bis zu diesem Zeitpunkt nur mit Vorab-Code buchbar (Mitglieder). Leer = sofort für alle.">Für alle buchbar ab (leer = sofort)</label><input type="datetime-local" class="nt-fuer-alle"></div>' +
           '<button type="button" class="btn-primary nt-submit">Termin hinzufügen</button>' +
         '</div>' +
         '<p class="msg nt-msg"></p>' +
@@ -1093,7 +1113,8 @@
       if(!datumIso || !uhrzeit){ showMsg(ntMsg, 'Bitte Datum und Uhrzeit angeben.', false); return; }
       if(!maxPersonen || maxPersonen < 1){ showMsg(ntMsg, 'Ungültige Personenzahl.', false); return; }
 
-      api('create-termin', {fuehrungId:f.id, datumIso:datumIso, uhrzeit:uhrzeit, maxPersonen:maxPersonen}).then(function(r){
+      var ntFuerAlle = wrap.querySelector('.nt-fuer-alle').value;
+      api('create-termin', {fuehrungId:f.id, datumIso:datumIso, uhrzeit:uhrzeit, maxPersonen:maxPersonen, fuerAlleAb:ntFuerAlle ? new Date(ntFuerAlle).toISOString() : ''}).then(function(r){
         if(r.status === 401){ goToLogin(); return; }
         if(!r.data.ok){ showMsg(ntMsg, r.data.error || 'Termin konnte nicht angelegt werden.', false); return; }
         showMsg(ntMsg, 'Termin angelegt.', true);

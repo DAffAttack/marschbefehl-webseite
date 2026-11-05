@@ -45,6 +45,29 @@ function gueltigerPreis(v) {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100000;
 }
 
+// Vorab-Buchung: gut abtippbarer Code ohne verwechselbare Zeichen (0/O, 1/I).
+function neuerVorabCode() {
+  const zeichen = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const b = crypto.randomBytes(8);
+  const c = Array.from(b, (x) => zeichen[x % zeichen.length]).join('');
+  return `${c.slice(0, 4)}-${c.slice(4)}`;
+}
+
+// Setzt oder entfernt die Vorab-Phase. Liefert einen Fehlertext oder null.
+function vorabSetzen(termin, wert) {
+  if (wert === '' || wert === null || wert === undefined) {
+    delete termin.fuerAlleAb;
+    delete termin.vorabCode;
+    return null;
+  }
+  const ab = typeof wert === 'string' ? new Date(wert) : new Date(NaN);
+  if (Number.isNaN(ab.getTime())) return 'Ungültiger Zeitpunkt für „Für alle buchbar ab“.';
+  if (ab.getTime() >= terminDatumZeit(termin).getTime()) return '„Für alle buchbar ab“ muss vor dem Termin liegen.';
+  termin.fuerAlleAb = ab.toISOString();
+  if (!termin.vorabCode) termin.vorabCode = neuerVorabCode();
+  return null;
+}
+
 function terminAdminFeld(t, state) {
   const belegt = belegtePersonen(state, t.id);
   return {
@@ -59,6 +82,8 @@ function terminAdminFeld(t, state) {
     status: t.status || 'offen',
     absageGrund: t.absageGrund || '',
     abgesagtAm: t.abgesagtAm || null,
+    fuerAlleAb: t.fuerAlleAb || null,
+    vorabCode: t.vorabCode || null,
   };
 }
 
@@ -182,6 +207,7 @@ exports.handler = async (event) => {
           telefon: b.telefon || '',
           personen: b.personen,
           fahrzeug: b.fahrzeug || '',
+          vorab: b.vorab === true,
           status: b.status || 'bezahlt',
           betragCent: typeof b.betragCent === 'number' ? b.betragCent : null,
           reserviertBis: b.reserviertBis || null,
@@ -387,6 +413,8 @@ exports.handler = async (event) => {
           maxPersonen,
           erstelltAm: new Date().toISOString(),
         };
+        const vorabFehler = vorabSetzen(termin, body.fuerAlleAb);
+        if (vorabFehler) return { ok: false, status: 400, error: vorabFehler };
         state.termine.push(termin);
         return { ok: true, termin };
       });
@@ -416,6 +444,10 @@ exports.handler = async (event) => {
             status: 400,
             error: `Es sind bereits ${belegt} Plätze gebucht — die maximale Personenzahl kann nicht darunter gesetzt werden.`,
           };
+        }
+        if ('fuerAlleAb' in body) {
+          const vorabFehler = vorabSetzen(termin, body.fuerAlleAb);
+          if (vorabFehler) return { ok: false, status: 400, error: vorabFehler };
         }
         termin.maxPersonen = maxPersonen;
         return { ok: true, termin };

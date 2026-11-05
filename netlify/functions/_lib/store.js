@@ -38,6 +38,14 @@ const { getStore, setEnvironmentContext } = require('@netlify/blobs');
 // Hinweis: Das mitgelieferte connectLambda() übergibt die "uncachedEdgeURL" nicht, die
 // für Lesen mit starker Konsistenz nötig ist. Deshalb wird der Kontext hier selbst
 // gesetzt (gleiche Felder wie connectLambda, plus url_uncached).
+// Vorab-Buchung (05.11.2026): Bis "fuerAlleAb" braucht ein Termin den "vorabCode",
+// den nur der Mitglieder-Beitrag nennt. Ohne fuerAlleAb sofort für alle buchbar.
+function vorabAktiv(termin) {
+  if (!termin || !termin.fuerAlleAb) return false;
+  const ab = new Date(termin.fuerAlleAb).getTime();
+  return Number.isFinite(ab) && Date.now() < ab;
+}
+
 function blobsVerbinden(event) {
   if (!event || !event.blobs) return;
   let data;
@@ -307,6 +315,7 @@ function withState(mutator, optionen) {
 
 module.exports = {
   blobsVerbinden,
+  vorabAktiv,
   withState,
   readState,
   belegtePersonen,
