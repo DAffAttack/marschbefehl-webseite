@@ -97,6 +97,10 @@
   }
   .lang-text p{ margin:0 0 18px; }
   .lang-text p:last-child{ margin-bottom:0; }
+  .lang-bild{ margin:28px 0; }
+  .lang-bild img{ width:100%; height:auto; display:block; border-radius:14px; background:var(--ink-soft); }
+  .lang-bild figcaption{ margin-top:8px; font-size:13px; line-height:1.5; color:var(--muted); }
+  .lang-bild:last-child{ margin-bottom:0; }
 
   .ort-block{ margin-bottom:48px; }
   .ort-block h2{ font-size:15px; margin:0 0 4px; }
@@ -673,7 +677,14 @@
     var langWrap = document.getElementById('f-langbeschreibung');
     var absaetze = (f.langbeschreibung || '').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean);
     if(absaetze.length === 0) absaetze = [f.langbeschreibung || ''];
-    langWrap.innerHTML = absaetze.map(function(p){ return '<p>' + escapeHtml(p).replace(/\n/g, '<br>') + '</p>'; }).join('');
+    var langTeile = absaetze.map(function(p){ return '<p>' + escapeHtml(p).replace(/\n/g, '<br>') + '</p>'; });
+    // Freiwilliges Foto mitten im Text: nach der ersten Hälfte der Absätze.
+    if(f.bildBeschreibungId){
+      langTeile.splice(Math.ceil(absaetze.length / 2), 0,
+        '<figure class="lang-bild"><img src="/.netlify/functions/fuehrungen-bild?id=' + encodeURIComponent(f.bildBeschreibungId) + '" alt="Besuchergruppe bei einer früheren Führung">' +
+        '<figcaption>Bei einer unserer früheren Führungen</figcaption></figure>');
+    }
+    langWrap.innerHTML = langTeile.join('');
 
     var ortBlock = document.getElementById('f-ort-block');
     if(f.ort){

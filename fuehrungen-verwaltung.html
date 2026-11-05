@@ -528,6 +528,16 @@
           </div>
         </div>
       </div>
+      <div class="field">
+        <label>Bild in der Beschreibung (freiwillig)</label>
+        <div class="image-upload">
+          <div class="preview" id="nf-bild-beschreibung-preview">kein Bild</div>
+          <div class="upload-controls">
+            <input type="file" id="nf-bild-beschreibung-input" accept="image/jpeg,image/png,image/webp">
+            <div class="upload-status" id="nf-bild-beschreibung-status">Erscheint mitten im Text, darunter steht „Bei einer unserer früheren Führungen“. JPG, PNG oder WebP, max. 3&nbsp;MB.</div>
+          </div>
+        </div>
+      </div>
 
       <div class="field" style="max-width:220px;">
         <label>Preis pro Person (&euro;)</label>
@@ -739,6 +749,7 @@
 
   var nfBildUebersichtId = null;
   var nfBildDetailId = null;
+  var nfBildBeschreibungId = null;
 
   nfKurz.addEventListener('input', function(){
     var len = nfKurz.value.length;
@@ -757,6 +768,12 @@
     document.getElementById('nf-bild-detail-preview'),
     document.getElementById('nf-bild-detail-status'),
     function(id){ nfBildDetailId = id; }
+  );
+  wireImageUpload(
+    document.getElementById('nf-bild-beschreibung-input'),
+    document.getElementById('nf-bild-beschreibung-preview'),
+    document.getElementById('nf-bild-beschreibung-status'),
+    function(id){ nfBildBeschreibungId = id; }
   );
 
   nfSubmit.addEventListener('click', function(){
@@ -785,7 +802,8 @@
       treffpunkt: document.getElementById('nf-treffpunkt').value.trim(),
       preisProPerson: preis,
       bildUebersichtId: nfBildUebersichtId,
-      bildDetailId: nfBildDetailId
+      bildDetailId: nfBildDetailId,
+      bildBeschreibungId: nfBildBeschreibungId
     }).then(function(r){
       nfSubmit.disabled = false;
       if(r.status === 401){ goToLogin(); return; }
@@ -794,7 +812,12 @@
       nfTitel.value = ''; nfKurz.value = ''; nfLang.value = ''; nfOrt.value = ''; document.getElementById('nf-treffpunkt').value = ''; nfPreis.value = '';
       nfKurzCounter.textContent = '0 / 100';
       nfKurzCounter.classList.remove('is-near-limit');
-      nfBildUebersichtId = null; nfBildDetailId = null;
+      nfBildUebersichtId = null; nfBildDetailId = null; nfBildBeschreibungId = null;
+      document.getElementById('nf-bild-beschreibung-preview').style.backgroundImage = '';
+      document.getElementById('nf-bild-beschreibung-preview').textContent = 'kein Bild';
+      document.getElementById('nf-bild-beschreibung-status').textContent = 'Erscheint mitten im Text, darunter steht „Bei einer unserer früheren Führungen“. JPG, PNG oder WebP, max. 3 MB.';
+      document.getElementById('nf-bild-beschreibung-status').className = 'upload-status';
+      document.getElementById('nf-bild-beschreibung-input').value = '';
       document.getElementById('nf-bild-uebersicht-preview').style.backgroundImage = '';
       document.getElementById('nf-bild-uebersicht-preview').textContent = 'kein Bild';
       document.getElementById('nf-bild-uebersicht-status').textContent = 'JPG, PNG oder WebP, max. 3 MB.';
@@ -999,6 +1022,12 @@
             '<div class="upload-controls"><input type="file" class="ef-bild-detail-input" accept="image/jpeg,image/png,image/webp"><div class="upload-status ef-bild-detail-status">Unverändert lassen: einfach kein neues Bild wählen.</div></div>' +
           '</div></div>' +
         '</div>' +
+        '<div class="field"><label>Bild in der Beschreibung (freiwillig)</label><div class="image-upload">' +
+          '<div class="preview ef-bild-beschreibung-preview"' + (f.bildBeschreibungId ? ' style="background-image:url(' + bildUrl(f.bildBeschreibungId) + ')"' : '') + '></div>' +
+          '<div class="upload-controls"><input type="file" class="ef-bild-beschreibung-input" accept="image/jpeg,image/png,image/webp"><div class="upload-status ef-bild-beschreibung-status">Erscheint mitten im Text, darunter steht „Bei einer unserer früheren Führungen“.</div>' +
+          (f.bildBeschreibungId ? '<label style="display:block;margin-top:8px;font-weight:400;"><input type="checkbox" class="ef-bild-beschreibung-weg"> Bild aus der Beschreibung entfernen</label>' : '') +
+          '</div>' +
+        '</div></div>' +
         '<div class="field" style="max-width:220px;"><label>Preis pro Person (&euro;)</label><input type="number" class="ef-preis" min="0" step="0.5" value="' + f.preisProPerson + '"></div>' +
         '<div><button type="button" class="btn-primary ef-save">Änderungen speichern</button> <button type="button" class="btn-secondary ef-cancel">Abbrechen</button></div>' +
         '<p class="msg ef-msg"></p>' +
@@ -1047,6 +1076,13 @@
       wrap.querySelector('.ef-bild-detail-status'),
       function(id){ efBildDetailId = id; }
     );
+    var efBildBeschreibungId = null;
+    wireImageUpload(
+      wrap.querySelector('.ef-bild-beschreibung-input'),
+      wrap.querySelector('.ef-bild-beschreibung-preview'),
+      wrap.querySelector('.ef-bild-beschreibung-status'),
+      function(id){ efBildBeschreibungId = id; }
+    );
 
     wrap.querySelector('.ef-save').addEventListener('click', function(){
       var efMsg = wrap.querySelector('.ef-msg');
@@ -1075,6 +1111,9 @@
       };
       if(efBildUebersichtId) payload.bildUebersichtId = efBildUebersichtId;
       if(efBildDetailId) payload.bildDetailId = efBildDetailId;
+      if(efBildBeschreibungId) payload.bildBeschreibungId = efBildBeschreibungId;
+      var efBeschreibungWeg = wrap.querySelector('.ef-bild-beschreibung-weg');
+      if(efBeschreibungWeg && efBeschreibungWeg.checked) payload.bildBeschreibungEntfernen = true;
 
       api('edit-fuehrung', payload).then(function(r){
         if(r.status === 401){ goToLogin(); return; }

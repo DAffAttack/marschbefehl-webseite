@@ -186,6 +186,7 @@ exports.handler = async (event) => {
             preisProPerson: f.preisProPerson,
             bildUebersichtId: f.bildUebersichtId || null,
             bildDetailId: f.bildDetailId || null,
+            bildBeschreibungId: f.bildBeschreibungId || null,
             terminAnzahlZukuenftig: zukuenftig.length,
             terminAnzahlVergangen: vergangen.length,
             buchungenAnzahlVergangen: buchungenAnzahl,
@@ -241,6 +242,7 @@ exports.handler = async (event) => {
       const preisProPerson = Number(body.preisProPerson);
       const bildUebersichtId = typeof body.bildUebersichtId === 'string' ? body.bildUebersichtId.trim() : '';
       const bildDetailId = typeof body.bildDetailId === 'string' ? body.bildDetailId.trim() : '';
+      const bildBeschreibungId = typeof body.bildBeschreibungId === 'string' ? body.bildBeschreibungId.trim() : '';
 
       if (!isNichtLeererText(titel, TITEL_MAX)) return errorResponse(400, `Bitte einen Titel angeben (max. ${TITEL_MAX} Zeichen).`);
       if (!isNichtLeererText(kurzbeschreibung, KURZBESCHREIBUNG_MAX)) {
@@ -254,6 +256,7 @@ exports.handler = async (event) => {
       if (!gueltigerPreis(preisProPerson)) return errorResponse(400, 'Ungültiger Preis pro Person.');
       if (!istGueltigeId(bildUebersichtId)) return errorResponse(400, 'Bitte ein Übersichtsbild hochladen.');
       if (!istGueltigeId(bildDetailId)) return errorResponse(400, 'Bitte ein Detailbild hochladen.');
+      if (bildBeschreibungId && !istGueltigeId(bildBeschreibungId)) return errorResponse(400, 'Ungültiges Bild für die Beschreibung.');
 
       const result = await withState((state) => {
         const fuehrung = {
@@ -266,6 +269,7 @@ exports.handler = async (event) => {
           preisProPerson,
           bildUebersichtId,
           bildDetailId,
+          bildBeschreibungId: bildBeschreibungId || null,
           erstelltAm: new Date().toISOString(),
         };
         state.fuehrungen.push(fuehrung);
@@ -292,6 +296,10 @@ exports.handler = async (event) => {
       const neuesBildDetailId = typeof body.bildDetailId === 'string' && body.bildDetailId.trim()
         ? body.bildDetailId.trim()
         : null;
+      const neuesBildBeschreibungId = typeof body.bildBeschreibungId === 'string' && body.bildBeschreibungId.trim()
+        ? body.bildBeschreibungId.trim()
+        : null;
+      const bildBeschreibungEntfernen = body.bildBeschreibungEntfernen === true;
 
       if (!fuehrungId) return errorResponse(400, 'Keine Führung angegeben.');
       if (!isNichtLeererText(titel, TITEL_MAX)) return errorResponse(400, `Bitte einen Titel angeben (max. ${TITEL_MAX} Zeichen).`);
@@ -306,9 +314,11 @@ exports.handler = async (event) => {
       if (!gueltigerPreis(preisProPerson)) return errorResponse(400, 'Ungültiger Preis pro Person.');
       if (neuesBildUebersichtId && !istGueltigeId(neuesBildUebersichtId)) return errorResponse(400, 'Ungültiges Übersichtsbild.');
       if (neuesBildDetailId && !istGueltigeId(neuesBildDetailId)) return errorResponse(400, 'Ungültiges Detailbild.');
+      if (neuesBildBeschreibungId && !istGueltigeId(neuesBildBeschreibungId)) return errorResponse(400, 'Ungültiges Bild für die Beschreibung.');
 
       let altesBildUebersichtId = null;
       let altesBildDetailId = null;
+      let altesBildBeschreibungId = null;
 
       const result = await withState((state) => {
         const fuehrung = state.fuehrungen.find((f) => f.id === fuehrungId);
@@ -329,6 +339,14 @@ exports.handler = async (event) => {
           altesBildDetailId = fuehrung.bildDetailId || null;
           fuehrung.bildDetailId = neuesBildDetailId;
         }
+        // Ein neu gewähltes Bild hat Vorrang vor dem Häkchen „entfernen“.
+        if (neuesBildBeschreibungId && neuesBildBeschreibungId !== fuehrung.bildBeschreibungId) {
+          altesBildBeschreibungId = fuehrung.bildBeschreibungId || null;
+          fuehrung.bildBeschreibungId = neuesBildBeschreibungId;
+        } else if (!neuesBildBeschreibungId && bildBeschreibungEntfernen) {
+          altesBildBeschreibungId = fuehrung.bildBeschreibungId || null;
+          fuehrung.bildBeschreibungId = null;
+        }
 
         return { ok: true, fuehrung };
       });
@@ -338,6 +356,7 @@ exports.handler = async (event) => {
       // best-effort, darf die eigentliche Bearbeitung nicht mehr zum Scheitern bringen.
       await bildLoeschenBestEffort(altesBildUebersichtId);
       await bildLoeschenBestEffort(altesBildDetailId);
+      await bildLoeschenBestEffort(altesBildBeschreibungId);
 
       return json(200, result);
     }
@@ -370,7 +389,7 @@ exports.handler = async (event) => {
         state.buchungen = state.buchungen.filter((b) => !terminIdsDieserFuehrung.includes(b.terminId));
         state.fuehrungen = state.fuehrungen.filter((f) => f.id !== fuehrungId);
 
-        bilderZumLoeschen = [fuehrung.bildUebersichtId, fuehrung.bildDetailId].filter(Boolean);
+        bilderZumLoeschen = [fuehrung.bildUebersichtId, fuehrung.bildDetailId, fuehrung.bildBeschreibungId].filter(Boolean);
 
         return { ok: true };
       });
