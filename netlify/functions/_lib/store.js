@@ -73,6 +73,19 @@ const IMAGE_STORE_NAME = 'fuehrungen-bilder';
 const RECHNUNG_STORE_NAME = 'fuehrungen-rechnungen';
 const MAX_RETRIES = 10;
 
+// Getrennte Speicher (05.11.2026): Netlify-Blobs gelten für alle Deploys einer Site. Damit
+// Testbuchungen nie echte Plätze belegen, setzt nur der Kontext "production" die Variable
+// BUCHUNG_SPEICHER=live und arbeitet dann auf eigenen Stores mit der Endung "-live". Alle
+// anderen Deploys und "netlify dev" bleiben auf den alten Namen. Die Variable wird bei jedem
+// Zugriff gelesen. Der passende Stripe-Schlüssel wird in zahlung.js erzwungen.
+function speicherIstLive() {
+  return String(process.env.BUCHUNG_SPEICHER || '').trim() === 'live';
+}
+
+function speicherName(name) {
+  return speicherIstLive() ? name + '-live' : name;
+}
+
 // Seit E2 (03.11.2026) zusätzlich:
 //   ereignisse             Protokoll (Buchung angelegt, bezahlt, abgelaufen, storniert, Webhook ...)
 //   verarbeiteteEreignisse IDs der schon verarbeiteten Stripe-Ereignisse (Idempotenz des Webhooks)
@@ -183,17 +196,18 @@ function getFuehrungenStore() {
   const cfg = blobsConfig();
   // consistency 'strong': Lesen liefert immer den zuletzt geschriebenen Stand (Blobs ist
   // sonst nur "eventually consistent"). Für Platzzählung und Bestätigung unverzichtbar.
-  return getStore({ name: STORE_NAME, consistency: 'strong', ...(cfg || {}) });
+  return getStore({ name: speicherName(STORE_NAME), consistency: 'strong', ...(cfg || {}) });
 }
 
 function getRechnungenStore() {
   const cfg = blobsConfig();
-  return getStore({ name: RECHNUNG_STORE_NAME, consistency: 'strong', ...(cfg || {}) });
+  return getStore({ name: speicherName(RECHNUNG_STORE_NAME), consistency: 'strong', ...(cfg || {}) });
 }
 
 function getBilderStore() {
   const cfg = blobsConfig();
-  return cfg ? getStore({ name: IMAGE_STORE_NAME, ...cfg }) : getStore(IMAGE_STORE_NAME);
+  const name = speicherName(IMAGE_STORE_NAME);
+  return cfg ? getStore({ name, ...cfg }) : getStore(name);
 }
 
 /**
@@ -314,6 +328,8 @@ function withState(mutator, optionen) {
 }
 
 module.exports = {
+  speicherIstLive,
+  speicherName,
   blobsVerbinden,
   vorabAktiv,
   withState,

@@ -1,14 +1,19 @@
 // Fragt den Resend-Schlüssel und die Kopie-Adresse ab und trägt beides bei Netlify ein
-// (Kontext branch:buchung, mit --alle für alle Kontexte). Werte erscheinen nirgends im Chat.
+// (Kontext branch:buchung, mit --echt Kontext production). Werte erscheinen nirgends im Chat.
 //
-// Aufruf über werkzeug\3 START Resend-Schluessel eintragen.cmd (Doppelklick) oder:
-//   node werkzeug/resend-schluessel-setzen.js [--alle]
+// Aufruf über werkzeug\3 START Resend-Schluessel eintragen.cmd (Doppelklick, Testadresse),
+// werkzeug\4 START Echte Seite einrichten.cmd (echte Seite) oder:
+//   node werkzeug/resend-schluessel-setzen.js [--echt]
 
 const path = require('path');
 const readline = require('readline');
 const { spawnSync } = require('child_process');
 
-const alle = process.argv.includes('--alle');
+if (process.argv.includes('--alle')) {
+  console.error('--alle gibt es nicht mehr. Fuer die echte Seite: --echt');
+  process.exit(2);
+}
+const KONTEXT = process.argv.includes('--echt') ? 'production' : 'branch:buchung';
 const KOPIE_VORGABE = 'mail.zsh@proton.me';
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -17,10 +22,10 @@ const frage = (text) => new Promise((res) => rl.question(text, (a) => res((a || 
 function setzen(name, wert, geheim) {
   const args = ['netlify', 'env:set', name, wert];
   if (geheim) args.push('--secret');
-  if (!alle) args.push('--context', 'branch:buchung');
+  args.push('--context', KONTEXT);
   const r = spawnSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', args, { cwd: path.join(__dirname, '..'), encoding: 'utf8', shell: process.platform === 'win32' });
   const ok = r.status === 0;
-  console.log((ok ? 'OK   ' : 'FEHL ') + name + (alle ? ' (alle Kontexte)' : ' (branch:buchung)'));
+  console.log((ok ? 'OK   ' : 'FEHL ') + name + ' (' + KONTEXT + ')');
   if (!ok) console.log(((r.stdout || '') + (r.stderr || '')).split(wert).join('***'));
   return ok;
 }

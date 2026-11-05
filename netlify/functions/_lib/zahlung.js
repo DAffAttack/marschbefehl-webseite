@@ -14,6 +14,7 @@
 //      gibt es dort nur eine Fehlermeldung, nie eine Scheinzahlung.
 
 const Stripe = require('stripe');
+const { speicherIstLive } = require('./store');
 
 const ATTRAPPE_WEBHOOK_SECRET = 'whsec_attrappe_nur_lokal';
 const WAEHRUNG = 'eur';
@@ -27,7 +28,21 @@ function attrappeAktiv() {
   return !stripeSchluessel() && process.env.NETLIFY_DEV === 'true';
 }
 
+// Schutz (05.11.2026): Echter Schlüssel nur mit echtem Speicher, Testschlüssel nur mit
+// Testspeicher. Passt es nicht, gilt die Zahlung als nicht eingerichtet und niemand kann
+// buchen. So kann weder echtes Geld im Testspeicher landen noch eine Testkarte echte Plätze
+// belegen. Prüflauf: werkzeug/speicher-pruefen.js
+function speicherKonflikt() {
+  const key = stripeSchluessel();
+  if (!key) return false;
+  return /^(sk|rk)_live_/.test(key) !== speicherIstLive();
+}
+
 function betriebsart() {
+  if (speicherKonflikt()) {
+    console.error('Zahlung gesperrt: Stripe-Schlüssel und BUCHUNG_SPEICHER passen nicht zusammen.');
+    return 'nicht-konfiguriert';
+  }
   if (stripeSchluessel()) return 'stripe';
   if (attrappeAktiv()) return 'attrappe';
   return 'nicht-konfiguriert';
@@ -261,6 +276,7 @@ function rohBody(event) {
  */
 function webhookEreignisLesen(event) {
   const art = betriebsart();
+  if (art === 'nicht-konfiguriert') throw new Error('Zahlung nicht eingerichtet oder Schlüssel passt nicht zum Speicher.');
   const secret = art === 'attrappe' ? ATTRAPPE_WEBHOOK_SECRET : process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET fehlt.');
   const h = event.headers || {};

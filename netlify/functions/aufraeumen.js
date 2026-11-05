@@ -7,6 +7,7 @@
 
 const { withState, protokoll, blobsVerbinden } = require('./_lib/store');
 const { nachUeberweisungVerfallen } = require('./_lib/ueberweisung');
+const { datenBereinigen } = require('./_lib/bereinigung');
 
 exports.handler = async (event) => {
   blobsVerbinden(event);
@@ -29,7 +30,12 @@ exports.handler = async (event) => {
           protokoll(state, { art: 'ueberweisung-verfallen', buchungId: b.id, nummer: b.nummer, text: 'Frist ' + b.ueberweisungFrist.slice(0, 10) });
         }
       }
-      if (freigegeben.length === 0 && verfallen.length === 0) return { ok: false, status: 200, error: 'nichts zu tun' };
+      const bereinigt = datenBereinigen(state, jetzt);
+      if (bereinigt.kontakte > 0 || bereinigt.entfernt.length > 0) {
+        protokoll(state, { art: 'daten-bereinigt', text: bereinigt.kontakte + ' Kontaktangaben gelöscht, ' + bereinigt.entfernt.length + ' abgelaufene Reservierungen entfernt' });
+      }
+      const nichtsBereinigt = bereinigt.kontakte === 0 && bereinigt.entfernt.length === 0;
+      if (freigegeben.length === 0 && verfallen.length === 0 && nichtsBereinigt) return { ok: false, status: 200, error: 'nichts zu tun' };
       return { ok: true, freigegeben, verfallen };
     });
     // Verfallene Überweisungen: offene Zahlung bei Stripe abbrechen, Gast informieren.

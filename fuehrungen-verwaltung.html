@@ -449,6 +449,7 @@
 
 <main>
   <h1>Führungen – Verwaltung</h1>
+  <div id="speicher-hinweis" hidden style="margin:10px 0 14px; padding:10px 14px; border-radius:10px; font-weight:600;"></div>
   <p class="intro">Interner Bereich zum Anlegen von Führungen &amp; Terminen und zur Einsicht der Buchungen. Nicht öffentlich verlinkt.</p>
 
   <div id="login-view">
@@ -1347,6 +1348,15 @@
       var fuehrungen = r.data.fuehrungen || [];
       var termine = r.data.termine || [];
       var buchungen = r.data.buchungen || [];
+
+      var speicherHinweis = document.getElementById('speicher-hinweis');
+      var istEcht = r.data.speicher === 'echt';
+      speicherHinweis.textContent = istEcht
+        ? 'Echte Seite: Alles hier ist echt, mit echten Gästen und echtem Geld.'
+        : 'Testseite: Alles hier sind nur Proben. Es belegt keine echten Plätze und bewegt kein echtes Geld.';
+      speicherHinweis.style.background = istEcht ? '#EEF4E0' : '#FFF3CD';
+      speicherHinweis.style.color = istEcht ? '#3f5316' : '#664d03';
+      speicherHinweis.hidden = false;
 
       renderBuchungsuebersicht(fuehrungen, termine, buchungen);
 

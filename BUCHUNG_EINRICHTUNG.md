@@ -14,7 +14,7 @@ Stand 04.11.2026. Das Buchungssystem (Branch `buchung`) ist fertig gebaut, lokal
 
 ## 2. Stripe einrichten (Betreiber)
 
-✅ 04.11.2026: Stripe-Konto angelegt, Testmodus; `STRIPE_SECRET_KEY` (sk_test) und `STRIPE_WEBHOOK_SECRET` per Doppelklick auf `werkzeug\2 START Stripe-Schluessel eintragen.cmd` (Desktop-Verknüpfung „Stripe-Schluessel eintragen“) für den Kontext `branch:buchung` gesetzt. Die Datei fragt beide Werte ab und prüft die Form (sk_…, whsec_…). Für den Livegang dieselbe Datei mit Live-Werten und `--alle` (Webhook dann auf marschbefehl.com, Punkt 3).
+✅ 04.11.2026: Stripe-Konto angelegt, Testmodus; `STRIPE_SECRET_KEY` (sk_test) und `STRIPE_WEBHOOK_SECRET` per Doppelklick auf `werkzeug\2 START Stripe-Schluessel eintragen.cmd` (Desktop-Verknüpfung „Stripe-Schluessel eintragen“) für den Kontext `branch:buchung` gesetzt. Die Datei fragt beide Werte ab und prüft die Form (sk_…, whsec_…). Für den Livegang gilt `werkzeug\4 START Echte Seite einrichten.cmd` (Abschnitt 6).
 
 1. Konto bei stripe.com anlegen (Gewerbe, IBAN, Ausweis). Für den Testmodus reicht die Anmeldung.
 2. **Developers → API keys**: `Secret key` (sk_test_… / später sk_live_…) → Netlify-Variable `STRIPE_SECRET_KEY`.
@@ -68,9 +68,9 @@ Site configuration → Environment variables. Liste und Erklärung in `.env.exam
 Stand 04.11.2026 abends: Abschnitt 5 komplett bestanden. Entschieden: **50 € je Person, 20 Plätze je Termin, keine Mindestteilnehmerzahl, Storno bis 14 Tage kostenfrei** (`agb.html` entsprechend angepasst). Vor dem Livegang noch: Testbuchung ZSH-2026-0008 stornieren/erstatten, Punkte 1–6 unten.
 
 1. Rechtstexte freigegeben: `agb.html` (Stornoregel bestätigt, keine Mindestzahl – Text vom Nutzer einmal ganz lesen), `datenschutz.html` Abschnitt 9, Hinweis „kein Widerrufsrecht“ im Formular, Impressum mit Kleinunternehmer-Hinweis sobald Steuernummer da.
-2. Testdaten löschen: Führung „Prüf-Führung (TEST)“ **und die Alt-Führung „Panzerkampf an der Oder“ vom August 2026 (Termin 19.09.2026, Buchung „Theo Tester“)** in der Verwaltung entfernen (Termine zuerst absagen/löschen). Hinweis: Der Rechnungszähler steht dann schon bei R-2026-0001 (Probe-Rechnung); die erste echte Rechnung wird R-2026-0002 – für das Finanzamt in Ordnung, Stornos und Proben dürfen Nummern verbrauchen, die Probe-Rechnung als PDF aufbewahren. Blobs-Stores auf Netlify sind je Site, Branch-Deploy und Produktion teilen sie sich → Testbuchungen vom Branch-Test vor dem Livegang stornieren.
-3. Stripe-Konto freischalten (Live), im Live-Konto PayPal und Google Pay aktivieren (Abschnitt 2 Punkt 4), Webhook für die Live-Adresse anlegen, dann die Live-Werte eintragen – für alle Kontexte im Ordner `website`: `node werkzeug/stripe-schluessel-setzen.js --alle` (der Doppelklick auf `2 START …` setzt nur den Branch).
-4. `buchung` → `vorschau` → `main` mergen; Deploy abwarten; erste echte Führung in der Verwaltung anlegen.
+2. **Getrennte Speicher (seit 05.11.2026), Testdaten bleiben stehen.** Der Kontext `production` hat `BUCHUNG_SPEICHER=live` und arbeitet auf `fuehrungen-live`, `fuehrungen-bilder-live`, `fuehrungen-rechnungen-live`; alle anderen Deploys auf den alten Stores. Die echte Seite beginnt leer, also bei ZSH-2026-0001 und R-2026-0001. Echter Stripe-Schlüssel nur mit echtem Speicher, Testschlüssel nur mit Testspeicher, sonst ist die Zahlung gesperrt (`_lib/zahlung.js`, Prüflauf `werkzeug/speicher-pruefen.js`). Die Verwaltung zeigt oben „Testseite“ oder „Echte Seite“.
+3. Stripe-Konto freischalten (Live), Bezahlarten im Live-Konto aktivieren, Webhook für `https://marschbefehl.com/.netlify/functions/stripe-webhook` anlegen, dann Doppelklick auf `werkzeug\4 START Echte Seite einrichten.cmd`. Die Datei setzt nur den Kontext `production`: Passwort, `BUCHUNG_SPEICHER=live`, Resend, Stripe (nimmt nur `sk_live_`). Das frühere `--alle` gibt es nicht mehr.
+4. `buchung` → `vorschau` → `main` mergen; Deploy abwarten; in der Verwaltung prüfen, dass oben „Echte Seite“ steht; erste echte Führung dort neu anlegen.
 5. EVENTIM.Light-Konto ruhen lassen (nichts mehr eingebunden).
 6. Nach dem ersten echten Termin: Abgleich-Mail und Protokoll ansehen.
 
@@ -78,6 +78,7 @@ Stand 04.11.2026 abends: Abschnitt 5 komplett bestanden. Entschieden: **50 € j
 
 - Verwaltung: `https://marschbefehl.com/fuehrungen-verwaltung.html` (Sitzung 12 h; 5 Fehlversuche → 15 Min Sperre).
 - Täglich 06:00 UTC Abgleich; Mail nur bei Abweichungen (Note, TO-DO je Zeile).
+- Löschfristen (`_lib/bereinigung.js`, läuft mit `aufraeumen`): Telefon und Anreise ein Jahr nach dem Termin; abgelaufene, nie bezahlte Reservierungen 40 Tage nach Fristende. Prüflauf `werkzeug/bereinigung-pruefen.js`.
 - Sicherung: Verwaltung → „Sicherung herunterladen“ (JSON mit allen Buchungen, Terminen, Protokoll); wöchentlich ablegen.
 - Passwort wechseln = alle Sitzungen ungültig. Schlüssel nie im Repo, nur in Netlify-Variablen.
 - Lokal testen: `npx netlify dev --port 8888` im Ordner `website` (Attrappen für Zahlung und Mail, Ausgang unter `.netlify/mail-ausgang`).

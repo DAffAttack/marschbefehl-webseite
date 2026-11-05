@@ -17,7 +17,7 @@
 //   Datum/Uhrzeit/max. Personen — kein eigenes Preisfeld mehr.
 
 const crypto = require('crypto');
-const { withState, readState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, getBilderStore, blobsVerbinden, protokoll } = require('./_lib/store');
+const { withState, readState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, getBilderStore, blobsVerbinden, protokoll, speicherIstLive } = require('./_lib/store');
 const { testUeberweisungEingang } = require('./_lib/zahlung');
 const {
   json,
@@ -227,7 +227,7 @@ exports.handler = async (event) => {
           ueberweisungErinnertAm: b.ueberweisungErinnertAm || null,
           ueberweisung: b.ueberweisung ? { referenz: b.ueberweisung.referenz || '', iban: b.ueberweisung.iban || '', hostedUrl: b.ueberweisung.hostedUrl || '' } : null,
         }));
-      return json(200, { ok: true, fuehrungen, termine, buchungen });
+      return json(200, { ok: true, fuehrungen, termine, buchungen, speicher: speicherIstLive() ? 'echt' : 'test' });
     }
 
     // ---------------- Führungen ----------------
