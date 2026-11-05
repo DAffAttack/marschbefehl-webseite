@@ -50,7 +50,14 @@
     }
   ];
 
-  var WECHSEL_MS = 8000;
+  // Standzeit je Stimme nach Textlänge, damit auch lange Zitate in Ruhe lesbar sind.
+  var MS_JE_ZEICHEN = 70;
+  var MIN_STANDZEIT_MS = 12000;
+  var SCROLL_MS = 800;
+
+  function standzeit(s) {
+    return Math.max(MIN_STANDZEIT_MS, (s.text.length + s.wer.length) * MS_JE_ZEICHEN);
+  }
 
   function el(tag, klasse, text) {
     var e = document.createElement(tag);
@@ -135,16 +142,22 @@
       ziel.addEventListener(a, function () { pause = true; }, { passive: true });
     });
     ['mouseleave', 'focusout'].forEach(function (a) {
-      ziel.addEventListener(a, function () { pause = false; });
+      ziel.addEventListener(a, function () { pause = false; planen(); });
     });
     var pause = false;
-    markieren();
-    if (!ruhig) {
-      setInterval(function () {
-        if (halten || pause || document.hidden || !band.clientWidth) return;
+    var uhr = null;
+    function planen() {
+      clearTimeout(uhr);
+      if (ruhig || halten) return;
+      uhr = setTimeout(function () {
+        if (halten) return;
+        if (pause || document.hidden || !band.clientWidth) { planen(); return; }
         gehe(aktuell() + 1);
-      }, WECHSEL_MS);
+        uhr = setTimeout(planen, SCROLL_MS);
+      }, standzeit(STIMMEN[aktuell()]));
     }
+    markieren();
+    planen();
   }
 
   var ziel = document.getElementById('gaeste-stimmen');
