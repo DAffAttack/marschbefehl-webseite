@@ -1,11 +1,12 @@
 // Kleine Helfer für einheitliche JSON-Antworten in allen Functions.
 
-function json(statusCode, obj) {
+function json(statusCode, obj, zusatzKopf) {
   return {
     statusCode,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
+      ...(zusatzKopf || {}),
     },
     body: JSON.stringify(obj),
   };

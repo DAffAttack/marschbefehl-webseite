@@ -9,3 +9,10 @@ node_modules
 .env
 .env.*
 _site/
+
+# Von netlify dev automatisch erzeugt (Edge-Functions-Laufzeit), nicht versionieren
+deno.lock
+
+# Sitzungsprotokolle der Claude-App (lokal)
+protokolle/
+werkzeug/letzter_lauf.txt
