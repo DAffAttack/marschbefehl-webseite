@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impressum – Zeitreise Seelower Höhen</title>
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
 <style>
   :root{
     --green:#A1C74F;
@@ -64,8 +66,10 @@
 </head>
 <body>
 
+<header id="site-header"></header>
+
 <main>
-  <a class="back" href="index.html">&#8592; Zurück zur Startseite</a>
+  <a class="back" href="/index.html">&#8592; Zurück zur Startseite</a>
   <h1>Impressum</h1>
 
   <h2>Angaben gemäß § 5 DDG</h2>
@@ -101,11 +105,22 @@
 <footer>
   <div>&copy; 2026 Zeitreise Seelower Höhen</div>
   <div style="margin-top:10px;">
-    <a href="impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="datenschutz.html">Datenschutz</a>
+    <a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a>
   </div>
 </footer>
 
-<script data-goatcounter="https://marschbefehl.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+<script>
+(function(){
+  // GoatCounter nur auf der echten Domain zaehlen, nicht auf Vorschau-/Test-
+  // Adressen (Netlify-Branch-Deploys, localhost, etc.) -- sonst zaehlen Tests
+  // und geteilte Vorschau-Links als echte Besuche in der Statistik mit.
+  if(!/(^|\.)marschbefehl\.com$/.test(location.hostname)) return;
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = '//gc.zgo.at/count.js';
+  s.setAttribute('data-goatcounter', 'https://marschbefehl.goatcounter.com/count');
+  document.body.appendChild(s);
+})();
+</script>
 </body>
 </html>

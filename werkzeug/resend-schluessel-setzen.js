@@ -1,0 +1,63 @@
+// Fragt den Resend-Schlüssel und die Kopie-Adresse ab und trägt beides bei Netlify ein
+// (Kontext branch:buchung, mit --echt Kontext production). Werte erscheinen nirgends im Chat.
+//
+// Aufruf über werkzeug\3 START Resend-Schluessel eintragen.cmd (Doppelklick, Testadresse),
+// werkzeug\4 START Echte Seite einrichten.cmd (echte Seite) oder:
+//   node werkzeug/resend-schluessel-setzen.js [--echt]
+
+const path = require('path');
+const readline = require('readline');
+const { spawnSync } = require('child_process');
+
+if (process.argv.includes('--alle')) {
+  console.error('--alle gibt es nicht mehr. Fuer die echte Seite: --echt');
+  process.exit(2);
+}
+const KONTEXT = process.argv.includes('--echt') ? 'production' : 'branch:buchung';
+const KOPIE_VORGABE = 'mail.zsh@proton.me';
+
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const frage = (text) => new Promise((res) => rl.question(text, (a) => res((a || '').trim())));
+
+function setzen(name, wert, geheim) {
+  const args = ['netlify', 'env:set', name, wert];
+  if (geheim) args.push('--secret');
+  args.push('--context', KONTEXT);
+  const r = spawnSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', args, { cwd: path.join(__dirname, '..'), encoding: 'utf8', shell: process.platform === 'win32' });
+  const ok = r.status === 0;
+  console.log((ok ? 'OK   ' : 'FEHL ') + name + ' (' + KONTEXT + ')');
+  if (!ok) console.log(((r.stdout || '') + (r.stderr || '')).split(wert).join('***'));
+  return ok;
+}
+
+// Liegt der Schlüssel schon in der Zwischenablage (Kopier-Knopf bei Resend), reicht Enter.
+function ausZwischenablage() {
+  if (process.platform !== 'win32') return '';
+  const r = spawnSync('powershell', ['-NoProfile', '-Command', 'Get-Clipboard -Raw'], { encoding: 'utf8' });
+  const t = (r.stdout || '').trim();
+  return /^re_[A-Za-z0-9_]{10,}$/.test(t) ? t : '';
+}
+
+(async () => {
+  console.log('');
+  let key = '';
+  const vorgabe = ausZwischenablage();
+  if (vorgabe) console.log('Ein Resend-Schluessel liegt in der Zwischenablage (re_' + '*'.repeat(8) + ').');
+  while (!/^re_[A-Za-z0-9_]{10,}$/.test(key)) {
+    key = (await frage(vorgabe ? '1) Resend API Key [Enter = aus der Zwischenablage]: ' : '1) Resend API Key (beginnt mit re_), einfuegen + Enter: ')) || vorgabe;
+    if (!key) { console.log('   Abgebrochen.'); rl.close(); process.exit(2); }
+    if (!key.startsWith('re_')) console.log('   Das sieht nicht nach einem Resend-Schluessel aus (muss mit re_ beginnen).');
+  }
+  let kopie = '';
+  while (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kopie)) {
+    kopie = (await frage('2) Deine E-Mail fuer Kopien ("Neue Buchung", Abgleich) [Enter = ' + KOPIE_VORGABE + ']: ')) || KOPIE_VORGABE;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kopie)) console.log('   Das ist keine E-Mail-Adresse.');
+  }
+  rl.close();
+  console.log('');
+  let gut = setzen('RESEND_API_KEY', key, true);
+  gut = setzen('MAIL_KOPIE_AN', kopie, false) && gut;
+  console.log(gut ? '\nFertig. Claude "erledigt" schreiben, dann wird der Deploy neu angestossen und die Mail geprueft.'
+                  : '\nMindestens ein Wert konnte nicht gesetzt werden (siehe oben).');
+  process.exit(gut ? 0 : 1);
+})();

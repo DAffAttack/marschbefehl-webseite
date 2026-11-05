@@ -1,0 +1,703 @@
+/* Drehschalter – zentrales Auswahl-Element auf der Startseite.
+   Funkgeräte-Optik: das freigegebene Produktfoto (freigestellt, transparenter
+   Hintergrund) wird als rotierendes Bild verwendet -- kein nachgebautes 3D,
+   sondern das echte Foto per CSS transform gedreht (der Zeiger ist bereits
+   Teil des Fotos und dreht dadurch automatisch korrekt mit).
+   Drehen per Maus/Touch/Tastatur, Einrasten mit synthetischem Klick-Sound,
+   zweiter separater Klick (mit eigenem, tieferem Bestätigungs-Sound)
+   navigiert erst dann zur Zielseite.
+   Barrierefreier Fallback: echte <a href>-Liste bleibt immer im DOM/sichtbar. */
+(function(){
+  'use strict';
+
+  var TOPICS = [
+    {label:'Videos', href:'/videos.html'},
+    {label:'Artikel', href:'/artikel/index.html'},
+    {label:'Karte', href:'/karte.html'},
+    {label:'Führungen', href:'/fuehrungen.html'},
+    {label:'Literatur', href:'/quellen.html'},
+    {label:'Unterstützen', href:'/unterstuetzen.html'},
+    {label:'Kontakt', href:'/kontakt.html'},
+    {label:'Kooperationen', href:'/kooperationen.html'}
+  ];
+  var STEP = (Math.PI*2)/TOPICS.length;
+  // Das Foto zeigt den Zeiger in Ruhestellung nach RECHTS (= 90° im Uhrzeigersinn
+  // von oben, unsere Winkel-Konvention). Offset gleicht das aus, damit currentTheta=0
+  // (Index 0, "Videos") den Zeiger optisch nach oben zeigen lässt.
+  var IMG_REST_OFFSET_DEG = 90;
+
+  var section = document.querySelector('.dial-section');
+  var knobWrap = document.getElementById('dialKnob');
+  var hitCircle = document.getElementById('dialHitCircle');
+  var rotor = document.getElementById('dialRotor');
+  var knobImg = document.getElementById('dialKnobImg');
+  var lightCone = document.getElementById('dialLightCone');
+  var labelsHost = document.getElementById('dialLabels');
+  var readoutLabel = document.getElementById('dialReadoutLabel');
+  var lightBtn = document.getElementById('dialLightBtn');
+  if(!section || !knobWrap || !hitCircle || !rotor || !labelsHost || !readoutLabel) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Feste Beschriftungen im Ring positionieren ---------- */
+  function layoutLabels(){
+    var rect = knobWrap.getBoundingClientRect();
+    // Ring-Radius = Radradius + Wunschabstand, ABER nach oben begrenzt durch
+    // den tatsaechlich vorhandenen Platz (2026-08-17).
+    // Hintergrund: Der Wunschabstand allein fuehrte je nach Bildschirmbreite
+    // entweder zu unnoetig kleinem Rad oder dazu, dass die seitlichen
+    // Schildchen ("Karte", "Kontakt") ueber den Panelrand hinausragten. Feste
+    // Zahlenwerte pro Breakpoint zu raten hat sich als Sackgasse erwiesen --
+    // bei der naechsten Layoutaenderung stimmen sie wieder nicht.
+    // Deshalb rechnet der Ring jetzt selbst: Er misst das breiteste Schildchen
+    // und den verfuegbaren Platz und nimmt den kleineren der beiden Radien.
+    // Dadurch passt es sich automatisch an jede Bildschirmbreite UND an
+    // geaenderte Beschriftungstexte an.
+    var r = rect.width/2 + Math.max(38, rect.width*0.19);
+
+    var host = labelsHost.getBoundingClientRect();
+    var plaetzchen = labelsHost.querySelectorAll('.dial-label');
+    if(host.width > 0 && plaetzchen.length){
+      // Sichtbare Zahnradkante (nicht die Elementkante -- das Foto hat Rand).
+      var zahnradR = rect.width*0.4317;
+      var maxR = Infinity, minR = 0;
+      plaetzchen.forEach(function(el, i){
+        var theta = i*STEP;
+        var sin = Math.abs(Math.sin(theta)), cos = Math.abs(Math.cos(theta));
+        var halbB = el.offsetWidth/2, halbH = el.offsetHeight/2;
+        // (1) Nach aussen: Das Schildchen darf nicht ueber den Rand ragen.
+        //     Waagerechter Ausschlag ist sin(theta)*r plus halbe Breite.
+        if(sin > 0.01){
+          maxR = Math.min(maxR, (host.width/2 - 8 - halbB)/sin);
+        }
+        // (2) Nach innen: Das Schildchen darf nicht auf dem Zahnrad liegen.
+        //     Radiale Ausdehnung eines gedrehten Rechtecks, konservativ
+        //     genaehert ueber die Projektion seiner Halbachsen.
+        minR = Math.max(minR, zahnradR + 6 + halbB*sin + halbH*cos);
+      });
+      // Beide Grenzen zusammen bestimmen den moeglichen Bereich. Liegt der
+      // Wunschradius darueber, wird gedeckelt; passt gar nichts mehr, hat die
+      // Aussen-Grenze Vorrang (lieber eng am Rad als ueber den Bildrand).
+      if(r > maxR) r = maxR;
+      if(r < minR) r = Math.min(minR, maxR);
+    }
+    labelsHost.querySelectorAll('.dial-label').forEach(function(el, i){
+      var theta = i*STEP;
+      var x = Math.sin(theta)*r;
+      var y = -Math.cos(theta)*r;
+      el.style.transform = 'translate(-50%,-50%) translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
+    });
+  }
+  TOPICS.forEach(function(topic, i){
+    var plate = document.createElement('div');
+    plate.className = 'dial-label';
+    plate.dataset.index = i;
+    var text = document.createElement('span');
+    text.className = 'dial-label-text';
+    text.textContent = topic.label;
+    plate.appendChild(text);
+    labelsHost.appendChild(plate);
+  });
+
+  /* ---------- Web Audio: zwei unterschiedliche synthetische Sounds ---------- */
+  var audioCtx = null;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e){ audioCtx = null; }
+    return audioCtx;
+  }
+
+  /* Ton-Kanal moeglichst frueh aufwecken (2026-08-17).
+
+     Problem, das damit geloest wird: Browser starten den Ton-Kanal aus
+     Werbeschutz-Gruenden im Ruhezustand; er darf erst nach einer echten
+     Nutzergeste aufwachen, und dieses Aufwecken ist ASYNCHRON. Wurde der
+     erste Ton im selben Wimpernschlag wie die erste Geste abgespielt, war
+     der Kanal noch nicht wach und der Ton verpuffte lautlos -- daher die
+     Nutzer-Meldung "beim ersten Mal kommt kein Ton, erst beim zweiten Mal".
+
+     WICHTIG, warum es so und nicht anders geloest ist: Ein erster Versuch
+     hatte das Abspielen BLOCKIERT, solange der Kanal schlief, und den Ton
+     danach nachgeholt. Das war zu riskant -- griff das Nachholen aus
+     irgendeinem Grund nicht (aeltere Browser geben bei resume() kein
+     Promise zurueck, Fingerprinting-Schutz mancher Browser greift in Web
+     Audio ein), kam GAR KEIN Ton mehr. Genau das ist beim Nutzer passiert.
+
+     Diese Fassung kann nicht schlechter sein als der Ursprungszustand: Das
+     Abspielen wird nie blockiert. Stattdessen wird der Kanal schon bei der
+     allerersten Geste IRGENDWO auf der Seite geweckt -- in der Capture-
+     Phase, also noch vor allen eigenen Handlern. Da die Dreh-Geraeusche
+     erst bei pointermove/pointerup folgen, ist der Kanal bis dahin wach. */
+  function audioFreischalten(){
+    var ctx = ensureAudio();
+    if(ctx && ctx.state === 'suspended'){
+      try{ ctx.resume(); }catch(e){}
+    }
+    // Tonweg "anwaermen": Ein unhoerbarer Ein-Sample-Puffer bringt den
+    // Audio-Graphen zum Laufen. Ohne das verschluckt manche Umgebung den
+    // allerersten echten Ton, weil die Tonausgabe erst nach ein paar
+    // Millisekunden wirklich anlaeuft.
+    if(ctx){
+      try{
+        var stille = ctx.createBuffer(1, 1, ctx.sampleRate);
+        var q = ctx.createBufferSource();
+        q.buffer = stille;
+        q.connect(ctx.destination);
+        q.start(0);
+      }catch(e){}
+    }
+    document.removeEventListener('pointerdown', audioFreischalten, true);
+    document.removeEventListener('touchstart', audioFreischalten, true);
+    document.removeEventListener('mousedown', audioFreischalten, true);
+    document.removeEventListener('keydown', audioFreischalten, true);
+  }
+
+  /* Liefert den Ton-Kanal und stoesst bei Bedarf das Aufwecken an --
+     BLOCKIERT das Abspielen aber NIE (Lehre aus dem Fehlversuch weiter
+     oben: eine Fassung, die den Ton zurueckhaelt, kann schlechter sein als
+     gar kein Fix). Schlief der Kanal, wird derselbe Sound nach dem
+     Aufwachen EINMAL nachgeholt. Doppelte Toene entstehen dadurch nicht:
+     War der Kanal wirklich schlafend, blieb der unmittelbare Versuch
+     ohnehin lautlos; war er wach, gibt es gar kein Nachholen. */
+  var audioNachholLaeuft = false;
+  function tonKanal(nachholen){
+    var ctx = ensureAudio();
+    if(!ctx) return null;
+    if(ctx.state === 'suspended' && !audioNachholLaeuft){
+      audioNachholLaeuft = true;
+      var fertig = function(){
+        audioNachholLaeuft = false;
+        if(ctx.state === 'running' && typeof nachholen === 'function') nachholen();
+      };
+      try{
+        var p = ctx.resume();
+        // Aeltere Browser geben hier kein Promise zurueck -- dann per
+        // kurzer Verzoegerung nachfassen statt auf .then zu vertrauen.
+        if(p && typeof p.then === 'function') p.then(fertig, function(){ audioNachholLaeuft = false; });
+        else setTimeout(fertig, 80);
+      }catch(e){ audioNachholLaeuft = false; }
+    }
+    return ctx;
+  }
+  document.addEventListener('pointerdown', audioFreischalten, true);
+  document.addEventListener('touchstart', audioFreischalten, true);
+  document.addEventListener('mousedown', audioFreischalten, true);
+  document.addEventListener('keydown', audioFreischalten, true);
+
+  // Sound A: kurzer, heller Rast-Klick beim Weiterdrehen auf die nächste Position.
+  function playDetentClick(){
+    var ctx = tonKanal(playDetentClick);
+    if(!ctx) return;
+    // Kleiner Vorlauf statt exakt "jetzt": Wird der Ton auf den aktuellen
+    // Zeitpunkt gelegt, faellt er weg, wenn die Tonausgabe erst ein paar
+    // Millisekunden spaeter wirklich anlaeuft. 30ms sind unhoerbar, machen
+    // das Einplanen aber zuverlaessig.
+    var now = ctx.currentTime + 0.03;
+    var len = Math.floor(ctx.sampleRate*0.035);
+    var buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for(var i=0;i<len;i++){
+      data[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 3.2);
+    }
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    var band = ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.setValueAtTime(2400, now);
+    band.frequency.exponentialRampToValueAtTime(750, now+0.03);
+    band.Q.value = 4;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now+0.04);
+    noise.connect(band); band.connect(gain); gain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now+0.05);
+  }
+
+  // Sound B: satter, mechanischer Schnapper wie ein alter Kippschalter/Relais --
+  // rein Noise-basiert (kein Sinuston/Piepser), hörbar voller/tiefer als der
+  // helle Rast-Klick, mit tiefem "Thunk"-Nachschlag für das Gefühl von Gewicht.
+  function playConfirmSound(){
+    var ctx = tonKanal(playConfirmSound);
+    if(!ctx) return;
+    // Kleiner Vorlauf statt exakt "jetzt": Wird der Ton auf den aktuellen
+    // Zeitpunkt gelegt, faellt er weg, wenn die Tonausgabe erst ein paar
+    // Millisekunden spaeter wirklich anlaeuft. 30ms sind unhoerbar, machen
+    // das Einplanen aber zuverlaessig.
+    var now = ctx.currentTime + 0.03;
+
+    function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
+      var len = Math.max(4, Math.floor(ctx.sampleRate*dur));
+      var buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for(var i=0;i<len;i++){
+        data[i] = (Math.random()*2-1) * Math.pow(1 - i/len, curve);
+      }
+      var src = ctx.createBufferSource();
+      src.buffer = buffer;
+      var gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(peakGain, startTime + attack);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      var node = src;
+      connectChain.forEach(function(filter){ node.connect(filter); node = filter; });
+      node.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(startTime);
+      src.stop(startTime + dur + 0.02);
+    }
+
+    // 1) Harter, kurzer Anschlag -- der eigentliche "Schnapper" des Kontakts,
+    //    sehr kurzer Attack/Decay, breitbandig+crisp (Hochpass) für metallische Härte.
+    var hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 900;
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 6000;
+    noiseBurst(now, 0.016, 1.5, [hp, lp], 0.9, 0.001);
+
+    // 2) Tiefer Thunk direkt danach -- mechanisches Gewicht/Gehäuse-Resonanz,
+    //    NUR gefilterter Noise (kein Oszillator), damit es nicht "piept".
+    var thunkStart = now + 0.014;
+    var lpThunk = ctx.createBiquadFilter();
+    lpThunk.type = 'lowpass';
+    lpThunk.frequency.setValueAtTime(420, thunkStart);
+    lpThunk.frequency.exponentialRampToValueAtTime(110, thunkStart + 0.08);
+    lpThunk.Q.value = 1.1;
+    noiseBurst(thunkStart, 0.1, 2.1, [lpThunk], 0.75, 0.006);
+
+    // 3) Winziger Feder-Nachklapper (Rückstellung des Schaltmechanismus)
+    var tailStart = now + 0.078;
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1900;
+    bp.Q.value = 3;
+    noiseBurst(tailStart, 0.018, 1.8, [bp], 0.22, 0.001);
+  }
+
+  // Sound C: der Kippschalter fürs Licht -- lauter/kräftiger Umleg-Klick,
+  // bewusst deutlicher gemischt als die beiden Hauptschalter-Sounds oben,
+  // ebenfalls reiner gefilterter Noise (kein Oszillator), damit es nach
+  // echtem Metall-Kontakt statt Piepton klingt. Gleicher Klick für beide
+  // Richtungen (an/aus) -- ein Kippschalter macht in beide Richtungen
+  // denselben Anschlag.
+  function playToggleClick(){
+    var ctx = tonKanal(playToggleClick);
+    if(!ctx) return;
+    // Kleiner Vorlauf statt exakt "jetzt": Wird der Ton auf den aktuellen
+    // Zeitpunkt gelegt, faellt er weg, wenn die Tonausgabe erst ein paar
+    // Millisekunden spaeter wirklich anlaeuft. 30ms sind unhoerbar, machen
+    // das Einplanen aber zuverlaessig.
+    var now = ctx.currentTime + 0.03;
+
+    function noiseBurst(startTime, dur, curve, connectChain, peakGain, attack){
+      var len = Math.max(4, Math.floor(ctx.sampleRate*dur));
+      var buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for(var i=0;i<len;i++){
+        data[i] = (Math.random()*2-1) * Math.pow(1 - i/len, curve);
+      }
+      var src = ctx.createBufferSource();
+      src.buffer = buffer;
+      var gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(peakGain, startTime + attack);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      var node = src;
+      connectChain.forEach(function(filter){ node.connect(filter); node = filter; });
+      node.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(startTime);
+      src.stop(startTime + dur + 0.02);
+    }
+
+    // 1) Harter metallischer Anschlag -- kräftiger/lauter als der Haupt-
+    //    schalter-Klick (Sound A), breitbandiger Hochpass für schärferes,
+    //    knackigeres Transient.
+    var hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 700;
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 7200;
+    noiseBurst(now, 0.02, 1.3, [hp, lp], 1.0, 0.0008);
+
+    // 2) Voller, kräftiger Thunk direkt danach -- deutlich lauter/tiefer
+    //    im Pegel als der Bestätigungs-Sound des Hauptschalters, damit der
+    //    Kippschalter spürbar "kräftiger" wirkt.
+    var thunkStart = now + 0.012;
+    var lpThunk = ctx.createBiquadFilter();
+    lpThunk.type = 'lowpass';
+    lpThunk.frequency.setValueAtTime(500, thunkStart);
+    lpThunk.frequency.exponentialRampToValueAtTime(90, thunkStart + 0.1);
+    lpThunk.Q.value = 1.3;
+    noiseBurst(thunkStart, 0.13, 2.0, [lpThunk], 0.95, 0.005);
+
+    // 3) Kurzer metallischer Nachklang (Gehäuseresonanz)
+    var tailStart = now + 0.09;
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1500;
+    bp.Q.value = 2.6;
+    noiseBurst(tailStart, 0.03, 1.6, [bp], 0.32, 0.001);
+  }
+
+  /* ---------- Zustand ---------- */
+  var currentTheta = 0;        // aktuell gerenderter Drehwinkel (Bildschirm-CW-von-oben)
+  var settleTarget = 0;        // Ziel beim Einrasten
+  var settling = false;
+  var loopRunning = false;
+  var armedIndex = 0;          // aktuell "eingerastet" angezeigtes Thema
+  var lastSnapIndex = 0;
+  var isLit = false;
+
+  function normIndex(i){ return ((i % TOPICS.length) + TOPICS.length) % TOPICS.length; }
+
+  function setArmed(idx, opts){
+    opts = opts || {};
+    armedIndex = normIndex(idx);
+    var topic = TOPICS[armedIndex];
+    if(readoutLabel.textContent !== topic.label){
+      if(!reduceMotion && typeof gsap !== 'undefined' && !opts.silent){
+        gsap.fromTo(readoutLabel, {opacity:0, y:6}, {opacity:1, y:0, duration:0.22, ease:'power2.out'});
+      }
+      readoutLabel.textContent = topic.label;
+    }
+    knobWrap.setAttribute('aria-valuenow', String(armedIndex));
+    knobWrap.setAttribute('aria-valuetext', topic.label);
+    labelsHost.querySelectorAll('.dial-label').forEach(function(el){
+      el.classList.toggle('is-active', Number(el.dataset.index) === armedIndex);
+    });
+  }
+
+  function updateFromTheta(theta, opts){
+    opts = opts || {};
+    var rawIndex = Math.round(theta/STEP);
+    var snapIndex = normIndex(rawIndex);
+    if(snapIndex !== lastSnapIndex || opts.force){
+      lastSnapIndex = snapIndex;
+      if(!opts.silent) playDetentClick();
+      setArmed(snapIndex, opts);
+    }
+  }
+
+  /* ---------- Rotation des Foto-Elements ---------- */
+  function applyRotation(){
+    var deg = currentTheta*180/Math.PI - IMG_REST_OFFSET_DEG;
+    rotor.style.transform = 'rotate(' + deg.toFixed(2) + 'deg)';
+  }
+
+  function startLoop(){
+    if(loopRunning) return;
+    loopRunning = true;
+    requestAnimationFrame(loopTick);
+  }
+  function loopTick(){
+    if(settling){
+      currentTheta += (settleTarget - currentTheta) * 0.22;
+      if(Math.abs(settleTarget - currentTheta) < 0.0008){
+        currentTheta = settleTarget;
+        settling = false;
+      }
+      applyRotation();
+      requestAnimationFrame(loopTick);
+    } else {
+      applyRotation();
+      loopRunning = false;
+    }
+  }
+
+  /* ---------- Interaktion: Drag / Touch ---------- */
+  var dragging = false;
+  var dragStartX = 0, dragStartY = 0, dragMoved = false;
+  var lastPointerTheta = 0;
+  var pointerDownTime = 0;
+  var focusFromPointer = false;
+
+  function screenThetaFromEvent(e){
+    var rect = knobWrap.getBoundingClientRect();
+    // Gleicher Mittelpunkt wie istInnerhalbKreis() und wie die tatsächliche
+    // Rotationsachse (.dial-knob-rotor transform-origin:48% 50%) -- sonst
+    // liefe der Ziehwinkel um einen anderen Punkt als die sichtbare Drehung.
+    var cx = rect.left + rect.width*KNOPF_MITTE_X_ANTEIL, cy = rect.top + rect.height/2;
+    var dx = e.clientX - cx, dy = e.clientY - cy;
+    return Math.atan2(dx, -dy);
+  }
+  function shortestDiff(a, b){
+    var d = a - b;
+    while(d > Math.PI) d -= Math.PI*2;
+    while(d < -Math.PI) d += Math.PI*2;
+    return d;
+  }
+
+  // knobWrap ist ein eckiges Element (für die kreisrunde Drehgeste braucht es
+  // ein Quadrat als Referenzrahmen), der sichtbare Knopf darin ist aber rund
+  // und kleiner als das Quadrat. Ohne diese Prüfung reagieren Klicks in den
+  // Ecken des Quadrats (dort, wo die schräg stehenden Ring-Schildchen sitzen,
+  // z.B. Kooperationen/Artikel/Unterstützen/Führungen) fälschlich auf den
+  // Knopf, obwohl dort optisch nur leerer Raum bzw. ein Schildchen zu sehen
+  // ist -- vom Nutzer am 2026-08-17 gemeldet und hierdurch behoben.
+  // Zwei verschiedene Radien für zwei verschiedene Zwecke (Nutzer-Präzisierung
+  // 2026-08-17): DREHEN darf über die ganze sichtbare Zahnrad-Scheibe gehen
+  // (großer Radius, verhindert nur, dass Klicks in den leeren Ecken des
+  // eckigen Referenz-Quadrats fälschlich reagieren -- z.B. bei den schräg
+  // stehenden Ring-Schildchen Kooperationen/Artikel/Unterstützen/Führungen).
+  // BESTÄTIGEN per Tap/Klick (ohne Ziehen) darf dagegen nur auf der kleinen
+  // schwarzen Kappe in der Mitte auslösen (halbierter Radius, 0.16 statt der
+  // Kappen-eigenen 0.32, siehe vorherige Korrektur).
+  // Nachmessung am echten Foto (knob-front-cutout-v1.png, Alpha-Kanal): das
+  // eckige Container-Quadrat ist deutlich größer als das sichtbare Zahnrad
+  // (viel grauer Leerraum drumherum), 1.0 (voller Container-Radius) reichte
+  // dadurch noch bis in die Ring-Schildchen hinein. Auf Nutzer-Wunsch
+  // (2026-08-17, zweite Korrektur) um 50% verkleinert: 1.0 -> 0.5.
+  // DRITTE Korrektur (2026-08-17, siebte Runde): 0.5 war zu vorsichtig --
+  // deckte nur die innere Hälfte der sichtbaren Zahnrad-Scheibe ab, der
+  // äußere Zahnrad-Ring ließ sich dadurch nicht mehr per Drag drehen
+  // (Nutzer-Meldung: "man kann nur noch über den kleinen inneren schwarzen
+  // Teil drehen"). Empirisch an drei Breakpoints (375/650/813px CSS-Breite)
+  // per Debug-Overlay durchgetestet: 0.66 deckt die komplette Scheibe ab
+  // UND bleibt an allen getesteten Breiten klar von den Ring-Schildchen
+  // entfernt (die Schildchen-Größe ist in px fix, wird bei kleinerem Knopf
+  // relativ zur Scheibe größer -- 0.66 ist der Wert, der auch am kleinsten
+  // Breakpoint noch sicher Abstand hält). Muss synchron mit der CSS-Regel
+  // .dial-hit-circle{width/height} in index.html bleiben (dort width%
+  // entspricht direkt diesem Anteil-Wert).
+  // VIERTE Korrektur (2026-08-17, achte Runde): Auf expliziten Nutzerwunsch
+  // ist 0.66 kein akzeptabler Kompromiss mehr -- der Dreh-Kreis soll GENAU
+  // an der sichtbaren Außenkante der grünen Zahnrad-Scheibe liegen (inkl.
+  // der äußeren Zahnrad-Buckel), die komplette grüne Fläche muss greifbar
+  // sein. Per Pillow/NumPy sauber nachgemessen (Alphakanal von
+  // knob-front-cutout-v1.png, radiale Max-Distanz pro Winkel-Grad, der
+  // schmale Zeiger-Ausreißer bei 0°/360° explizit ausgeschlossen, da er
+  // nicht Teil der GRÜNEN Scheibe ist): die Zahnrad-Buckel reichen bis
+  // ca. 43.2% der Bildbreite vom Zentrum (0.4317 * 1024px = 442px).
+  // Das entspricht einem Anteil-Wert von 2*0.4317 = 0.863 (Anteil ist relativ
+  // zur HALBEN Element-Breite definiert, siehe istInnerhalbKreis unten).
+  // Kollisionsrisiko mit den Ring-Schildchen hätte hier bewusst NICHT mehr
+  // Vorrang vor der vollen grünen Drehfläche -- per Debug-Overlay an allen
+  // drei Breakpoints (375/650/813px) nachgeprüft: bei 0.863 bleibt trotzdem
+  // überall ein sichtbarer Abstand zu den Schildchen, keine Überlappung.
+  // Die frühere Sorge (0.84 kollidierte angeblich auf 375px mit "Kontakt"/
+  // "Karte") hat sich bei dieser sauberen Nachmessung NICHT bestätigt --
+  // Labels mussten deshalb nicht verschoben werden.
+  // FÜNFTE Korrektur (2026-08-17, neunte Runde): 0.863 war noch zu klein, weil
+  // dieser Wert an der SICHTBAREN Radbreite gemessen wurde, die Prüfung unten
+  // aber die untransformierte Wrap-Box benutzt. .dial-knob-stage hat
+  // rotateX(9deg) bei perspective:900px und rendert das Rad dadurch ca. 2,35%
+  // breiter als die Wrap-Box (282.9px sichtbar vs. 276.4px Wrap, auf der
+  // Vorschau-Seite nachgemessen). Aufschlag: 0.863 * (282.9/276.4) = 0.8835.
+  var KNOPF_DREH_RADIUS_ANTEIL = 0.8835;
+  // Klick-Kreis (Bestätigen). Historie: war mal 0.32, wurde auf Nutzerwunsch
+  // zweimal halbiert (0.32 -> 0.16 -> 0.08), weil beim Drehen versehentlich
+  // navigiert wurde. Damit war er aber DEUTLICH kleiner als die sichtbare
+  // schwarze Kappe: Nutzer-Meldung 2026-08-17 "wenn ich auf den Schalter
+  // klicke, reagiert er nicht immer" -- man musste die Kappenmitte fast
+  // punktgenau treffen (11px Klickradius bei ~39px sichtbarer Kappe).
+  // Neue Vorgabe des Nutzers: "Die Klickfläche soll die Fläche über dem
+  // schwarzen Teil des Knopfes sein. Großzügig um den schwarzen Bereich."
+  // Kappe per Pixelmessung am Foto bestimmt (radiale Helligkeitskante gegen
+  // den olivgrünen Ring, Median über 68 Strahlen): Radius 13,87% der
+  // Bildbreite. Als Anteil (relativ zur halben Wrap-Breite, inkl. des
+  // 1.0235-Perspektivfaktors wie beim Dreh-Radius): 0.1387*2*1.0235 = 0.284.
+  // Darauf bewusst ~12% Zugabe für das "großzügig" -> 0.32. Liegt weiterhin
+  // klar innerhalb des Zahnrads (Dreh-Radius 0.8835), Drehen am Ring bleibt
+  // also unverändert ohne Navigationsgefahr.
+  var KNOPF_KLICK_RADIUS_ANTEIL = 0.32;
+  // Waagerechter Mittelpunkt-Anteil: NICHT 0.5, sondern 0.48 -- identisch mit
+  // transform-origin:48% 50% von .dial-knob-rotor (index.html). Das ist der
+  // kalibrierte echte Mittelpunkt des Rades (das Foto ist asymmetrisch, weil
+  // der Zeiger nach einer Seite übersteht). Mit 0.5 lag die Prüfzone 5,7px zu
+  // weit rechts, wodurch an der linken Radhälfte ein toter Rand entstand
+  // (per elementFromPoint auf der Vorschau-Seite nachgewiesen: bei 135/180/225/
+  // 270 Grad traf man am Radrand .dial-knob-rotor statt das Dreh-Feld).
+  // Muss synchron mit left:48% der .dial-hit-circle-Regel bleiben.
+  var KNOPF_MITTE_X_ANTEIL = 0.48;
+  function istInnerhalbKreis(clientX, clientY, radiusAnteil){
+    var rect = knobWrap.getBoundingClientRect();
+    var cx = rect.left + rect.width*KNOPF_MITTE_X_ANTEIL, cy = rect.top + rect.height/2;
+    var dx = clientX - cx, dy = clientY - cy;
+    var radius = (Math.min(rect.width, rect.height) / 2) * radiusAnteil;
+    return Math.hypot(dx, dy) <= radius;
+  }
+
+  function onPointerDown(e){
+    if(e.button !== undefined && e.button !== 0) return;
+    if(!istInnerhalbKreis(e.clientX, e.clientY, KNOPF_DREH_RADIUS_ANTEIL)) return;
+    // WICHTIG (Bugfix 2026-08-17, zehnte Runde): Ohne preventDefault startet der
+    // Browser beim Ziehen sein natives Drag-and-Drop ("Grafik verschieben").
+    // Das feuert dragstart UND nimmt uns dabei die Pointer-Capture wieder weg
+    // (im Ereignis-Log nachgewiesen: gotpointercapture -> dragstart ->
+    // lostpointercapture), wodurch keine pointermove-Events mehr ankommen und
+    // die Drehung mitten in der Geste tot ist. Trat typischerweise erst ab der
+    // ZWEITEN Ziehbewegung auf, weil der Browser den Startpunkt dann als
+    // Fortsetzung einer bestehenden Auswahl/Grafik-Geste behandelt.
+    // preventDefault hier ist unkritisch: der Fokus wird zwei Zeilen tiefer
+    // ohnehin selbst gesetzt, und Scrollen ist auf dem Knopf durch
+    // touch-action:none ohnehin bewusst abgeschaltet.
+    e.preventDefault();
+    dragging = true;
+    dragMoved = false;
+    settling = false;
+    pointerDownTime = Date.now();
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    lastPointerTheta = screenThetaFromEvent(e);
+    knobWrap.classList.add('is-dragging');
+    focusFromPointer = true;
+    knobWrap.focus({preventScroll:true});
+    try{ knobWrap.setPointerCapture(e.pointerId); }catch(err){}
+    ensureAudio();
+  }
+  function onPointerMove(e){
+    if(!dragging) return;
+    var dist = Math.hypot(e.clientX-dragStartX, e.clientY-dragStartY);
+    // Schwelle 2026-08-17 von 5 auf 8px angehoben: 5px überschreitet schon ein
+    // leicht wackeliger Mausklick oder ein Finger-Tap, wodurch die Geste als
+    // Drehung statt als Tap gewertet wurde und das Bestätigen ausblieb
+    // ("reagiert nicht immer"). Gedreht wird trotzdem ab dem ersten Pixel --
+    // diese Schwelle entscheidet NUR darüber, ob es zusätzlich als Tap zählt,
+    // und eine unbeabsichtigte Drehung von unter 8px ist ohnehin belanglos.
+    if(dist > 8) dragMoved = true;
+    var theta = screenThetaFromEvent(e);
+    var delta = shortestDiff(theta, lastPointerTheta);
+    lastPointerTheta = theta;
+    currentTheta += delta;
+    applyRotation();
+    updateFromTheta(currentTheta);
+  }
+  function onPointerUp(e){
+    if(!dragging) return;
+    dragging = false;
+    knobWrap.classList.remove('is-dragging');
+    // Zeitgrenze 2026-08-17 von 400 auf 700ms angehoben -- ein bewusster,
+    // etwas längerer Druck auf die Kappe ist immer noch ein Bestätigen und
+    // kein "Greifen zum Drehen"; 400ms war für ruhige Klicks/Taps zu knapp.
+    var wasQuickTap = !dragMoved && (Date.now() - pointerDownTime) < 700
+      && istInnerhalbKreis(dragStartX, dragStartY, KNOPF_KLICK_RADIUS_ANTEIL);
+    var rawIndex = Math.round(currentTheta/STEP);
+    settleTarget = rawIndex*STEP;
+    settling = true;
+    startLoop();
+    updateFromTheta(currentTheta, {silent:true});
+    if(wasQuickTap){
+      navigateToArmed();
+    }
+  }
+
+  // Der Listener sitzt jetzt auf dem echten, per clip-path rund
+  // zugeschnittenen Klick-Feld statt auf dem eckigen knobWrap -- so kann der
+  // Browser Hover/Klick von sich aus schon auf den Kreis begrenzen (siehe
+  // .dial-hit-circle in index.html), statt dass nur unsichtbare JS-Mathematik
+  // dafür sorgt.
+  hitCircle.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+  // Zweiter Riegel gegen das native Drag-and-Drop (siehe Kommentar in
+  // onPointerDown). preventDefault dort verhindert es in allen getesteten
+  // Fällen bereits, aber ein dragstart kann je nach Browser/Eingabegerät auch
+  // aus einer schon bestehenden Textauswahl heraus ausgelöst werden -- dann
+  // greift dieser Handler. Bewusst auf beiden Elementen, weil dragstart vom
+  // Knopf-Bild ebenso wie vom Klick-Feld ausgehen kann.
+  function blockNativeDrag(e){ e.preventDefault(); }
+  hitCircle.addEventListener('dragstart', blockNativeDrag);
+  knobWrap.addEventListener('dragstart', blockNativeDrag);
+
+  /* ---------- Tastatur ---------- */
+  knobWrap.addEventListener('keydown', function(e){
+    var handled = true;
+    var base = settling ? settleTarget : Math.round(currentTheta/STEP)*STEP;
+    if(e.key === 'ArrowRight' || e.key === 'ArrowUp'){
+      settleTarget = base + STEP;
+      settling = true; startLoop();
+      updateFromTheta(settleTarget);
+    } else if(e.key === 'ArrowLeft' || e.key === 'ArrowDown'){
+      settleTarget = base - STEP;
+      settling = true; startLoop();
+      updateFromTheta(settleTarget);
+    } else if(e.key === 'Home'){
+      settleTarget = 0; settling = true; startLoop(); updateFromTheta(settleTarget);
+    } else if(e.key === 'End'){
+      settleTarget = (TOPICS.length-1)*STEP; settling = true; startLoop(); updateFromTheta(settleTarget);
+    } else if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){
+      navigateToArmed();
+    } else {
+      handled = false;
+    }
+    if(handled) e.preventDefault();
+  });
+
+  function navigateToArmed(){
+    var topic = TOPICS[armedIndex];
+    if(!topic) return;
+    // Sound darf die Navigation nie blockieren -- falls WebAudio in einer
+    // bestimmten Browser-/Umgebungskonstellation wirft (z.B. Autoplay-Policy,
+    // deaktiviertes WebAudio), muss die Seite trotzdem wechseln.
+    try{ playConfirmSound(); } catch(err){ /* Sound ist rein kosmetisch */ }
+    knobWrap.classList.add('is-confirmed');
+    // Pause, damit der Bestätigungs-Sound UND der Drück-Effekt (Knopf sackt
+    // sichtbar nach unten, siehe .dial-canvas-wrap.is-confirmed in index.html)
+    // beide spürbar ankommen, bevor die Seite wechselt.
+    window.setTimeout(function(){
+      window.location.href = topic.href;
+    }, 190);
+  }
+
+  /* ---------- Beleuchtungs-Knopf ---------- */
+  if(lightBtn){
+    lightBtn.addEventListener('click', function(){
+      isLit = !isLit;
+      ensureAudio();
+      playToggleClick();
+      lightBtn.setAttribute('aria-pressed', String(isLit));
+      lightBtn.classList.toggle('is-lit', isLit);
+      if(lightCone) lightCone.classList.toggle('is-lit', isLit);
+    });
+  }
+
+  /* ---------- Fokus-Ring nur für echte Tastatur-Bedienung (kein Ring bei Maus/Touch) ---------- */
+  knobWrap.addEventListener('focus', function(){
+    if(!focusFromPointer){
+      knobWrap.classList.add('kbd-focus');
+    }
+    focusFromPointer = false;
+  });
+  knobWrap.addEventListener('blur', function(){
+    knobWrap.classList.remove('kbd-focus');
+  });
+
+  /* ---------- Init / Resize / Fallback ---------- */
+  function activateFallback(){
+    section.classList.add('dial-fallback-active');
+  }
+
+  window.addEventListener('resize', function(){
+    layoutLabels();
+  });
+
+  if(reduceMotion){
+    activateFallback();
+  } else if(knobImg){
+    knobImg.addEventListener('error', activateFallback);
+  }
+
+  layoutLabels();
+  setArmed(0, {silent:true});
+  lastSnapIndex = 0;
+  applyRotation();
+
+  /* Einblende-Animation des Panels */
+  if(!reduceMotion && typeof gsap !== 'undefined'){
+    gsap.set('.dial-panel', {opacity:0, y:24});
+    if(typeof ScrollTrigger !== 'undefined'){
+      gsap.registerPlugin(ScrollTrigger);
+      gsap.to('.dial-panel', {opacity:1, y:0, duration:0.7, ease:'power2.out', scrollTrigger:{trigger:'.dial-panel', start:'top 90%'}});
+    } else {
+      gsap.to('.dial-panel', {opacity:1, y:0, duration:0.7, ease:'power2.out', delay:0.1});
+    }
+  } else {
+    var panel = document.querySelector('.dial-panel');
+    if(panel){ panel.style.opacity = 1; panel.style.transform = 'none'; }
+  }
+})();

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buchung – Zeitreise Seelower Höhen</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F;
+    --green-dark:#6F8F2E;
+    --green-soft:#EEF4E0;
+    --ink:#1E1E1E;
+    --muted:#5A5A5A;
+    --paper:#F7F7F2;
+    --card:#FFFFFF;
+    --line:#E3E3DC;
+    --red:#B9402E;
+    --amber:#B8860B;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:"Segoe UI", system-ui, sans-serif; background:var(--paper); color:var(--ink); }
+  main{ max-width:720px; margin:0 auto; padding:48px 20px 72px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:32px; box-shadow:0 6px 24px rgba(0,0,0,.05); }
+  .status-row{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .status-icon{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:0 0 44px; }
+  .status-icon svg{ width:24px; height:24px; }
+  .is-ok .status-icon{ background:var(--green-soft); color:var(--green-dark); }
+  .is-wait .status-icon{ background:#FFF6DE; color:var(--amber); }
+  .is-bad .status-icon{ background:#FBE9E5; color:var(--red); }
+  h1{ font-size:1.5rem; margin:0; }
+  p{ line-height:1.55; color:var(--muted); }
+  .facts{ margin:22px 0 0; padding:0; list-style:none; border-top:1px solid var(--line); }
+  .facts li{ display:flex; justify-content:space-between; gap:16px; padding:11px 0; border-bottom:1px solid var(--line); font-size:.95rem; }
+  .facts li span:first-child{ color:var(--muted); }
+  .facts li span:last-child{ font-weight:600; text-align:right; }
+  .nummer{ font-family:ui-monospace, Consolas, monospace; letter-spacing:.04em; }
+  .actions{ margin-top:26px; display:flex; gap:12px; flex-wrap:wrap; }
+  .btn{ display:inline-block; padding:12px 20px; border-radius:10px; font-weight:600; text-decoration:none; background:var(--green); color:var(--ink); }
+  .btn.secondary{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .spinner{ display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--green-dark); border-radius:50%; animation:spin 1s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .spinner{ animation:none; } }
+  footer{ background:#2A2A26; color:#c7c7c2; text-align:center; padding:36px 24px; font-size:13px; margin-top:56px; }
+  footer a{ color:#c7c7c2; opacity:.85; text-decoration:none; }
+  footer a:hover{ opacity:1; text-decoration:underline; }
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main>
+  <div class="card is-wait" id="card">
+    <div class="status-row">
+      <div class="status-icon" id="icon"><span class="spinner" aria-hidden="true"></span></div>
+      <h1 id="titel">Zahlung wird bestätigt …</h1>
+    </div>
+    <p id="text">Einen Moment bitte. Wir warten auf die Bestätigung des Zahlungsanbieters. Das dauert meist nur wenige Sekunden.</p>
+    <ul class="facts" id="facts" hidden></ul>
+    <div class="actions" id="actions"></div>
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;">
+    <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var nr = q.get('nr') || '';
+  var s = q.get('s') || '';
+  var card = document.getElementById('card');
+  var icon = document.getElementById('icon');
+  var titel = document.getElementById('titel');
+  var text = document.getElementById('text');
+  var facts = document.getElementById('facts');
+  var actions = document.getElementById('actions');
+
+  var OK_SVG = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var BAD_SVG = '<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+  var WAIT_SVG = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  function esc(t){ return String(t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function datum(iso, uhr){
+    if(!iso) return '';
+    var d = new Date(iso + 'T' + (uhr || '00:00') + ':00');
+    var tage = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    var p = iso.split('-');
+    return tage[d.getDay()] + ', ' + p[2] + '.' + p[1] + '.' + p[0] + (uhr ? ', ' + uhr + ' Uhr' : '');
+  }
+  function euro(cent){ return (cent/100).toFixed(2).replace('.', ',') + ' €'; }
+
+  function zeige(zustand, h1, p, d){
+    card.className = 'card ' + zustand;
+    icon.innerHTML = zustand === 'is-ok' ? OK_SVG : zustand === 'is-bad' ? BAD_SVG : WAIT_SVG;
+    titel.textContent = h1;
+    text.textContent = p;
+    if(d){
+      facts.hidden = false;
+      facts.innerHTML =
+        '<li><span>Buchungsnummer</span><span class="nummer">' + esc(d.nummer) + '</span></li>' +
+        (d.fuehrungTitel ? '<li><span>Führung</span><span>' + esc(d.fuehrungTitel) + '</span></li>' : '') +
+        (d.termin ? '<li><span>Termin</span><span>' + esc(datum(d.termin.datumIso, d.termin.uhrzeit)) + '</span></li>' : '') +
+        '<li><span>Personen</span><span>' + d.personen + '</span></li>' +
+        (typeof d.betragCent === 'number' ? '<li><span>Betrag</span><span>' + euro(d.betragCent) + '</span></li>' : '');
+    }
+  }
+
+  if(!nr || !s){
+    zeige('is-bad', 'Keine Buchung gefunden', 'Dieser Link ist unvollständig. Bitte die Buchung über die Führungen-Seite erneut starten.');
+    actions.innerHTML = '<a class="btn" href="/fuehrungen.html">Zu den Führungen</a>';
+    return;
+  }
+
+  var versuche = 0;
+  var MAX = 10; // 10 × 2 s = 20 s Wartezeit auf den Webhook
+
+  function abfragen(){
+    versuche++;
+    fetch('/.netlify/functions/buchung-status?nr=' + encodeURIComponent(nr) + '&s=' + encodeURIComponent(s))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.ok){
+          zeige('is-bad', 'Buchung nicht gefunden', d.error || 'Bitte über Kontakt nachfragen und die Buchungsnummer nennen.');
+          actions.innerHTML = '<a class="btn" href="/kontakt.html">Kontakt</a>';
+          return;
+        }
+        if(d.status === 'bezahlt'){
+          // Rechnung entsteht direkt nach der Zahlungsmeldung — kurz nachfragen, falls sie noch fehlt.
+          if(!d.rechnungsnummer && versuche < MAX){ setTimeout(abfragen, 2000); }
+          zeige('is-ok', 'Buchung bestätigt', 'Vielen Dank! Die Zahlung ist eingegangen und der Platz ist fest gebucht. Die Bestätigung mit Rechnung und Treffpunkt ist per E-Mail unterwegs.', d);
+          var rechnungLink = d.rechnungsnummer
+            ? '<a class="btn secondary" href="/.netlify/functions/rechnung-pdf?nr=' + encodeURIComponent(nr) + '&s=' + encodeURIComponent(s) + '" target="_blank" rel="noopener">Rechnung ' + esc(d.rechnungsnummer) + ' (PDF)</a>'
+            : '<span class="btn secondary" style="opacity:.6;">Rechnung wird erstellt …</span>';
+          actions.innerHTML = '<a class="btn" href="/fuehrungen.html">Zu den Führungen</a>' + rechnungLink;
+          return;
+        }
+        if(d.status === 'pruefen'){
+          zeige('is-wait', 'Zahlung eingegangen, wird geprüft', 'Die Zahlung ist da, der Betrag stimmt aber nicht mit der Buchung überein. Wir melden uns per E-Mail, der Platz bleibt reserviert.', d);
+          actions.innerHTML = '<a class="btn secondary" href="/kontakt.html">Kontakt</a>';
+          return;
+        }
+        if(d.status === 'wartet-ueberweisung'){
+          var u = d.ueberweisung || {};
+          var frist = u.frist ? new Date(u.frist).toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'}) : '';
+          zeige('is-wait', 'Bitte überweisen – der Platz ist gehalten', 'Vielen Dank! Sie haben Banküberweisung gewählt. Der Platz bleibt bis ' + frist + ' für Sie reserviert. Bitte überweisen Sie mit genau diesen Angaben; sobald das Geld eingegangen ist (1 bis 2 Werktage), kommt die Bestätigung mit Rechnung per E-Mail. Die Angaben stehen auch in der Mail, die gerade unterwegs ist.', d);
+          facts.innerHTML +=
+            (u.empfaenger ? '<li><span>Empfänger</span><span>' + esc(u.empfaenger) + '</span></li>' : '') +
+            (u.iban ? '<li><span>IBAN</span><span class="nummer">' + esc(u.iban) + '</span></li>' : '') +
+            (u.bic ? '<li><span>BIC</span><span>' + esc(u.bic) + '</span></li>' : '') +
+            '<li><span>Verwendungszweck</span><span class="nummer">' + esc(u.referenz || d.nummer) + '</span></li>' +
+            (frist ? '<li><span>Überweisen bis</span><span>' + esc(frist) + '</span></li>' : '');
+          actions.innerHTML = (u.hostedUrl ? '<a class="btn" href="' + esc(u.hostedUrl) + '" target="_blank" rel="noopener">Zahlungsanweisung öffnen</a>' : '') + '<a class="btn secondary" href="/fuehrungen.html">Zu den Führungen</a>';
+          return;
+        }
+        if(d.status === 'reserviert'){
+          if(versuche < MAX){ setTimeout(abfragen, 2000); return; }
+          zeige('is-wait', 'Zahlung noch nicht bestätigt', 'Der Zahlungsanbieter hat die Zahlung noch nicht gemeldet. Das kann bei manchen Zahlarten einige Minuten dauern. Diese Seite kann später erneut geöffnet werden; die Buchungsnummer bitte notieren.', d);
+          actions.innerHTML = '<a class="btn secondary" href="' + location.href + '">Erneut prüfen</a>';
+          return;
+        }
+        if(d.status === 'erstattet' || d.status === 'storniert'){
+          zeige('is-bad', 'Buchung storniert', d.status === 'erstattet' ? 'Diese Buchung wurde storniert, der Betrag wird erstattet. Die Details stehen in der Mail dazu.' : 'Diese Buchung wurde storniert. Die Details stehen in der Mail dazu.', d);
+          actions.innerHTML = '<a class="btn" href="/fuehrungen.html">Zu den Führungen</a>';
+          return;
+        }
+        // abgelaufen
+        zeige('is-bad', 'Zahlung nicht abgeschlossen', 'Für diese Buchung ist keine Zahlung eingegangen, der reservierte Platz wurde wieder freigegeben. Die Buchung kann jederzeit neu gestartet werden.', d);
+        actions.innerHTML = '<a class="btn" href="' + (d.fuehrungId ? '/fuehrung.html?id=' + encodeURIComponent(d.fuehrungId) : '/fuehrungen.html') + '">Erneut buchen</a>';
+      })
+      .catch(function(){
+        if(versuche < MAX){ setTimeout(abfragen, 2000); return; }
+        zeige('is-bad', 'Verbindung fehlgeschlagen', 'Der Status konnte nicht geladen werden. Bitte die Seite neu laden.');
+      });
+  }
+  abfragen();
+})();
+</script>
+</body>
+</html>
