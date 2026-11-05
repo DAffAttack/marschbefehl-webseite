@@ -102,7 +102,20 @@
 
     if(ruhend) return;
 
+    // Das Netz reagiert nur auf den freien Flaechen neben dem Inhalt. Ueber Text,
+    // Bildern, Kopf und Fuss bleibt es ruhig, sonst wird die Seite beim Lesen
+    // unruhig (Nutzerwunsch 05.11.2026). Vollbreite Huellen zaehlen als frei: Ihr
+    // Rand neben der Inhaltsspalte ist fuer das Auge leerer Hintergrund. Im
+    // schmalen Fenster fuellt der Inhalt selbst die Breite, dort gilt das nicht.
+    function aufFreierFlaeche(el){
+      if(el === document.body || el === document.documentElement) return true;
+      if(el.closest('.site-header, footer, .hero, .nav-mobile-panel')) return false;
+      return window.innerWidth >= 1100 && el.getBoundingClientRect().width >= window.innerWidth*0.9;
+    }
+    window.netzAufFreierFlaeche = aufFreierFlaeche; // nur fuer die Pruefung von aussen
+
     window.addEventListener('mousemove', function(e){
+      if(!aufFreierFlaeche(e.target)){ hoverTargetStrength = 0; return; }
       pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
       pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(pointerNDC, camera);
