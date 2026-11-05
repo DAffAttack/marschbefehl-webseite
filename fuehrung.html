@@ -398,7 +398,6 @@
     <div class="ort-block" id="f-ort-block">
       <h2>Treffpunkt</h2>
       <p class="ort-text" id="f-ort-text"></p>
-      <div class="ort-map" id="f-ort-map"></div>
     </div>
 
     <div class="section-head">
@@ -411,6 +410,8 @@
     </div>
 
     <p class="note-storno">Bezahlt wird sicher im Voraus über unseren Zahlungsanbieter (Karte, Apple Pay, Google Pay, PayPal). Die Buchung gilt mit Zahlungseingang und wird per E-Mail bestätigt. Stornierung laut <a href="/agb.html" style="color:var(--green-dark); font-weight:600;">Teilnahmebedingungen</a>, bei Fragen gern über <a href="/kontakt.html" style="color:var(--green-dark); font-weight:600;">Kontakt</a>.</p>
+
+    <section id="gaeste-stimmen"></section>
 
     <div class="cta-box">
       <h2>Fragen zu dieser Führung?</h2>
@@ -427,6 +428,8 @@
   </div>
 </footer>
 
+<link rel="stylesheet" href="/assets/gaeste-stimmen.css">
+<script src="/assets/gaeste-stimmen.js"></script>
 <script src="/assets/vendor/gsap.min.js"></script>
 <script>
 (function(){
@@ -691,14 +694,6 @@
       document.getElementById('f-ort-text').textContent = f.treffpunktNachBuchung
         ? f.ort + '. Den genauen Treffpunkt erhalten Sie mit der Buchungsbestätigung.'
         : f.ort;
-      // Keine eingebettete Karte eines Drittanbieters (Datenschutz): Link öffnet den Treffpunkt
-      // auf OpenStreetMap erst mit dem Klick (E6, 03.11.2026).
-      document.getElementById('f-ort-map').innerHTML =
-        '<a class="ort-link" href="https://www.openstreetmap.org/search?query=' + encodeURIComponent(f.ort) + '" target="_blank" rel="noopener">' +
-          '<span class="ort-link-icon" aria-hidden="true">&#9906;</span>' +
-          '<span><strong>Treffpunkt auf der Karte öffnen</strong><br><small>OpenStreetMap, öffnet in einem neuen Fenster. Für die Navigation die Adresse oben ins Navi übernehmen.</small></span>' +
-        '</a>';
-      if(f.treffpunktNachBuchung) document.getElementById('f-ort-map').style.display = 'none';
     } else {
       ortBlock.style.display = 'none';
     }
