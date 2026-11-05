@@ -30,7 +30,12 @@
   camera.position.set(0, 2.3, 5.2);
   camera.lookAt(0, -0.9, -1);
 
-  var geo = new THREE.PlaneGeometry(18, 13, 56, 40);
+  /* Fläche weit größer als der Bildausschnitt, Maschenweite wie zuvor, und nach
+     hinten läuft das Netz im Hintergrund aus, damit nirgends eine Kante zu sehen
+     ist (05.11.2026). Breiter als auf der Startseite, weil der Artikelkopf ein
+     flaches, sehr breites Bild ist. Nebelfarbe = Hintergrund des Kopfes. */
+  scene.fog = new THREE.Fog(0x1b1b1b, 6.5, 15);
+  var geo = new THREE.PlaneGeometry(48, 20, 150, 62);
   var mat = new THREE.MeshBasicMaterial({color:0xA1C74F, wireframe:true, transparent:true, opacity:0.24});
   var terrain = new THREE.Mesh(geo, mat);
   terrain.rotation.x = -Math.PI/2.3;

@@ -152,6 +152,20 @@
 .nav-mobile-panel a[aria-current="page"]{color:var(--green-dark);}
 .nav-mobile-panel a .arrow{color:var(--muted); font-size:15px;}
 
+/* Helles Geländenetz hinter den Unterseiten (assets/netz-hintergrund.js) */
+#netz-hintergrund{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:-1;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 900ms ease;
+}
+#netz-hintergrund.ist-da{opacity:1;}
+@media print{ #netz-hintergrund{display:none;} }
+
 @media (min-width:1040px){
   .nav-desktop{display:flex;}
   .nav-toggle{display:none;}
