@@ -710,7 +710,7 @@
   .nav-mobile-panel a{color:#e7e6df; border-bottom-color:#3a3a33;}
   .nav-mobile-panel a[aria-current="page"]{color:var(--green);}
 
-  .hero-inner{margin-top:auto; padding:4px 20px 0;}
+  .hero-inner{margin-top:auto; padding:4px 20px 0; text-shadow:0 1px 3px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.75);}
   .hero p{
     font-size:clamp(14px, 1.05vw, 17px);
     line-height:1.55;
@@ -955,19 +955,187 @@
   var clock = new THREE.Clock();
   var posAttr = geo.attributes.position;
 
+  /* ---------- Luftbild im Netz (Nutzerwunsch 05.11.2026) ----------
+     Das Netz ist die Oberfläche der Seelower Höhen: Nach dem Laden gleitet es
+     zur Geländeform des Fotos, und das Foto blendet schwach auf demselben Netz
+     ein. Unter der Maus wird es klar. Lädt das Foto nicht, bleibt das reine Netz. */
+  var LUFT_DECKUNG = 0.42, LUFT_FORM = 0.85, LUFT_EINBLENDEN = 5;
+  var luft = null;
+  var FOTO_SEITENVERHAELTNIS = 1272/551;
+  var FOTO_FOKUS_U = 0.6; // Der Hügel liegt rechts, bei schmalen Fenstern dorthin ausschneiden.
+
+  /* Geländeform von Hand dem Foto nachempfunden; u von links, v von oben. */
+  function fotoHuegel(u, v, cu, cv, su, sv, hoehe){
+    var a = (u-cu)/su, b = (v-cv)/sv;
+    return hoehe * Math.exp(-(a*a + b*b)/2);
+  }
+  function fotoHoehe(u, v){
+    return fotoHuegel(u, v, 0.80, 0.80, 0.20, 0.20, 2.0)
+         + fotoHuegel(u, v, 0.62, 0.62, 0.10, 0.11, 0.7)
+         + fotoHuegel(u, v, 0.98, 0.50, 0.14, 0.08, 0.5)
+         + fotoHuegel(u, v, 0.05, 0.74, 0.07, 0.08, 0.7)
+         - 0.25;
+  }
+
+  var luftGlsl =
+    'uniform sampler2D uFoto; uniform vec2 uScale; uniform vec2 uOffset; uniform vec2 uKnick;' +
+    'uniform float uBasis;' +
+    'vec2 fotoUV(vec2 ndc){ vec2 s = ndc*0.5+0.5;' +
+    '  float u = s.x < uKnick.x ? uOffset.x+(uKnick.y-uOffset.x)*s.x/uKnick.x : uKnick.y+(s.x-uKnick.x)*uScale.x;' +
+    '  return vec2(u, s.y*uScale.y+uOffset.y); }' +
+    'vec3 foto(vec2 uv){' +
+    '  vec3 c = texture2D(uFoto, uv).rgb;' +
+    '  float g = dot(c, vec3(0.299,0.587,0.114));' +
+    '  return mix(vec3(g), c, 0.86)*0.82;' +
+    '}';
+
+  function luftAufbauen(textur){
+    var gemeinsam = {
+      uFoto:{value:textur}, uScale:{value:new THREE.Vector2(1,1)}, uOffset:{value:new THREE.Vector2(0,0)}, uKnick:{value:new THREE.Vector2(0.5,0.5)},
+      uBasis:{value:0},
+      uLinse:{value:0}, uLinsePos:{value:new THREE.Vector2(0,0)}
+    };
+    var count = posAttr.count;
+    geo.setAttribute('aRest', new THREE.BufferAttribute(new Float32Array(count), 1));
+
+    var flaecheMat = new THREE.ShaderMaterial({
+      uniforms:gemeinsam, transparent:true, side:THREE.DoubleSide,
+      polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
+      vertexShader:
+        'attribute float aRest; varying vec4 vRuhe; varying vec2 vLokal;' +
+        'void main(){ vLokal = position.xy;' +
+        '  vRuhe = projectionMatrix*modelViewMatrix*vec4(position.xy, aRest, 1.0);' +
+        '  gl_Position = projectionMatrix*modelViewMatrix*vec4(position, 1.0); }',
+      fragmentShader:
+        'uniform float uLinse; uniform vec2 uLinsePos; varying vec4 vRuhe; varying vec2 vLokal;' + luftGlsl +
+        'void main(){ vec2 uv = fotoUV(vRuhe.xy/vRuhe.w);' +
+        '  vec2 d = vLokal-uLinsePos;' +
+        '  float l = uLinse*smoothstep(0.12, 0.62, exp(-dot(d,d)/(2.0*2.6*2.6)));' +
+        '  float a = max(uBasis, l);' +
+        '  if(a < 0.015) discard;' +
+        '  gl_FragColor = vec4(foto(uv), a); }'
+    });
+    var flaecheMesh = new THREE.Mesh(geo, flaecheMat);
+    flaecheMesh.rotation.copy(terrain.rotation);
+    flaecheMesh.position.copy(terrain.position);
+    flaecheMesh.frustumCulled = false;
+    flaecheMesh.renderOrder = 0;
+    terrain.renderOrder = 2;
+    terrain.frustumCulled = false;
+    scene.add(flaecheMesh);
+
+    // Der Himmel über dem Netzrand: dasselbe Foto bildschirmfest dahinter.
+    var hintenMat = new THREE.ShaderMaterial({
+      uniforms:gemeinsam, transparent:true, depthWrite:false, // Tiefentest: nur dort, wo die Fläche nicht liegt.
+      vertexShader:'varying vec2 vNdc; void main(){ vNdc = position.xy; gl_Position = vec4(position.xy, 0.9999, 1.0); }',
+      fragmentShader:'varying vec2 vNdc;' + luftGlsl +
+        'void main(){ vec2 uv = fotoUV(vNdc); gl_FragColor = vec4(foto(uv), uBasis); }'
+    });
+    var hinten = new THREE.Mesh(new THREE.PlaneGeometry(2,2), hintenMat);
+    hinten.frustumCulled = false;
+    hinten.renderOrder = 1;
+    scene.add(hinten);
+
+    luft = {
+      u:gemeinsam, rest:geo.attributes.aRest,
+      start:clock.getElapsedTime(), linsePos:new THREE.Vector2(0,0)
+    };
+    luftRuheform();
+    if(reduceMotion) animate();
+  }
+
+  /* Ruheform und Fotoausschnitt hängen vom Fenster ab: Foto wie "cover" über die
+     ganze Fläche, dann für jeden Netzpunkt die Geländehöhe an seiner Fotostelle. */
+  function luftRuheform(){
+    if(!luft) return;
+    var a = camera.aspect, f = FOTO_SEITENVERHAELTNIS;
+    var su = a < f ? a/f : 1, st = a < f ? 1 : f/a;
+    /* Der Hügel mit den Birken (u = 0,5) soll rechts neben dem Funkgerät stehen,
+       nicht dahinter (Nutzerwunsch 06.11.2026). Rechts vom Knick bleibt das Foto
+       unverzerrt, links davon wird es höchstens um ein Drittel in die Breite
+       gezogen, damit es bis zum linken Rand reicht (Spiegeln zeigte Muster).
+       Ist das Fenster zu schmal für einen Platz neben dem Gerät (Handy), bleibt
+       der mittige Ausschnitt ohne Knick. */
+    var ou = Math.min(Math.max(FOTO_FOKUS_U - su/2, 0), 1-su), ot = (1-st)*0.35;
+    var knickS = 0.5, knickU = ou + 0.5*su;
+    var geraet = document.querySelector('.dial-panel');
+    if(geraet && hero.clientWidth){
+      var g = geraet.getBoundingClientRect();
+      var rechtsFrei = hero.clientWidth - g.right;
+      if(rechtsFrei/hero.clientWidth > 0.15){
+        knickS = (g.right + rechtsFrei*0.1)/hero.clientWidth;
+        knickU = Math.min(Math.max(0.5/knickS, su/1.35)*knickS, 1 - (1-knickS)*su);
+        ou = 0;
+      }
+    }
+    luft.u.uKnick.value.set(knickS, knickU);
+    luft.u.uScale.value.set(su, st);
+    luft.u.uOffset.value.set(ou, ot);
+    terrain.updateMatrixWorld(true);
+    camera.updateMatrixWorld(true);
+    var p = new THREE.Vector3();
+    for(var i=0;i<posAttr.count;i++){
+      var x = posAttr.getX(i), y = posAttr.getY(i), z = 0;
+      for(var n=0;n<3;n++){
+        p.set(x, y, z).applyMatrix4(terrain.matrixWorld);
+        if(p.z > camera.position.z - 0.6){ z = 0; break; }
+        p.project(camera);
+        var sx = p.x*0.5+0.5;
+        var u = sx < knickS ? ou + (knickU-ou)*sx/knickS : knickU + (sx-knickS)*su;
+        var oben = 1 - ((p.y*0.5+0.5)*st+ot);
+        z = fotoHoehe(Math.min(Math.max(u,0),1), Math.min(Math.max(oben,0),1));
+      }
+      luft.rest.setX(i, z);
+    }
+    luft.rest.needsUpdate = true;
+  }
+  window.addEventListener('resize', luftRuheform);
+
+  function kante(a, b, x){ var s = Math.min(Math.max((x-a)/(b-a),0),1); return s*s*(3-2*s); }
+
+  window.addEventListener('load', function(){
+    new THREE.TextureLoader().load('/assets/luftbild-hoehen.jpg', function(tex){
+      tex.generateMipmaps = false;
+      tex.minFilter = THREE.LinearFilter;
+      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+      luftAufbauen(tex);
+    });
+  });
+
   function animate(){
     var t = reduceMotion ? 0 : clock.getElapsedTime();
     hoverStrength += (hoverTargetStrength - hoverStrength) * 0.06;
     hoverPos.x += (hoverTarget.x - hoverPos.x) * 0.12;
     hoverPos.y += (hoverTarget.y - hoverPos.y) * 0.12;
 
+    var linseStark = 0, grundM = 0;
+    if(luft){
+      var ein = reduceMotion ? 1 : kante(0, LUFT_EINBLENDEN, t - luft.start);
+      grundM = LUFT_FORM*ein;
+      luft.u.uBasis.value = LUFT_DECKUNG*ein;
+      linseStark = reduceMotion ? 0 : hoverStrength;
+      luft.linsePos.x += (hoverPos.x - luft.linsePos.x)*0.07;
+      luft.linsePos.y += (hoverPos.y - luft.linsePos.y)*0.07;
+      luft.u.uLinsePos.value.copy(luft.linsePos);
+      luft.u.uLinse.value = linseStark;
+    }
+
     for(var i=0;i<posAttr.count;i++){
       var x = posAttr.getX(i), y = posAttr.getY(i);
       var z = terrainHeight(x, y, t);
+      var m = 0;
+      if(luft){
+        m = grundM;
+        if(linseStark > 0.001){
+          var ldx = x - luft.linsePos.x, ldy = y - luft.linsePos.y;
+          m = Math.max(m, linseStark*Math.min(Math.exp(-(ldx*ldx+ldy*ldy)/(2*2.6*2.6))*1.5, 1));
+        }
+        z += (luft.rest.getX(i) - z)*m;
+      }
       if(hoverStrength > 0.001){
         var dx = x - hoverPos.x, dy = y - hoverPos.y;
         var distSq = dx*dx + dy*dy;
-        z += hoverStrength * HOVER_HEIGHT * Math.exp(-distSq / (2*HOVER_RADIUS*HOVER_RADIUS));
+        z += (1 - 0.75*m) * hoverStrength * HOVER_HEIGHT * Math.exp(-distSq / (2*HOVER_RADIUS*HOVER_RADIUS));
       }
       posAttr.setZ(i, z);
     }
