@@ -122,19 +122,6 @@
     line-height:1.6;
     margin:0 0 36px;
   }
-  .scroll-cue{
-    width:26px;
-    height:26px;
-    color:#fff;
-    opacity:0.75;
-    animation:bounce 1.8s ease-in-out infinite;
-  }
-  .scroll-cue svg{width:100%; height:100%;}
-  @keyframes bounce{
-    0%,100%{transform:translateY(0); opacity:0.5;}
-    50%{transform:translateY(8px); opacity:0.9;}
-  }
-
   main{
     max-width:var(--max);
     margin:0 auto;
@@ -665,27 +652,152 @@
   }
   footer a{opacity:0.85; text-decoration:none;}
   footer a:hover{opacity:1; text-decoration:underline;}
+
+  /* ---------- Startseite als EINE Bühne (05.11.2026, Variante B) ----------
+     Header, Geländenetz, Titel und Funkgerät liegen zusammen im ersten
+     Bildschirm. .hero ist der gemeinsame Rahmen: Das Netz füllt ihn ganz und
+     reagiert auf die Maus überall darin, auch über Titel und Funkgerät, weil
+     die Mausereignisse von dort zu .hero hochlaufen. Gilt nur für diese Seite,
+     die Unterseiten behalten ihren hellen Header aus nav.css. */
+  body{background:var(--ink);}
+  .hero{min-height:100vh; padding:0; justify-content:flex-start; align-items:stretch;}
+  .hero::after{background:radial-gradient(ellipse at 50% 55%, rgba(27,27,27,0.05) 0%, rgba(27,27,27,0.45) 68%, rgba(27,27,27,0.9) 100%);}
+  .hero .site-header{
+    position:relative;
+    flex:none;
+    padding:13px 44px;
+    background:linear-gradient(180deg, rgba(14,14,12,0.75), rgba(14,14,12,0));
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    border-bottom:none;
+    flex-direction:row-reverse; /* Name + Logo rechts, Menü links */
+  }
+  .hero .site-header .brand{
+    gap:12px;
+    color:#fff;
+    font-family:'Oswald', -apple-system, sans-serif;
+    font-weight:600;
+    font-size:18px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    text-shadow:0 1px 10px rgba(0,0,0,0.9);
+  }
+  /* Helle Logo-Fassung: In logo.png sind die Figuren auf dunklem Grund kaum zu
+     sehen. site-chrome.js setzt logo.png für alle Seiten, deshalb der Tausch
+     nur hier per CSS. */
+  .hero .site-header .brand img{
+    content:url("/assets/logo-hero.png");
+    width:auto;
+    height:64px;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,0.6));
+  }
+  .hero .nav-desktop a{
+    font-family:'Oswald', -apple-system, sans-serif;
+    font-weight:500;
+    font-size:13px;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:#b5b29c;
+  }
+  .hero .nav-desktop a:hover{color:#fff; background:rgba(255,255,255,0.07);}
+  .hero .nav-desktop a[aria-current="page"]{color:var(--green);}
+  .hero .nav-desktop a::after{display:none;}
+  .hero .nav-toggle{background:#26251f; border-color:#4b4a40;}
+  .hero .nav-toggle .bars span{background:#e7e6df;}
+  /* Das Handymenü hängt am body, nicht in .hero: Weiß wäre die helle Schrift
+     des durchsichtigen Headers darüber nicht mehr lesbar. */
+  .nav-mobile-panel{background:#1b1b1b; border-bottom-color:#3a3a33;}
+  .nav-mobile-panel a{color:#e7e6df; border-bottom-color:#3a3a33;}
+  .nav-mobile-panel a[aria-current="page"]{color:var(--green);}
+
+  .hero-inner{margin-top:auto; padding:4px 20px 0; text-shadow:0 1px 3px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.75);}
+  .hero p{
+    font-size:clamp(14px, 1.05vw, 17px);
+    line-height:1.55;
+    color:#d3d2ca;
+    max-width:760px;
+    margin:0;
+    text-shadow:0 1px 10px rgba(0,0,0,0.95);
+  }
+  .hero main{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:none;
+    margin:0 0 auto;
+    padding:18px 20px 26px;
+    text-align:left;
+  }
+  .dial-section{width:min(760px, 100%); margin:0 auto;}
+  .dial-panel{
+    padding:22px 12px 8px;
+    gap:10px;
+    box-shadow:0 40px 90px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  @media (min-width:701px){
+    .dial-visual{padding-top:74px; padding-bottom:78px;}
+  }
+  /* Die Schildchen sind Knöpfe. Sie liegen ÜBER dem eckigen Knopf-Rahmen,
+     sonst schluckt dessen Quadrat die Klicks auf die diagonalen Schildchen. */
+  .dial-labels{z-index:3;}
+  .dial-label{
+    min-width:64px;
+    max-width:118px;
+    padding:10px 12px 9px;
+    border-color:#4a4938;
+    text-decoration:none;
+    cursor:pointer;
+    pointer-events:auto;
+    transition:box-shadow 160ms ease, border-color 160ms ease, filter 160ms ease;
+  }
+  .dial-label-text{font-size:11.5px; color:#b5b29c; text-shadow:none; transition:color 160ms ease;}
+  .dial-label:hover{
+    border-color:var(--green);
+    filter:brightness(1.25);
+    box-shadow:0 1px 0 rgba(255,255,255,0.05), 0 6px 14px rgba(0,0,0,0.55), 0 0 12px rgba(161,199,79,0.3);
+  }
+  .dial-label:hover .dial-label-text{color:#fff;}
+  .dial-label:active{filter:brightness(0.9);}
+  .dial-label:focus-visible{outline:2px solid #f2e8cf; outline-offset:3px;}
+  .dial-label.is-active{border-color:rgba(161,199,79,0.75);}
+  .dial-label.is-active .dial-label-text{color:#d4e6a4; text-shadow:0 0 8px rgba(161,199,79,0.5);}
+  /* Die Linkliste bleibt im Dokument, sichtbar aber nur als Ersatz, wenn das
+     Rad nicht läuft (Bild fehlt, reduzierte Bewegung). */
+  .dial-links{display:none;}
+  footer{margin-top:0;}
+  /* Menü und Name brauchen zusammen rund 1090px. Darunter wird es enger, bis
+     nav.css bei 1040px auf den Menüknopf umschaltet. */
+  @media (max-width:1200px){
+    .hero .site-header{padding-left:20px; padding-right:20px;}
+    .hero .nav-desktop a{padding-left:8px; padding-right:8px;}
+  }
+  @media (max-width:700px){
+    .hero .site-header{padding:9px 14px;}
+    .hero .site-header .brand{font-size:14px; gap:8px;}
+    .hero .site-header .brand img{height:46px;}
+    .hero p{font-size:13px;}
+    .hero main{padding:14px 16px 20px;}
+    .dial-panel{padding:14px 4px 4px;}
+    .dial-label{padding:9px 9px 8px; min-width:58px;}
+    .dial-label-text{font-size:10.5px;}
+  }
 </style>
 </head>
 <body>
 
-<header id="site-header"></header>
-
-<section class="hero">
+<div class="hero">
+  <header id="site-header"></header>
   <canvas id="terrain-canvas" aria-hidden="true"></canvas>
   <div class="hero-inner">
-    <img class="logo" src="/assets/logo-hero.png" alt="Zeitreise Seelower Höhen Logo">
-    <h1>Zeitreise Seelower Höhen</h1>
+    <!-- Sichtbar steht der Name nur noch oben rechts mit Logo (Nutzerwunsch
+         05.11.2026); die h1 bleibt für Suchmaschinen und Vorleseprogramme. -->
+    <h1 class="visually-hidden">Zeitreise Seelower Höhen</h1>
     <!-- Gekürzt am 2026-08-17 (drei Zeilen -> zwei). Weggefallen ist nur die
          Werbefloskel "Geschichte hautnah"; alle Suchbegriffe, die zählen
          (Seelower Höhen, Ostfront, Zweiter Weltkrieg, Zeitzeugen), sind
          bewusst erhalten geblieben. -->
     <p>Dokumentationen zur Schlacht um die Seelower Höhen und zur Ostfront im Zweiten Weltkrieg – nach Zeitzeugen, Quellen und Feldrecherche.</p>
-    <div class="scroll-cue" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
   </div>
-</section>
 
 <main>
   <!-- "Auf einen Blick" und die sichtbare Überschrift sind am 2026-08-17 auf
@@ -697,8 +809,6 @@
        einzunehmen. Ein ersatzloses Löschen hätte die Seite ohne jede h2
        zurückgelassen. -->
   <h2 class="visually-hidden">Wo möchtest du weiterlesen?</h2>
-  <p class="dial-hint">Am Schalter drehen und einrasten lassen – zum Bestätigen noch einmal klicken.</p>
-
   <section class="dial-section" aria-label="Themenbereiche der Seite">
     <div class="dial-panel">
       <span class="dial-bullet-hole" aria-hidden="true"></span>
@@ -707,7 +817,7 @@
       </div>
 
       <div class="dial-visual">
-        <div class="dial-labels" id="dialLabels" aria-hidden="true"></div>
+        <nav class="dial-labels" id="dialLabels" aria-label="Themenbereiche"></nav>
 
         <div class="dial-canvas-wrap"
              id="dialKnob"
@@ -738,6 +848,7 @@
         <a class="dial-link" href="/videos.html">Videos</a>
         <a class="dial-link" href="/artikel/index.html">Artikel</a>
         <a class="dial-link" href="/karte.html">Karte</a>
+        <a class="dial-link" href="/fuehrungen.html">Führungen</a>
         <a class="dial-link" href="/quellen.html">Literatur</a>
         <a class="dial-link" href="/unterstuetzen.html">Unterstützen</a>
         <a class="dial-link" href="/kontakt.html">Kontakt</a>
@@ -746,6 +857,7 @@
     </div>
   </section>
 </main>
+</div>
 
 <footer>
   <div>&copy; 2026 Zeitreise Seelower Höhen</div>
@@ -776,8 +888,13 @@
   camera.position.set(0, 2.3, 5.2);
   camera.lookAt(0, -0.9, -1);
 
-  var geo = new THREE.PlaneGeometry(18, 13, 56, 40);
-  var mat = new THREE.MeshBasicMaterial({color:0xA1C74F, wireframe:true, transparent:true, opacity:0.24});
+  /* Fläche weit größer als der Bildausschnitt, Maschenweite wie zuvor, und
+     nach hinten läuft das Netz im Hintergrund aus (Nutzerwunsch 05.11.2026:
+     vorher sah man die Kanten in den hinteren Ecken "wie einen Teppich, der zu
+     Ende ist"). Nebelfarbe = Hintergrund von .hero. */
+  scene.fog = new THREE.Fog(0x1b1b1b, 6.5, 15);
+  var geo = new THREE.PlaneGeometry(30, 20, 94, 62);
+  var mat = new THREE.MeshBasicMaterial({color:0xA1C74F, wireframe:true, transparent:true, opacity:0.3});
   var terrain = new THREE.Mesh(geo, mat);
   terrain.rotation.x = -Math.PI/2.3;
   terrain.position.set(0, -1.9, -2);
@@ -801,7 +918,7 @@
   resize();
   window.addEventListener('resize', resize);
 
-  var rayPlane = new THREE.Mesh(new THREE.PlaneGeometry(18, 13, 1, 1));
+  var rayPlane = new THREE.Mesh(new THREE.PlaneGeometry(30, 20, 1, 1));
   rayPlane.rotation.copy(terrain.rotation);
   rayPlane.position.copy(terrain.position);
   rayPlane.updateMatrixWorld(true);
@@ -817,6 +934,8 @@
 
   if(!reduceMotion){
     hero.addEventListener('mousemove', function(e){
+      // Über dem Funkgerät bleibt das Netz ruhig (Nutzerwunsch 05.11.2026).
+      if(e.target.closest('.dial-panel')){ hoverTargetStrength = 0; return; }
       var rect = canvas.getBoundingClientRect();
       pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointerNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -836,19 +955,187 @@
   var clock = new THREE.Clock();
   var posAttr = geo.attributes.position;
 
+  /* ---------- Luftbild im Netz (Nutzerwunsch 05.11.2026) ----------
+     Das Netz ist die Oberfläche der Seelower Höhen: Nach dem Laden gleitet es
+     zur Geländeform des Fotos, und das Foto blendet schwach auf demselben Netz
+     ein. Unter der Maus wird es klar. Lädt das Foto nicht, bleibt das reine Netz. */
+  var LUFT_DECKUNG = 0.42, LUFT_FORM = 0.85, LUFT_EINBLENDEN = 5;
+  var luft = null;
+  var FOTO_SEITENVERHAELTNIS = 1272/551;
+  var FOTO_FOKUS_U = 0.6; // Der Hügel liegt rechts, bei schmalen Fenstern dorthin ausschneiden.
+
+  /* Geländeform von Hand dem Foto nachempfunden; u von links, v von oben. */
+  function fotoHuegel(u, v, cu, cv, su, sv, hoehe){
+    var a = (u-cu)/su, b = (v-cv)/sv;
+    return hoehe * Math.exp(-(a*a + b*b)/2);
+  }
+  function fotoHoehe(u, v){
+    return fotoHuegel(u, v, 0.80, 0.80, 0.20, 0.20, 2.0)
+         + fotoHuegel(u, v, 0.62, 0.62, 0.10, 0.11, 0.7)
+         + fotoHuegel(u, v, 0.98, 0.50, 0.14, 0.08, 0.5)
+         + fotoHuegel(u, v, 0.05, 0.74, 0.07, 0.08, 0.7)
+         - 0.25;
+  }
+
+  var luftGlsl =
+    'uniform sampler2D uFoto; uniform vec2 uScale; uniform vec2 uOffset; uniform vec2 uKnick;' +
+    'uniform float uBasis;' +
+    'vec2 fotoUV(vec2 ndc){ vec2 s = ndc*0.5+0.5;' +
+    '  float u = s.x < uKnick.x ? uOffset.x+(uKnick.y-uOffset.x)*s.x/uKnick.x : uKnick.y+(s.x-uKnick.x)*uScale.x;' +
+    '  return vec2(u, s.y*uScale.y+uOffset.y); }' +
+    'vec3 foto(vec2 uv){' +
+    '  vec3 c = texture2D(uFoto, uv).rgb;' +
+    '  float g = dot(c, vec3(0.299,0.587,0.114));' +
+    '  return mix(vec3(g), c, 0.86)*0.82;' +
+    '}';
+
+  function luftAufbauen(textur){
+    var gemeinsam = {
+      uFoto:{value:textur}, uScale:{value:new THREE.Vector2(1,1)}, uOffset:{value:new THREE.Vector2(0,0)}, uKnick:{value:new THREE.Vector2(0.5,0.5)},
+      uBasis:{value:0},
+      uLinse:{value:0}, uLinsePos:{value:new THREE.Vector2(0,0)}
+    };
+    var count = posAttr.count;
+    geo.setAttribute('aRest', new THREE.BufferAttribute(new Float32Array(count), 1));
+
+    var flaecheMat = new THREE.ShaderMaterial({
+      uniforms:gemeinsam, transparent:true, side:THREE.DoubleSide,
+      polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
+      vertexShader:
+        'attribute float aRest; varying vec4 vRuhe; varying vec2 vLokal;' +
+        'void main(){ vLokal = position.xy;' +
+        '  vRuhe = projectionMatrix*modelViewMatrix*vec4(position.xy, aRest, 1.0);' +
+        '  gl_Position = projectionMatrix*modelViewMatrix*vec4(position, 1.0); }',
+      fragmentShader:
+        'uniform float uLinse; uniform vec2 uLinsePos; varying vec4 vRuhe; varying vec2 vLokal;' + luftGlsl +
+        'void main(){ vec2 uv = fotoUV(vRuhe.xy/vRuhe.w);' +
+        '  vec2 d = vLokal-uLinsePos;' +
+        '  float l = uLinse*smoothstep(0.12, 0.62, exp(-dot(d,d)/(2.0*2.6*2.6)));' +
+        '  float a = max(uBasis, l);' +
+        '  if(a < 0.015) discard;' +
+        '  gl_FragColor = vec4(foto(uv), a); }'
+    });
+    var flaecheMesh = new THREE.Mesh(geo, flaecheMat);
+    flaecheMesh.rotation.copy(terrain.rotation);
+    flaecheMesh.position.copy(terrain.position);
+    flaecheMesh.frustumCulled = false;
+    flaecheMesh.renderOrder = 0;
+    terrain.renderOrder = 2;
+    terrain.frustumCulled = false;
+    scene.add(flaecheMesh);
+
+    // Der Himmel über dem Netzrand: dasselbe Foto bildschirmfest dahinter.
+    var hintenMat = new THREE.ShaderMaterial({
+      uniforms:gemeinsam, transparent:true, depthWrite:false, // Tiefentest: nur dort, wo die Fläche nicht liegt.
+      vertexShader:'varying vec2 vNdc; void main(){ vNdc = position.xy; gl_Position = vec4(position.xy, 0.9999, 1.0); }',
+      fragmentShader:'varying vec2 vNdc;' + luftGlsl +
+        'void main(){ vec2 uv = fotoUV(vNdc); gl_FragColor = vec4(foto(uv), uBasis); }'
+    });
+    var hinten = new THREE.Mesh(new THREE.PlaneGeometry(2,2), hintenMat);
+    hinten.frustumCulled = false;
+    hinten.renderOrder = 1;
+    scene.add(hinten);
+
+    luft = {
+      u:gemeinsam, rest:geo.attributes.aRest,
+      start:clock.getElapsedTime(), linsePos:new THREE.Vector2(0,0)
+    };
+    luftRuheform();
+    if(reduceMotion) animate();
+  }
+
+  /* Ruheform und Fotoausschnitt hängen vom Fenster ab: Foto wie "cover" über die
+     ganze Fläche, dann für jeden Netzpunkt die Geländehöhe an seiner Fotostelle. */
+  function luftRuheform(){
+    if(!luft) return;
+    var a = camera.aspect, f = FOTO_SEITENVERHAELTNIS;
+    var su = a < f ? a/f : 1, st = a < f ? 1 : f/a;
+    /* Der Hügel mit den Birken (u = 0,5) soll rechts neben dem Funkgerät stehen,
+       nicht dahinter (Nutzerwunsch 06.11.2026). Rechts vom Knick bleibt das Foto
+       unverzerrt, links davon wird es höchstens um ein Drittel in die Breite
+       gezogen, damit es bis zum linken Rand reicht (Spiegeln zeigte Muster).
+       Ist das Fenster zu schmal für einen Platz neben dem Gerät (Handy), bleibt
+       der mittige Ausschnitt ohne Knick. */
+    var ou = Math.min(Math.max(FOTO_FOKUS_U - su/2, 0), 1-su), ot = (1-st)*0.35;
+    var knickS = 0.5, knickU = ou + 0.5*su;
+    var geraet = document.querySelector('.dial-panel');
+    if(geraet && hero.clientWidth){
+      var g = geraet.getBoundingClientRect();
+      var rechtsFrei = hero.clientWidth - g.right;
+      if(rechtsFrei/hero.clientWidth > 0.15){
+        knickS = (g.right + rechtsFrei*0.1)/hero.clientWidth;
+        knickU = Math.min(Math.max(0.5/knickS, su/1.35)*knickS, 1 - (1-knickS)*su);
+        ou = 0;
+      }
+    }
+    luft.u.uKnick.value.set(knickS, knickU);
+    luft.u.uScale.value.set(su, st);
+    luft.u.uOffset.value.set(ou, ot);
+    terrain.updateMatrixWorld(true);
+    camera.updateMatrixWorld(true);
+    var p = new THREE.Vector3();
+    for(var i=0;i<posAttr.count;i++){
+      var x = posAttr.getX(i), y = posAttr.getY(i), z = 0;
+      for(var n=0;n<3;n++){
+        p.set(x, y, z).applyMatrix4(terrain.matrixWorld);
+        if(p.z > camera.position.z - 0.6){ z = 0; break; }
+        p.project(camera);
+        var sx = p.x*0.5+0.5;
+        var u = sx < knickS ? ou + (knickU-ou)*sx/knickS : knickU + (sx-knickS)*su;
+        var oben = 1 - ((p.y*0.5+0.5)*st+ot);
+        z = fotoHoehe(Math.min(Math.max(u,0),1), Math.min(Math.max(oben,0),1));
+      }
+      luft.rest.setX(i, z);
+    }
+    luft.rest.needsUpdate = true;
+  }
+  window.addEventListener('resize', luftRuheform);
+
+  function kante(a, b, x){ var s = Math.min(Math.max((x-a)/(b-a),0),1); return s*s*(3-2*s); }
+
+  window.addEventListener('load', function(){
+    new THREE.TextureLoader().load('/assets/luftbild-hoehen.jpg', function(tex){
+      tex.generateMipmaps = false;
+      tex.minFilter = THREE.LinearFilter;
+      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+      luftAufbauen(tex);
+    });
+  });
+
   function animate(){
     var t = reduceMotion ? 0 : clock.getElapsedTime();
     hoverStrength += (hoverTargetStrength - hoverStrength) * 0.06;
     hoverPos.x += (hoverTarget.x - hoverPos.x) * 0.12;
     hoverPos.y += (hoverTarget.y - hoverPos.y) * 0.12;
 
+    var linseStark = 0, grundM = 0;
+    if(luft){
+      var ein = reduceMotion ? 1 : kante(0, LUFT_EINBLENDEN, t - luft.start);
+      grundM = LUFT_FORM*ein;
+      luft.u.uBasis.value = LUFT_DECKUNG*ein;
+      linseStark = reduceMotion ? 0 : hoverStrength;
+      luft.linsePos.x += (hoverPos.x - luft.linsePos.x)*0.07;
+      luft.linsePos.y += (hoverPos.y - luft.linsePos.y)*0.07;
+      luft.u.uLinsePos.value.copy(luft.linsePos);
+      luft.u.uLinse.value = linseStark;
+    }
+
     for(var i=0;i<posAttr.count;i++){
       var x = posAttr.getX(i), y = posAttr.getY(i);
       var z = terrainHeight(x, y, t);
+      var m = 0;
+      if(luft){
+        m = grundM;
+        if(linseStark > 0.001){
+          var ldx = x - luft.linsePos.x, ldy = y - luft.linsePos.y;
+          m = Math.max(m, linseStark*Math.min(Math.exp(-(ldx*ldx+ldy*ldy)/(2*2.6*2.6))*1.5, 1));
+        }
+        z += (luft.rest.getX(i) - z)*m;
+      }
       if(hoverStrength > 0.001){
         var dx = x - hoverPos.x, dy = y - hoverPos.y;
         var distSq = dx*dx + dy*dy;
-        z += hoverStrength * HOVER_HEIGHT * Math.exp(-distSq / (2*HOVER_RADIUS*HOVER_RADIUS));
+        z += (1 - 0.75*m) * hoverStrength * HOVER_HEIGHT * Math.exp(-distSq / (2*HOVER_RADIUS*HOVER_RADIUS));
       }
       posAttr.setZ(i, z);
     }
@@ -875,7 +1162,7 @@
      Vorschau-Werkzeug, das Skripte hartnäckig zwischenspeichert) dazu, nach
      einer Änderung wirklich die neue Fassung zu laden statt der alten.
      Bei jeder inhaltlichen Änderung an dial.js hochzählen. -->
-<script src="/assets/dial.js?v=2026-08-18b"></script>
+<script src="/assets/dial.js?v=2026-11-05b"></script>
 <script>
 (function(){
   // GoatCounter nur auf der echten Domain zaehlen, nicht auf Vorschau-/Test-

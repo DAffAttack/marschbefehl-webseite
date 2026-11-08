@@ -133,4 +133,21 @@
   }else{
     init();
   }
+
+  // Helles Gelaendenetz hinter den Unterseiten. Erst nach dem Laden der Seite
+  // nachgeladen, damit es den Seitenaufbau nicht bremst. Nicht auf der Startseite
+  // (eigenes dunkles Netz), nicht in der Buchungsverwaltung (Arbeitsoberflaeche)
+  // und nicht auf Handy/Tablet: Ohne Maus gibt es dort keinen Hover-Effekt, also
+  // auch keinen Grund fuer die zusaetzlichen rund 640 KB.
+  function netzLaden(){
+    if(window.matchMedia('(hover: none)').matches) return;
+    var pfad = window.location.pathname;
+    if(pfad === '/' || pfad === '/index.html') return;
+    if(/fuehrungen-verwaltung/.test(pfad)) return;
+    var s = document.createElement('script');
+    s.src = '/assets/netz-hintergrund.js';
+    document.body.appendChild(s);
+  }
+  if(document.readyState === 'complete') netzLaden();
+  else window.addEventListener('load', netzLaden);
 })();

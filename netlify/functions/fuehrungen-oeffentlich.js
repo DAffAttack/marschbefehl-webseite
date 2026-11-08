@@ -28,6 +28,7 @@ function oeffentlichesDetailFeld(f) {
     preisProPerson: f.preisProPerson,
     bildUebersichtId: f.bildUebersichtId || null,
     bildDetailId: f.bildDetailId || null,
+    bildBeschreibungId: f.bildBeschreibungId || null,
   };
 }
 

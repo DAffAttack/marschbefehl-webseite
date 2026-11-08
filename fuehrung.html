@@ -97,6 +97,10 @@
   }
   .lang-text p{ margin:0 0 18px; }
   .lang-text p:last-child{ margin-bottom:0; }
+  .lang-bild{ margin:28px 0; }
+  .lang-bild img{ width:100%; height:auto; display:block; border-radius:14px; background:var(--ink-soft); }
+  .lang-bild figcaption{ margin-top:8px; font-size:13px; line-height:1.5; color:var(--muted); }
+  .lang-bild:last-child{ margin-bottom:0; }
 
   .ort-block{ margin-bottom:48px; }
   .ort-block h2{ font-size:15px; margin:0 0 4px; }
@@ -394,7 +398,6 @@
     <div class="ort-block" id="f-ort-block">
       <h2>Treffpunkt</h2>
       <p class="ort-text" id="f-ort-text"></p>
-      <div class="ort-map" id="f-ort-map"></div>
     </div>
 
     <div class="section-head">
@@ -407,6 +410,8 @@
     </div>
 
     <p class="note-storno">Bezahlt wird sicher im Voraus über unseren Zahlungsanbieter (Karte, Apple Pay, Google Pay, PayPal). Die Buchung gilt mit Zahlungseingang und wird per E-Mail bestätigt. Stornierung laut <a href="/agb.html" style="color:var(--green-dark); font-weight:600;">Teilnahmebedingungen</a>, bei Fragen gern über <a href="/kontakt.html" style="color:var(--green-dark); font-weight:600;">Kontakt</a>.</p>
+
+    <section id="gaeste-stimmen"></section>
 
     <div class="cta-box">
       <h2>Fragen zu dieser Führung?</h2>
@@ -423,6 +428,8 @@
   </div>
 </footer>
 
+<link rel="stylesheet" href="/assets/gaeste-stimmen.css">
+<script src="/assets/gaeste-stimmen.js"></script>
 <script src="/assets/vendor/gsap.min.js"></script>
 <script>
 (function(){
@@ -673,21 +680,20 @@
     var langWrap = document.getElementById('f-langbeschreibung');
     var absaetze = (f.langbeschreibung || '').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean);
     if(absaetze.length === 0) absaetze = [f.langbeschreibung || ''];
-    langWrap.innerHTML = absaetze.map(function(p){ return '<p>' + escapeHtml(p).replace(/\n/g, '<br>') + '</p>'; }).join('');
+    var langTeile = absaetze.map(function(p){ return '<p>' + escapeHtml(p).replace(/\n/g, '<br>') + '</p>'; });
+    // Freiwilliges Foto mitten im Text: nach der ersten Hälfte der Absätze.
+    if(f.bildBeschreibungId){
+      langTeile.splice(Math.ceil(absaetze.length / 2), 0,
+        '<figure class="lang-bild"><img src="/.netlify/functions/fuehrungen-bild?id=' + encodeURIComponent(f.bildBeschreibungId) + '" alt="Besuchergruppe bei einer früheren Führung">' +
+        '<figcaption>Bei einer unserer früheren Führungen</figcaption></figure>');
+    }
+    langWrap.innerHTML = langTeile.join('');
 
     var ortBlock = document.getElementById('f-ort-block');
     if(f.ort){
       document.getElementById('f-ort-text').textContent = f.treffpunktNachBuchung
         ? f.ort + '. Den genauen Treffpunkt erhalten Sie mit der Buchungsbestätigung.'
         : f.ort;
-      // Keine eingebettete Karte eines Drittanbieters (Datenschutz): Link öffnet den Treffpunkt
-      // auf OpenStreetMap erst mit dem Klick (E6, 03.11.2026).
-      document.getElementById('f-ort-map').innerHTML =
-        '<a class="ort-link" href="https://www.openstreetmap.org/search?query=' + encodeURIComponent(f.ort) + '" target="_blank" rel="noopener">' +
-          '<span class="ort-link-icon" aria-hidden="true">&#9906;</span>' +
-          '<span><strong>Treffpunkt auf der Karte öffnen</strong><br><small>OpenStreetMap, öffnet in einem neuen Fenster. Für die Navigation die Adresse oben ins Navi übernehmen.</small></span>' +
-        '</a>';
-      if(f.treffpunktNachBuchung) document.getElementById('f-ort-map').style.display = 'none';
     } else {
       ortBlock.style.display = 'none';
     }

@@ -89,9 +89,17 @@
     });
   }
   TOPICS.forEach(function(topic, i){
-    var plate = document.createElement('div');
+    // Schildchen sind echte Links. Strg-/Mittelklick bleibt dem Browser
+    // ueberlassen, ein normaler Klick dreht zuerst das Rad und oeffnet dann.
+    var plate = document.createElement('a');
     plate.className = 'dial-label';
+    plate.href = topic.href;
     plate.dataset.index = i;
+    plate.addEventListener('click', function(e){
+      if(e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+      e.preventDefault();
+      zuThema(i, navigateToArmed);
+    });
     var text = document.createElement('span');
     text.className = 'dial-label-text';
     text.textContent = topic.label;
@@ -355,9 +363,22 @@
 
   function normIndex(i){ return ((i % TOPICS.length) + TOPICS.length) % TOPICS.length; }
 
+  /* Das Rad steht beim Zurueckkommen dort, wo es zuletzt hingedreht wurde
+     (Nutzerwunsch 05.11.2026). Reine Bequemlichkeit: Ist der Speicher gesperrt
+     oder leer, startet es wie frueher bei "Videos". */
+  var SPEICHER_RAD = 'zsh_drehrad_position';
+  function gemerkteStellung(){
+    try{
+      var s = localStorage.getItem(SPEICHER_RAD);
+      var n = s === null ? 0 : Number(s);
+      return (n >= 0 && n < TOPICS.length && Math.floor(n) === n) ? n : 0;
+    }catch(e){ return 0; }
+  }
+
   function setArmed(idx, opts){
     opts = opts || {};
     armedIndex = normIndex(idx);
+    try{ localStorage.setItem(SPEICHER_RAD, String(armedIndex)); }catch(e){}
     var topic = TOPICS[armedIndex];
     if(readoutLabel.textContent !== topic.label){
       if(!reduceMotion && typeof gsap !== 'undefined' && !opts.silent){
@@ -537,6 +558,7 @@
     // ohnehin selbst gesetzt, und Scrollen ist auf dem Knopf durch
     // touch-action:none ohnehin bewusst abgeschaltet.
     e.preventDefault();
+    drehLauf++;
     dragging = true;
     dragMoved = false;
     settling = false;
@@ -628,6 +650,45 @@
     if(handled) e.preventDefault();
   });
 
+  /* ---------- Klick auf ein Schildchen dreht das Rad dorthin ---------- */
+  // Kuerzester Weg, damit das Rad nie unnoetig die lange Runde dreht. Die
+  // Rast-Klicks kommen von selbst aus updateFromTheta, einer je Position.
+  var drehLauf = 0;
+  function zuThema(ziel, danach){
+    var lauf = ++drehLauf;
+    settling = false;
+    var von = currentTheta;
+    var startIdx = Math.round(von/STEP);
+    var diff = normIndex(ziel - startIdx);
+    if(diff > TOPICS.length/2) diff -= TOPICS.length;
+    var bis = (startIdx + diff)*STEP;
+    var schritte = Math.abs(diff);
+    var fertig = false;
+    function abschluss(){
+      if(fertig || lauf !== drehLauf) return;
+      fertig = true;
+      currentTheta = bis;
+      applyRotation();
+      updateFromTheta(currentTheta, {silent:true});
+      if(danach) danach();
+    }
+    if(reduceMotion || schritte === 0){ abschluss(); return; }
+    var dauer = 200 + schritte*120;
+    var t0 = performance.now();
+    function schritt(jetzt){
+      if(fertig || lauf !== drehLauf) return;
+      var p = Math.min(1, (jetzt - t0)/dauer);
+      var e = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+      currentTheta = von + (bis - von)*e;
+      applyRotation();
+      updateFromTheta(currentTheta);
+      if(p < 1) requestAnimationFrame(schritt); else abschluss();
+    }
+    requestAnimationFrame(schritt);
+    // Riegel: Steht die Animation (Tab im Hintergrund), wird trotzdem navigiert.
+    window.setTimeout(abschluss, dauer + 120);
+  }
+
   function navigateToArmed(){
     var topic = TOPICS[armedIndex];
     if(!topic) return;
@@ -683,9 +744,17 @@
   }
 
   layoutLabels();
-  setArmed(0, {silent:true});
-  lastSnapIndex = 0;
+  var startStellung = gemerkteStellung();
+  currentTheta = settleTarget = startStellung*STEP;
+  setArmed(startStellung, {silent:true});
+  lastSnapIndex = startStellung;
   applyRotation();
+
+  // Zurueck-Knopf des Browsers: Die Seite kommt aus dem Zwischenspeicher genau so
+  // wieder, wie sie verlassen wurde, also mit noch eingedruecktem Knopf.
+  window.addEventListener('pageshow', function(){
+    knobWrap.classList.remove('is-confirmed');
+  });
 
   /* Einblende-Animation des Panels */
   if(!reduceMotion && typeof gsap !== 'undefined'){

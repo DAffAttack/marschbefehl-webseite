@@ -131,6 +131,14 @@ eleventyExcludeFromCollections: true
   <p class="intro">Hintergründe zu den Ereignissen und Themen aus den Dokumentationen – zum Nachlesen, Vertiefen und Weiterverlinken.</p>
 
   <div class="article-list">
+    <a class="article-card" href="/artikel/signalpatronen.html">
+      <img class="thumb" src="/assets/artikel/signalpatronen.jpg" alt="" loading="lazy">
+      <div class="body">
+        <p class="eyebrow">Zum Ansehen · Leuchtpistole 34/42</p>
+        <h2>Signalpatronen der Wehrmacht</h2>
+        <p>14 Patronen zum Abspielen: was am Himmel zu sehen war und was es bedeuten konnte, mit belegten Beispielen und Quellen.</p>
+      </div>
+    </a>
 {% for eintrag in collections.artikel %}
     <a class="article-card" href="{{ eintrag.url }}">
       {% if eintrag.data.youtubeId %}<img class="thumb" src="/assets/artikel/yt-{{ eintrag.data.youtubeId }}.jpg" alt="" loading="lazy">{% endif %}
