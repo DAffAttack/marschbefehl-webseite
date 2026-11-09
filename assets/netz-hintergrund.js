@@ -99,6 +99,9 @@
     groesse();
     window.addEventListener('resize', groesse);
     canvas.classList.add('ist-da');
+    // Textspalte bekommt weissen Grund, das Netz bleibt links, rechts und unten
+    // sichtbar (Nutzerwunsch 09.11.2026: Text auf dem Netz schlecht lesbar).
+    document.documentElement.classList.add('netz-an');
 
     if(ruhend) return;
 

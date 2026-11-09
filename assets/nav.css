@@ -164,6 +164,14 @@
   transition:opacity 900ms ease;
 }
 #netz-hintergrund.ist-da{opacity:1;}
+/* Weißer Grund nur so breit wie die Textspalte (09.11.2026). Links, rechts und
+   unter dem Inhalt bleibt das Netz zu sehen. Die Klasse setzt netz-hintergrund.js
+   erst, wenn das Netz wirklich läuft. */
+.netz-an main{
+  background:#fff;
+  border-radius:0 0 16px 16px;
+  box-shadow:0 10px 30px rgba(27,27,27,0.06);
+}
 @media print{ #netz-hintergrund{display:none;} }
 
 @media (min-width:1040px){
