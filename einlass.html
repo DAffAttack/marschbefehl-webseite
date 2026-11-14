@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Einlass – Führung</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1b1b1b">
+<style>
+  :root{
+    --green:#A1C74F; --green-dark:#6F8F2E; --ink:#1b1b1b; --paper:#fafaf8; --line:#e6e5e0; --muted:#6f6f6b;
+    --ok:#2e7d32; --warn:#c88a00; --bad:#c62828;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  button{font:inherit;cursor:pointer;}
+  .kopf{position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;padding:10px 16px calc(10px);display:flex;align-items:center;gap:10px;}
+  .kopf .titel{flex:1;min-width:0;}
+  .kopf .titel b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .kopf .titel span{font-size:12px;color:#bdbdb8;}
+  .netz{font-size:12px;padding:4px 9px;border-radius:99px;background:#2f4a12;color:#d9f0a8;white-space:nowrap;}
+  .netz.aus{background:#5a1d1d;color:#ffc9c9;}
+  .netz.wartet{background:#5a4300;color:#ffe6a3;}
+  main{max-width:560px;margin:0 auto;padding:16px;}
+  .karte{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px;}
+  h2{font-size:18px;margin:0 0 6px;}
+  p.leise{color:var(--muted);font-size:14px;margin:0 0 14px;}
+  input[type=password],input[type=search]{width:100%;font:inherit;font-size:16px;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);}
+  .knopf{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:700;background:var(--green);color:var(--ink);margin-top:10px;}
+  .knopf.zweit{background:#ecebe6;font-weight:600;}
+  .knopf.klein{display:inline-block;width:auto;padding:9px 14px;font-size:14px;margin:0;}
+  .fehler{color:var(--bad);font-size:14px;min-height:1em;margin-top:8px;}
+  .terminwahl button{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;}
+  .terminwahl b{display:block;font-size:16px;}
+  .terminwahl span{font-size:13px;color:var(--muted);}
+  .zaehler{display:flex;gap:10px;margin-bottom:12px;}
+  .zaehler div{flex:1;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;}
+  .zaehler b{font-size:26px;display:block;line-height:1.1;}
+  .zaehler span{font-size:12px;color:var(--muted);}
+  .reiter{display:flex;gap:6px;margin-bottom:12px;}
+  .reiter button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px;font-weight:600;}
+  .reiter button.an{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .kamera{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:1/1;}
+  .kamera video{width:100%;height:100%;object-fit:cover;display:block;}
+  .kamera .rahmen{position:absolute;inset:18%;border:3px solid rgba(255,255,255,.85);border-radius:18px;box-shadow:0 0 0 999px rgba(0,0,0,.25);pointer-events:none;}
+  .kamera .hinweis{position:absolute;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 3px #000;}
+  .kamera .start{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;text-align:center;padding:20px;}
+  .ergebnis{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:28px;color:#fff;}
+  .ergebnis.zeigen{display:flex;}
+  .ergebnis.ok{background:var(--ok);} .ergebnis.warn{background:var(--warn);} .ergebnis.bad{background:var(--bad);}
+  .ergebnis .zeichen{font-size:84px;line-height:1;margin-bottom:10px;}
+  .ergebnis .gross{font-size:30px;font-weight:800;margin:0 0 6px;}
+  .ergebnis .name{font-size:24px;font-weight:700;margin:6px 0;}
+  .ergebnis .info{font-size:18px;opacity:.95;margin:4px 0;}
+  .ergebnis .knoepfe{display:flex;gap:10px;margin-top:26px;width:100%;max-width:420px;}
+  .ergebnis .knoepfe button{flex:1;border:0;border-radius:12px;padding:16px;font-size:17px;font-weight:700;background:#fff;color:var(--ink);}
+  .ergebnis .knoepfe button.durch{background:rgba(255,255,255,.2);color:#fff;}
+  .liste .gast{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;}
+  .liste .gast .wer{flex:1;min-width:0;}
+  .liste .gast b{display:block;font-size:16px;}
+  .liste .gast span{font-size:13px;color:var(--muted);}
+  .liste .gast.da{background:#eef6e6;border-color:#cfe3b5;}
+  .liste .gast.storno{opacity:.5;}
+  .liste .gast .tel{font-size:22px;text-decoration:none;padding:4px 6px;}
+  .haken{width:46px;height:46px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:24px;font-weight:800;color:var(--ok);flex:none;}
+  .gast.da .haken{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .marke{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+  .marke.warn{background:#fff1cc;color:#7a5400;} .marke.bad{background:#fde0e0;color:#8a1c1c;}
+  .fuss{font-size:12.5px;color:var(--muted);text-align:center;margin:18px 0 30px;line-height:1.6;}
+  .fuss button{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:0;}
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<div class="kopf">
+  <div class="titel"><b id="kopf-titel">Einlass</b><span id="kopf-unter">Führung · Treffpunkt</span></div>
+  <span class="netz" id="netz">online</span>
+</div>
+
+<main>
+  <!-- Anmelden -->
+  <section id="v-login" class="karte" hidden>
+    <h2>Anmelden</h2>
+    <p class="leise">Mit dem Passwort der Verwaltung. Danach lädt die Gästeliste aufs Handy und die Seite funktioniert auch ohne Netz.</p>
+    <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password">
+    <button class="knopf" id="b-login">Anmelden</button>
+    <div class="fehler" id="login-fehler"></div>
+  </section>
+
+  <!-- Termin wählen -->
+  <section id="v-termine" hidden>
+    <div class="karte">
+      <h2>Welcher Termin?</h2>
+      <p class="leise">Am besten noch zu Hause mit Netz öffnen, dann liegt die Liste fürs Funkloch auf dem Handy.</p>
+      <div class="terminwahl" id="termin-liste"></div>
+      <div class="fehler" id="termin-fehler"></div>
+    </div>
+  </section>
+
+  <!-- Einlass -->
+  <section id="v-einlass" hidden>
+    <div class="zaehler">
+      <div><b id="z-personen">0 / 0</b><span>Personen da</span></div>
+      <div><b id="z-buchungen">0 / 0</b><span>Buchungen da</span></div>
+    </div>
+    <div class="reiter">
+      <button id="r-scan" class="an">Scannen</button>
+      <button id="r-liste">Liste</button>
+    </div>
+
+    <div id="t-scan">
+      <div class="kamera">
+        <video id="video" playsinline muted></video>
+        <div class="rahmen" id="rahmen" hidden></div>
+        <div class="hinweis" id="scan-hinweis" hidden>QR-Code in den Rahmen halten</div>
+        <div class="start" id="kamera-start">
+          <div style="font-size:15px;">Kamera für den QR-Code</div>
+          <button class="knopf klein" id="b-kamera">Kamera starten</button>
+          <div class="fehler" id="kamera-fehler" style="color:#ffb4b4;"></div>
+        </div>
+      </div>
+      <p class="leise" style="margin-top:10px;">Ohne Handy beim Gast: im Reiter „Liste“ den Namen antippen.</p>
+    </div>
+
+    <div id="t-liste" hidden>
+      <input type="search" id="suche" placeholder="Name oder Buchungsnummer suchen">
+      <div class="reiter" style="margin-top:10px;">
+        <button id="f-alle" class="an">Alle</button>
+        <button id="f-fehlt">Fehlt noch</button>
+      </div>
+      <div class="liste" id="gaeste"></div>
+    </div>
+
+    <div class="fuss">
+      <span id="stand">–</span><br>
+      <button id="b-neu">Liste neu laden</button> · <button id="b-termin">anderer Termin</button> · <button id="b-loeschen">Liste vom Handy löschen</button>
+    </div>
+  </section>
+</main>
+
+<!-- Scan-Ergebnis über den ganzen Schirm -->
+<div class="ergebnis" id="ergebnis" role="alert">
+  <div class="zeichen" id="e-zeichen">✓</div>
+  <div class="gross" id="e-gross">Eingecheckt</div>
+  <div class="name" id="e-name"></div>
+  <div class="info" id="e-info"></div>
+  <div class="info" id="e-info2"></div>
+  <div class="knoepfe">
+    <button class="durch" id="e-zurueck" hidden>Rückgängig</button>
+    <button id="e-weiter">Weiter scannen</button>
+  </div>
+</div>
+
+<script src="/assets/einlass/jsQR.js"></script>
+<script>
+(function(){
+  'use strict';
+  var API = '/.netlify/functions/einlass';
+  var LS_LISTEN = 'einlass_listen_v1';   // { terminId: {termin, gaeste, stand} }
+  var LS_OFFEN = 'einlass_offen_v1';     // [{terminId, buchungId, eingecheckt, zeit}]
+  var LS_TERMIN = 'einlass_termin_v1';
+  var CODE_RE = /(ZSH-\d{4}-\d{4})\.([A-Z2-9]{8})/;
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---------- Speicher (immer mit try/catch, Seite läuft auch ohne)
+  function lesen(k, vorgabe){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : vorgabe; } catch(e){ return vorgabe; } }
+  function schreiben(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function entfernen(k){ try { localStorage.removeItem(k); } catch(e){} }
+
+  var listen = lesen(LS_LISTEN, {});
+  var offen = lesen(LS_OFFEN, []);
+  var terminId = '';
+  var filter = 'alle';
+
+  // Alte Listen (Termin vor mehr als 2 Tagen) automatisch vom Handy löschen: personenbezogene Daten.
+  (function aufraeumen(){
+    var grenze = new Date(Date.now() - 2*864e5).toISOString().slice(0,10);
+    Object.keys(listen).forEach(function(id){ if (!listen[id].termin || listen[id].termin.datumIso < grenze) delete listen[id]; });
+    schreiben(LS_LISTEN, listen);
+  })();
+
+  function zeige(v){ ['v-login','v-termine','v-einlass'].forEach(function(id){ $(id).hidden = id !== v; }); }
+  function datumDe(iso, uhr){ var p = iso.split('-'); var d = new Date(iso+'T12:00:00'); var tag = ['So','Mo','Di','Mi','Do','Fr','Sa'][d.getDay()]; return tag + ' ' + p[2] + '.' + p[1] + '.' + p[0] + (uhr ? ', ' + uhr + ' Uhr' : ''); }
+  function uhrzeit(iso){ return new Date(iso).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); }
+  function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // ---------- Netzanzeige
+  function netzAnzeigen(){
+    var n = $('netz');
+    var warten = offen.length;
+    if (!navigator.onLine){ n.className = 'netz aus'; n.textContent = 'offline' + (warten ? ' · ' + warten + ' wartet' : ''); }
+    else if (warten){ n.className = 'netz wartet'; n.textContent = warten + ' wartet'; }
+    else { n.className = 'netz'; n.textContent = 'online'; }
+  }
+  window.addEventListener('online', function(){ netzAnzeigen(); senden(); });
+  window.addEventListener('offline', netzAnzeigen);
+
+  // ---------- Server
+  function holen(url, opt){
+    return fetch(url, Object.assign({ credentials:'same-origin', headers:{'Content-Type':'application/json'} }, opt || {}))
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ j._status = r.status; return j; }); });
+  }
+
+  function anmelden(){
+    $('login-fehler').textContent = '';
+    holen('/.netlify/functions/admin-api', { method:'POST', body: JSON.stringify({ action:'login', password: $('pw').value }) })
+      .then(function(j){
+        if (!j.ok){ $('login-fehler').textContent = j.error || 'Anmeldung fehlgeschlagen.'; return; }
+        $('pw').value = '';
+        senden();
+        start();
+      })
+      .catch(function(){ $('login-fehler').textContent = 'Kein Netz. Anmelden geht nur mit Netz.'; });
+  }
+
+  function termineLaden(){
+    zeige('v-termine');
+    $('kopf-titel').textContent = 'Einlass'; $('kopf-unter').textContent = 'Termin wählen';
+    var box = $('termin-liste'); box.innerHTML = '';
+    $('termin-fehler').textContent = '';
+    var zeichnen = function(termine, offline){
+      box.innerHTML = '';
+      if (!termine.length){ box.innerHTML = '<p class="leise">' + (offline ? 'Keine Liste auf dem Handy. Bitte einmal mit Netz öffnen.' : 'Keine anstehenden Termine.') + '</p>'; return; }
+      termine.forEach(function(t){
+        var b = document.createElement('button');
+        var aufHandy = listen[t.id] ? ' · auf dem Handy' : '';
+        b.innerHTML = '<b>' + esc(datumDe(t.datumIso, t.uhrzeit)) + '</b><span>' + esc(t.titel) + ' · ' + t.buchungen + ' Buchungen, ' + t.personen + ' Personen' + aufHandy + '</span>';
+        b.onclick = function(){ terminOeffnen(t.id); };
+        box.appendChild(b);
+      });
+    };
+    var ausSpeicher = function(){
+      return Object.keys(listen).map(function(id){
+        var L = listen[id]; var g = L.gaeste.filter(aktiv);
+        return { id:id, datumIso:L.termin.datumIso, uhrzeit:L.termin.uhrzeit, titel:L.termin.titel, buchungen:g.length, personen:g.reduce(function(s,x){return s+x.personen;},0) };
+      }).sort(function(a,b){ return (a.datumIso+a.uhrzeit).localeCompare(b.datumIso+b.uhrzeit); });
+    };
+    holen(API + '?aktion=termine').then(function(j){
+      if (j._status === 401){ zeige('v-login'); return; }
+      if (!j.ok){ $('termin-fehler').textContent = j.error || 'Fehler beim Laden.'; zeichnen(ausSpeicher(), true); return; }
+      zeichnen(j.termine, false);
+    }).catch(function(){ zeichnen(ausSpeicher(), true); });
+  }
+
+  function listeLaden(id){
+    return holen(API + '?terminId=' + encodeURIComponent(id)).then(function(j){
+      if (j._status === 401) return 'login';
+      if (!j.ok) throw new Error(j.error || 'Fehler');
+      listen[id] = { termin: j.termin, gaeste: j.gaeste, stand: j.stand };
+      offeneAnwenden(id);
+      schreiben(LS_LISTEN, listen);
+      return 'ok';
+    });
+  }
+
+  function terminOeffnen(id){
+    terminId = id; schreiben(LS_TERMIN, id);
+    var weiter = function(){
+      if (!listen[id]){ $('termin-fehler').textContent = 'Diese Liste liegt nicht auf dem Handy und es gibt gerade kein Netz.'; zeige('v-termine'); return; }
+      zeige('v-einlass'); zeichnen(); hashPruefen();
+    };
+    if (!listen[id]) zeige('v-termine');
+    listeLaden(id).then(function(s){ if (s === 'login' && !listen[id]) { zeige('v-login'); return; } weiter(); })
+      .catch(weiter);
+    if (listen[id]) weiter();
+  }
+
+  // ---------- Einchecken (lokal sofort, Server sobald Netz da ist)
+  function offeneAnwenden(id){
+    offen.forEach(function(e){
+      if (e.terminId !== id) return;
+      var g = gastVon(id, e.buchungId); if (!g) return;
+      g.eingechecktAm = e.eingecheckt ? (g.eingechecktAm || e.zeit) : '';
+    });
+  }
+  function gastVon(id, buchungId){ var L = listen[id]; if (!L) return null; for (var i=0;i<L.gaeste.length;i++) if (L.gaeste[i].id === buchungId) return L.gaeste[i]; return null; }
+
+  function setzen(g, eingecheckt){
+    var zeit = new Date().toISOString();
+    g.eingechecktAm = eingecheckt ? zeit : '';
+    offen = offen.filter(function(e){ return !(e.terminId === terminId && e.buchungId === g.id); });
+    offen.push({ terminId: terminId, buchungId: g.id, eingecheckt: eingecheckt, zeit: zeit });
+    schreiben(LS_OFFEN, offen); schreiben(LS_LISTEN, listen);
+    zeichnen(); senden();
+  }
+
+  var sendetGerade = false;
+  function senden(){
+    netzAnzeigen();
+    if (sendetGerade || !offen.length || !navigator.onLine) return;
+    var id = offen[0].terminId;
+    var paket = offen.filter(function(e){ return e.terminId === id; });
+    sendetGerade = true;
+    holen(API, { method:'POST', body: JSON.stringify({ terminId: id, eintraege: paket }) })
+      .then(function(j){
+        if (j._status === 401){ $('stand').textContent = 'Anmeldung abgelaufen – ' + offen.length + ' Einträge warten. Bitte neu anmelden.'; zeige('v-login'); return; }
+        if (!j.ok) return;
+        offen = offen.filter(function(e){ return paket.indexOf(e) < 0; });
+        schreiben(LS_OFFEN, offen);
+        // Stand vom Server übernehmen (andere Handys, Nachträge), eigene offene Einträge drüberlegen.
+        if (listen[id] && j.gaeste){ listen[id].gaeste = j.gaeste.sort(function(a,b){ return a.name.localeCompare(b.name,'de'); }); listen[id].stand = j.stand; offeneAnwenden(id); schreiben(LS_LISTEN, listen); }
+        if (id === terminId) zeichnen();
+      })
+      .catch(function(){})
+      .then(function(){ sendetGerade = false; netzAnzeigen(); if (offen.length && navigator.onLine) setTimeout(senden, 3000); });
+  }
+  setInterval(function(){ if (navigator.onLine && offen.length) senden(); }, 20000);
+
+  // ---------- Anzeige
+  function aktiv(g){ return g.status !== 'storniert'; }
+  function zeichnen(){
+    var L = listen[terminId]; if (!L) return;
+    $('kopf-titel').textContent = datumDe(L.termin.datumIso, L.termin.uhrzeit);
+    $('kopf-unter').textContent = L.termin.titel;
+    var akt = L.gaeste.filter(aktiv);
+    var da = akt.filter(function(g){ return g.eingechecktAm; });
+    var pers = function(a){ return a.reduce(function(s,g){ return s + g.personen; }, 0); };
+    $('z-personen').textContent = pers(da) + ' / ' + pers(akt);
+    $('z-buchungen').textContent = da.length + ' / ' + akt.length;
+    $('stand').textContent = 'Liste vom ' + new Date(L.stand).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) + ' Uhr';
+    var q = $('suche').value.trim().toLowerCase();
+    var box = $('gaeste'); box.innerHTML = '';
+    L.gaeste.filter(function(g){
+      if (filter === 'fehlt' && (g.eingechecktAm || !aktiv(g))) return false;
+      return !q || g.name.toLowerCase().indexOf(q) >= 0 || g.nummer.toLowerCase().indexOf(q) >= 0;
+    }).forEach(function(g){
+      var d = document.createElement('div');
+      d.className = 'gast' + (g.eingechecktAm ? ' da' : '') + (aktiv(g) ? '' : ' storno');
+      var marke = g.status === 'storniert' ? '<span class="marke bad">storniert</span>' : g.status === 'pruefen' ? '<span class="marke warn">Betrag prüfen</span>' : g.status === 'wartet-ueberweisung' ? '<span class="marke warn">Überweisung offen</span>' : '';
+      d.innerHTML = '<div class="wer"><b>' + esc(g.name) + marke + '</b><span>' + g.personen + ' Pers. · ' + (g.fahrzeug === 'eigen' ? 'eigenes Kfz' : g.fahrzeug === 'mitfahrer' ? 'Mitfahrer' : '–') + ' · ' + esc(g.nummer) + (g.eingechecktAm ? ' · da seit ' + uhrzeit(g.eingechecktAm) : '') + '</span></div>' +
+        (g.telefon ? '<a class="tel" href="tel:' + esc(g.telefon.replace(/[^\d+]/g,'')) + '" title="Anrufen">📞</a>' : '') +
+        (aktiv(g) ? '<button class="haken" title="Einchecken">' + (g.eingechecktAm ? '✓' : '') + '</button>' : '');
+      var h = d.querySelector('.haken');
+      if (h) h.onclick = function(){
+        if (g.eingechecktAm){ if (confirm(g.name + ': Einchecken zurücknehmen?')) setzen(g, false); }
+        else setzen(g, true);
+      };
+      box.appendChild(d);
+    });
+    if (!box.children.length) box.innerHTML = '<p class="leise">' + (filter === 'fehlt' ? 'Alle da.' : 'Keine Treffer.') + '</p>';
+    netzAnzeigen();
+  }
+
+  // ---------- Scan-Ergebnis
+  var letzterGast = null;
+  function ergebnis(art, zeichen, gross, name, info, info2, rueckgaengig){
+    var e = $('ergebnis');
+    e.className = 'ergebnis zeigen ' + art;
+    $('e-zeichen').textContent = zeichen; $('e-gross').textContent = gross;
+    $('e-name').textContent = name || ''; $('e-info').textContent = info || ''; $('e-info2').textContent = info2 || '';
+    $('e-zurueck').hidden = !rueckgaengig;
+    try { navigator.vibrate && navigator.vibrate(art === 'ok' ? 120 : [200,100,200]); } catch(x){}
+    scannerPause = true;
+  }
+  $('e-weiter').onclick = function(){ $('ergebnis').className = 'ergebnis'; scannerPause = false; letzterText = ''; };
+  $('e-zurueck').onclick = function(){ if (letzterGast){ setzen(letzterGast, false); } $('e-weiter').onclick(); };
+
+  function codePruefen(text){
+    var m = CODE_RE.exec(text || '');
+    if (!m){ ergebnis('bad','✕','Kein Ticket','', 'Dieser QR-Code gehört nicht zu einer Buchung.'); return; }
+    var nummer = m[1], code = m[2];
+    var L = listen[terminId];
+    var g = null;
+    if (L) L.gaeste.forEach(function(x){ if (x.nummer === nummer) g = x; });
+    if (!g){
+      // Anderer Termin auf dem Handy?
+      var anders = null;
+      Object.keys(listen).forEach(function(id){ if (id === terminId) return; listen[id].gaeste.forEach(function(x){ if (x.nummer === nummer && x.code === code) anders = { g:x, t:listen[id].termin }; }); });
+      if (anders){ ergebnis('bad','✕','Falscher Termin', anders.g.name, 'Gebucht für ' + datumDe(anders.t.datumIso, anders.t.uhrzeit), nummer); return; }
+      // Mit Netz einmal frisch laden (Buchung von heute früh?), dann erneut prüfen.
+      if (navigator.onLine && !codePruefen.nachgeladen){
+        codePruefen.nachgeladen = true;
+        listeLaden(terminId).then(function(){ zeichnen(); codePruefen(text); }).catch(function(){ codePruefen(text); }).then(function(){ codePruefen.nachgeladen = false; });
+        return;
+      }
+      ergebnis('bad','✕','Unbekannt','', 'Buchung ' + nummer + ' steht nicht auf der Liste dieses Termins.', navigator.onLine ? '' : 'Offline: Liste vom ' + new Date(L.stand).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+      return;
+    }
+    if (g.code !== code){ ergebnis('bad','✕','Code ungültig', g.name, 'Die Nummer stimmt, der Code nicht.', 'Ausweis zeigen lassen und im Reiter „Liste“ einchecken.'); return; }
+    if (g.status === 'storniert'){ ergebnis('bad','✕','Storniert', g.name, g.personen + ' Pers. · ' + nummer, 'Diese Buchung wurde storniert.'); return; }
+    if (g.eingechecktAm){ letzterGast = null; ergebnis('warn','!','Schon eingecheckt', g.name, g.personen + ' Pers. · seit ' + uhrzeit(g.eingechecktAm) + ' Uhr', 'Derselbe Code wurde schon gescannt.'); return; }
+    var hinweis = g.status === 'pruefen' ? 'Achtung: Zahlbetrag weicht ab, nachher prüfen.' : g.status === 'wartet-ueberweisung' ? 'Achtung: Überweisung noch nicht eingegangen.' : 'bezahlt';
+    setzen(g, true);
+    letzterGast = g;
+    ergebnis(g.status === 'bezahlt' ? 'ok' : 'warn', g.status === 'bezahlt' ? '✓' : '!', g.personen > 1 ? g.personen + ' Personen' : '1 Person', g.name, nummer + ' · ' + (g.fahrzeug === 'eigen' ? 'eigenes Kfz' : 'Mitfahrer'), hinweis, true);
+  }
+
+  // Code aus der Adresse (Handy-Kamera hat den QR-Code direkt geöffnet)
+  function hashPruefen(){
+    var h = decodeURIComponent(location.hash || '');
+    if (CODE_RE.test(h)){ history.replaceState(null, '', location.pathname + location.search); codePruefen(h); }
+  }
+
+  // ---------- Kamera
+  var video = $('video'), strom = null, scannerPause = false, letzterText = '', detektor = null;
+  var leinwand = document.createElement('canvas'), ctx = leinwand.getContext('2d', { willReadFrequently: true });
+  try { if ('BarcodeDetector' in window) detektor = new BarcodeDetector({ formats: ['qr_code'] }); } catch(e){ detektor = null; }
+
+  function kameraStarten(){
+    $('kamera-fehler').textContent = '';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ $('kamera-fehler').textContent = 'Dieser Browser gibt die Kamera nicht frei. Liste benutzen.'; return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 1280 } }, audio: false })
+      .then(function(s){
+        strom = s; video.srcObject = s; video.play();
+        $('kamera-start').hidden = true; $('rahmen').hidden = false; $('scan-hinweis').hidden = false;
+        requestAnimationFrame(schleife);
+      })
+      .catch(function(err){ $('kamera-fehler').textContent = 'Kamera nicht erlaubt (' + (err && err.name || 'Fehler') + '). In den Browser-Einstellungen die Kamera für diese Seite erlauben.'; });
+  }
+  function kameraStoppen(){ if (strom){ strom.getTracks().forEach(function(t){ t.stop(); }); strom = null; } $('kamera-start').hidden = false; $('rahmen').hidden = true; $('scan-hinweis').hidden = true; }
+
+  var arbeitet = false;
+  function schleife(){
+    if (!strom) return;
+    requestAnimationFrame(schleife);
+    if (scannerPause || arbeitet || video.readyState < 2) return;
+    arbeitet = true;
+    var fertig = function(text){
+      arbeitet = false;
+      if (text && text !== letzterText && !scannerPause){ letzterText = text; codePruefen(text); }
+    };
+    if (detektor){
+      detektor.detect(video).then(function(c){ fertig(c && c[0] ? c[0].rawValue : ''); }).catch(function(){ detektor = null; fertig(''); });
+      return;
+    }
+    var w = video.videoWidth, h = video.videoHeight; if (!w){ arbeitet = false; return; }
+    var s = Math.min(1, 720 / Math.max(w, h));
+    leinwand.width = Math.round(w*s); leinwand.height = Math.round(h*s);
+    ctx.drawImage(video, 0, 0, leinwand.width, leinwand.height);
+    var bild = ctx.getImageData(0, 0, leinwand.width, leinwand.height);
+    var r = window.jsQR ? jsQR(bild.data, bild.width, bild.height, { inversionAttempts: 'dontInvert' }) : null;
+    fertig(r ? r.data : '');
+  }
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) kameraStoppen(); });
+
+  // ---------- Bedienung
+  $('b-login').onclick = anmelden;
+  $('pw').addEventListener('keydown', function(e){ if (e.key === 'Enter') anmelden(); });
+  $('b-kamera').onclick = kameraStarten;
+  $('r-scan').onclick = function(){ $('r-scan').className = 'an'; $('r-liste').className = ''; $('t-scan').hidden = false; $('t-liste').hidden = true; };
+  $('r-liste').onclick = function(){ $('r-liste').className = 'an'; $('r-scan').className = ''; $('t-scan').hidden = true; $('t-liste').hidden = false; kameraStoppen(); zeichnen(); };
+  $('f-alle').onclick = function(){ filter = 'alle'; $('f-alle').className = 'an'; $('f-fehlt').className = ''; zeichnen(); };
+  $('f-fehlt').onclick = function(){ filter = 'fehlt'; $('f-fehlt').className = 'an'; $('f-alle').className = ''; zeichnen(); };
+  $('suche').addEventListener('input', zeichnen);
+  $('b-neu').onclick = function(){ if (!navigator.onLine){ alert('Kein Netz. Die Liste auf dem Handy bleibt.'); return; } senden(); listeLaden(terminId).then(function(s){ if (s === 'login') zeige('v-login'); else zeichnen(); }).catch(function(e){ alert('Neu laden fehlgeschlagen: ' + e.message); }); };
+  $('b-termin').onclick = function(){ kameraStoppen(); entfernen(LS_TERMIN); terminId = ''; termineLaden(); };
+  $('b-loeschen').onclick = function(){
+    if (offen.length && !confirm(offen.length + ' Einträge sind noch nicht beim Server angekommen. Trotzdem löschen?')) return;
+    if (!offen.length && !confirm('Gästeliste dieses Termins vom Handy löschen?')) return;
+    delete listen[terminId]; offen = offen.filter(function(e){ return e.terminId !== terminId; });
+    schreiben(LS_LISTEN, listen); schreiben(LS_OFFEN, offen);
+    kameraStoppen(); entfernen(LS_TERMIN); terminId = ''; termineLaden();
+  };
+
+  // ---------- Start
+  function start(){
+    var wunsch = new URLSearchParams(location.search).get('termin') || lesen(LS_TERMIN, '');
+    if (wunsch) terminOeffnen(wunsch); else termineLaden();
+  }
+  window.addEventListener('hashchange', function(){ if (terminId && listen[terminId]) hashPruefen(); });
+  netzAnzeigen();
+  start();
+  senden();
+
+  // Offline: Seite und Scanner im Handy zwischenspeichern
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/einlass-sw.js', { scope: '/einlass' }).catch(function(){});
+})();
+</script>
+</body>
+</html>

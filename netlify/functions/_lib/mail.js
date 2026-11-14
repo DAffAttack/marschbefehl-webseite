@@ -44,7 +44,7 @@ function slug(t) {
  */
 async function mailSenden(m) {
   const art = betriebsart();
-  const anhaenge = (m.anhaenge || []).map((a) => ({ dateiname: a.dateiname, inhalt: Buffer.from(a.inhalt), typ: a.typ }));
+  const anhaenge = (m.anhaenge || []).map((a) => ({ dateiname: a.dateiname, inhalt: Buffer.from(a.inhalt), typ: a.typ, inlineId: a.inlineId || '' }));
 
   if (art === 'attrappe') {
     const ordner = attrappeOrdner();
@@ -70,7 +70,9 @@ async function mailSenden(m) {
     html: m.html,
   };
   if (m.kopie && kopieAn()) body.bcc = [kopieAn()];
-  if (anhaenge.length) body.attachments = anhaenge.map((a) => ({ filename: a.dateiname, content: a.inhalt.toString('base64') }));
+  if (anhaenge.length) body.attachments = anhaenge.map((a) => (a.inlineId
+    ? { filename: a.dateiname, content: a.inhalt.toString('base64'), content_type: a.typ, content_id: a.inlineId } // im HTML als cid:<inlineId>
+    : { filename: a.dateiname, content: a.inhalt.toString('base64') }));
 
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -108,6 +110,22 @@ function esc(t) {
   return String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
+// QR-Code für den Einlass am Treffpunkt (Bild hängt als Inline-Anhang cid:einlass-qr an,
+// zusätzlich als Ticket-PDF). Ohne Code (Altbuchung) bleibt der Block leer.
+function einlassBlock(buchung) {
+  if (!buchung.einlassCode) return { text: '', html: '' };
+  return {
+    text: 'Ihr Ticket: Bitte zeigen Sie am Treffpunkt den QR-Code vor (im Anhang als Ticket-' + buchung.nummer + '.pdf, auf dem Handy oder ausgedruckt). Ein Code gilt für alle Personen dieser Buchung. Einlass-Code: ' + buchung.nummer + '.' + buchung.einlassCode + '\n\n',
+    html:
+      '<div style="text-align:center;border:1px solid #E3E3DC;border-radius:12px;padding:18px;margin:18px 0;">' +
+      '<p style="font-weight:600;margin:0 0 4px;">Ihr Ticket für den Treffpunkt</p>' +
+      '<p style="color:#555;font-size:13px;margin:0 0 12px;">Bitte diesen Code am Treffpunkt vorzeigen. Er gilt für alle Personen dieser Buchung.</p>' +
+      '<img src="cid:einlass-qr" width="220" height="220" alt="QR-Code ' + esc(buchung.nummer) + '" style="display:block;margin:0 auto;width:220px;height:220px;">' +
+      '<p style="font-weight:700;font-size:16px;margin:10px 0 0;">' + esc(buchung.nummer) + '</p>' +
+      '<p style="color:#777;font-size:12px;margin:4px 0 0;">Wird das Bild nicht angezeigt: Das Ticket hängt auch als PDF an.</p></div>',
+  };
+}
+
 function bestaetigungsMail({ buchung, fuehrung, termin, rechnungsnummer }) {
   const wann = datumLesbar(termin.datumIso, termin.uhrzeit);
   const betreff = 'Buchung ' + buchung.nummer + ' bestätigt: ' + fuehrung.titel + ' am ' + wann;
@@ -132,13 +150,15 @@ function bestaetigungsMail({ buchung, fuehrung, termin, rechnungsnummer }) {
   const text =
     'Hallo ' + buchung.name + ',\n\nvielen Dank, die Buchung ist bestätigt und bezahlt.\n\n' +
     daten.map(([k, v]) => k + ': ' + v).join('\n') +
-    '\n\nHinweise:\n' + hinweise.map((h) => '- ' + h).join('\n') +
+    '\n\n' + einlassBlock(buchung).text +
+    'Hinweise:\n' + hinweise.map((h) => '- ' + h).join('\n') +
     '\n\n' + zello.text +
     '\n\nBis bald im Oderbruch\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
   const html = htmlRahmen(
     'Buchung bestätigt',
     '<p>Hallo ' + esc(buchung.name) + ',</p><p>vielen Dank, die Buchung ist bestätigt und bezahlt. Die Rechnung hängt als PDF an.</p>' +
       tabelle(daten.map(([k, v]) => [esc(k), esc(v)])) +
+      einlassBlock(buchung).html +
       '<p style="font-weight:600;margin-bottom:6px;">Hinweise</p><ul style="padding-left:18px;color:#444;">' + hinweise.map((h) => '<li style="margin-bottom:6px;">' + esc(h) + '</li>').join('') + '</ul>' +
       zello.html +
       '<p>Bis bald im Oderbruch<br>Enrico Holland<br>Zeitreise Seelower Höhen · <a href="https://marschbefehl.com" style="color:#6F8F2E;">marschbefehl.com</a></p>'
@@ -166,13 +186,15 @@ function erinnerungsMail({ buchung, fuehrung, termin }) {
   const text =
     'Hallo ' + buchung.name + ',\n\nin drei Tagen ist es so weit. Hier die letzten Hinweise:\n\n' +
     daten.map(([k, v]) => k + ': ' + v).join('\n') +
-    '\n\n' + hinweise.map((h) => '- ' + h).join('\n') +
+    '\n\n' + einlassBlock(buchung).text +
+    hinweise.map((h) => '- ' + h).join('\n') +
     '\n\n' + zello.text +
     '\n\nBis bald im Oderbruch\nEnrico Holland\nZeitreise Seelower Höhen · marschbefehl.com\n';
   const html = htmlRahmen(
     'In drei Tagen geht es los',
     '<p>Hallo ' + esc(buchung.name) + ',</p><p>in drei Tagen ist es so weit. Hier die letzten Hinweise:</p>' +
       tabelle(daten.map(([k, v]) => [esc(k), esc(v)])) +
+      einlassBlock(buchung).html +
       '<ul style="padding-left:18px;color:#444;">' + hinweise.map((h) => '<li style="margin-bottom:6px;">' + esc(h) + '</li>').join('') + '</ul>' +
       zello.html +
       '<p>Bis bald im Oderbruch<br>Enrico Holland<br>Zeitreise Seelower Höhen · <a href="https://marschbefehl.com" style="color:#6F8F2E;">marschbefehl.com</a></p>'

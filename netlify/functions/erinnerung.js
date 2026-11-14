@@ -9,6 +9,7 @@
 const { readState, withState, findFuehrung, protokoll, blobsVerbinden } = require('./_lib/store');
 const { mailSenden, erinnerungsMail } = require('./_lib/mail');
 const { zelloAnhang } = require('./_lib/zello');
+const { codeSicherstellen, einlassAnhaenge } = require('./_lib/einlass');
 const { ueberweisungErinnern, ERINNERUNG_NACH_TAGEN } = require('./_lib/ueberweisung');
 
 const VORLAUF_TAGE = 3;
@@ -33,6 +34,16 @@ exports.handler = async (event) => {
   let gesendet = 0;
   let fehlgeschlagen = 0;
   try {
+    // Einlass-Codes für alle fälligen Buchungen sicherstellen (Buchungen vor dem 14.11.2026
+    // haben noch keinen), damit die Erinnerung den QR-Code mitbringt.
+    await withState((st) => {
+      let geaendert = false;
+      for (const b of st.buchungen) {
+        const t = st.termine.find((x) => x.id === b.terminId);
+        if (b.status === 'bezahlt' && !b.erinnertAm && t && t.datumIso === ziel && codeSicherstellen(b)) geaendert = true;
+      }
+      return geaendert ? { ok: true } : { ok: false, status: 200, error: 'nichts zu tun' };
+    });
     const state = await readState();
     const faellig = state.buchungen.filter((b) => {
       if (b.status !== 'bezahlt' || b.erinnertAm) return false;
@@ -45,7 +56,7 @@ exports.handler = async (event) => {
       if (!termin || !fuehrung) continue;
       const m = erinnerungsMail({ buchung: b, fuehrung, termin });
       try {
-        const erg = await mailSenden({ an: b.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: await zelloAnhang() });
+        const erg = await mailSenden({ an: b.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: (await einlassAnhaenge({ buchung: b, fuehrung, termin })).concat(await zelloAnhang()) });
         await withState((st) => {
           const x = st.buchungen.find((y) => y.id === b.id);
           if (x) {

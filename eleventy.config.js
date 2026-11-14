@@ -15,6 +15,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("assets");
   eleventyConfig.addPassthroughCopy("*.html");
   eleventyConfig.addPassthroughCopy("robots.txt");
+  eleventyConfig.addPassthroughCopy("einlass-sw.js");
   // Noch nicht nach Markdown umgezogene Artikel weiterhin ausliefern.
   eleventyConfig.addPassthroughCopy("artikel/*.html");
 
