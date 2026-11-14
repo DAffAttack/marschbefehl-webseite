@@ -402,7 +402,8 @@ function zahlartAusDetails(d) {
   if (d.type === 'card' && d.card) {
     const marke = MARKE_TEXT[d.card.brand] || (d.card.brand ? d.card.brand : '');
     const wallet = d.card.wallet && WALLET_TEXT[d.card.wallet.type];
-    return { typ: wallet ? d.card.wallet.type : 'card', text: wallet ? wallet + (marke ? ' (' + marke + ')' : '') : 'Karte' + (marke ? ' ' + marke : '') };
+    // Anzeige nur die Kartenmarke (sein Wunsch 14.11.2026: „Visa würde reichen“), auch bei Apple Pay, Google Pay, Link.
+    return { typ: wallet ? d.card.wallet.type : 'card', text: marke || wallet || 'Karte', wallet: wallet || '' };
   }
   return { typ: d.type, text: ZAHLART_TEXT[d.type] || d.type };
 }
