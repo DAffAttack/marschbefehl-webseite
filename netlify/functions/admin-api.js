@@ -102,6 +102,14 @@ async function bildLoeschenBestEffort(imageId) {
 // noch ohne gespeicherte Zahlart, werden beim Laden der Liste bei Stripe nachgefragt
 // (höchstens 15 je Aufruf, parallel; Fehler sind still, es wird beim nächsten Mal erneut
 // versucht). Einmal ermittelt, steht sie fest in der Buchung (Feld "zahlart").
+// Ältere Einträge ("Link (Visa)", "Karte Mastercard") auf die Kartenmarke kürzen.
+function zahlartKurz(text) {
+  const t = String(text || '');
+  const klammer = /\(([^)]+)\)$/.exec(t);
+  if (klammer) return klammer[1];
+  return t.replace(/^Karte (.+)$/, '$1');
+}
+
 async function zahlartenNachtragen() {
   try {
     const state = await readState();
@@ -245,7 +253,7 @@ exports.handler = async (event) => {
           bezahltAm: b.bezahltAm || null,
           erstelltAm: b.erstelltAm,
           rechnungsnummer: b.rechnungsnummer || null,
-          zahlart: b.zahlart ? b.zahlart.text : (b.ueberweisung ? 'Banküberweisung' : null),
+          zahlart: b.zahlart ? zahlartKurz(b.zahlart.text) : (b.ueberweisung ? 'Banküberweisung' : null),
           mailBestaetigungAm: b.mailBestaetigungAm || null,
           erinnertAm: b.erinnertAm || null,
           stripeSessionId: b.stripeSessionId || null,

@@ -1347,7 +1347,7 @@
         '<div class="uebersicht-stat"><div class="zahl">' + gesamtPersonen + '</div><div class="label">Personen gesamt</div></div>' +
       '</div>' +
       '<table class="uebersicht-table"><thead><tr>' +
-        '<th>Führung</th><th>Termin</th><th>Name</th><th>E-Mail</th><th>Personen</th><th>Bezahlt mit</th><th></th>' +
+        '<th>Führung</th><th>Termin</th><th>Name</th><th>E-Mail</th><th>Personen</th><th style="white-space:nowrap;">Bezahlt mit</th><th></th>' +
       '</tr></thead><tbody>' +
       zeilen.map(function(z){
         var b = z.buchung;
@@ -1357,8 +1357,8 @@
           '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
           '<td>' + escapeHtml(b.email) + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
           '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
-          '<td>' + zahlartText(b) + '</td>' +
-          '<td style="white-space:nowrap;">' + rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</td>' +
+          '<td style="white-space:nowrap;">' + zahlartText(b) + '</td>' +
+          '<td><div style="display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:120px;">' + rechnungLink(b) + mailErneutKnopf(b) + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</div></td>' +
         '</tr>';
       }).join('') +
       '</tbody></table>';
