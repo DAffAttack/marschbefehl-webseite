@@ -880,6 +880,7 @@
           '<button type="button" class="btn-secondary btn-toggle-buchungen">Buchungen (' + buchungenFuerTermin.filter(function(b){ return !istInaktiv(b); }).length + ')</button>' +
           (t.istVergangenheit ? '' : '<button type="button" class="btn-secondary btn-toggle-edit">Bearbeiten</button>') +
           '<a class="btn-secondary" style="text-decoration:none;" href="/.netlify/functions/teilnehmerliste?terminId=' + t.id + '" target="_blank" rel="noopener" title="Teilnehmerliste als PDF (bezahlte Buchungen)">Teilnehmerliste</a>' +
+          '<a class="btn-secondary" style="text-decoration:none;" href="/einlass.html?termin=' + t.id + '" target="_blank" rel="noopener" title="Einlass am Treffpunkt: QR-Codes scannen, Gäste abhaken (auch offline)">Einlass</a>' +
           (t.status === 'abgesagt' ? '<span class="status-badge status-storniert" title="' + escapeHtml(t.absageGrund || '') + '">abgesagt</span>' : '<button type="button" class="btn-secondary btn-cancel-termin" title="Alle Buchungen stornieren und erstatten, Termin bleibt als abgesagt stehen">Absagen</button>') +
           '<button type="button" class="btn-danger btn-delete-termin">Löschen</button>' +
         '</div>' +

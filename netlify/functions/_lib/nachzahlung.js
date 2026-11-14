@@ -12,6 +12,7 @@ const { withState, readState, findFuehrung, protokoll, neueRechnungsnummer, getR
 const { rechnungPdf } = require('./rechnung');
 const { mailSenden, bestaetigungsMail, neueBuchungMail, kopieAn } = require('./mail');
 const { zelloAnhang } = require('./zello');
+const { codeSicherstellen, einlassAnhaenge } = require('./einlass');
 
 async function rechnungSicherstellen(buchungId) {
   // 1) Nummer vergeben (atomar) und Daten holen
@@ -24,10 +25,11 @@ async function rechnungSicherstellen(buchungId) {
       b.rechnungsdatum = new Date().toISOString();
       protokoll(state, { art: 'rechnung-nummer', buchungId: b.id, nummer: b.nummer, text: b.rechnungsnummer });
     }
+    codeSicherstellen(b); // Einlass-Code für QR-Code und Ticket
     const termin = state.termine.find((t) => t.id === b.terminId) || null;
     const fuehrung = findFuehrung(state, b.fuehrungId);
     return { ok: true, buchung: JSON.parse(JSON.stringify(b)), termin, fuehrung };
-  }, { bestaetigen: (state, result) => state.buchungen.some((x) => x.id === buchungId && x.rechnungsnummer === result.buchung.rechnungsnummer) });
+  }, { bestaetigen: (state, result) => state.buchungen.some((x) => x.id === buchungId && x.rechnungsnummer === result.buchung.rechnungsnummer && x.einlassCode === result.buchung.einlassCode) });
   if (!r.ok) return r;
   if (!r.termin || !r.fuehrung) return { ok: false, status: 500, error: 'Termin oder Führung zur Buchung fehlt.' };
 
@@ -55,7 +57,7 @@ async function nachZahlung(buchungId, opt) {
   const m = bestaetigungsMail({ buchung: r.buchung, fuehrung: r.fuehrung, termin: r.termin, rechnungsnummer: r.buchung.rechnungsnummer });
   let ergebnis;
   try {
-    ergebnis = await mailSenden({ an: r.buchung.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: [{ dateiname: 'Rechnung-' + r.buchung.rechnungsnummer + '.pdf', inhalt: r.pdf, typ: 'application/pdf' }].concat(await zelloAnhang()) });
+    ergebnis = await mailSenden({ an: r.buchung.email, betreff: m.betreff, text: m.text, html: m.html, anhaenge: [{ dateiname: 'Rechnung-' + r.buchung.rechnungsnummer + '.pdf', inhalt: r.pdf, typ: 'application/pdf' }].concat(await einlassAnhaenge({ buchung: r.buchung, fuehrung: r.fuehrung, termin: r.termin }), await zelloAnhang()) });
   } catch (err) {
     console.error('nachZahlung: Bestätigungsmail fehlgeschlagen:', err.message);
     await withState((state) => {
