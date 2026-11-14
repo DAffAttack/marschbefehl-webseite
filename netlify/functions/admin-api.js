@@ -18,7 +18,7 @@
 
 const crypto = require('crypto');
 const { withState, readState, belegtePersonen, terminDatumZeit, findFuehrung, neueId, getBilderStore, blobsVerbinden, protokoll, speicherIstLive } = require('./_lib/store');
-const { testUeberweisungEingang } = require('./_lib/zahlung');
+const { testUeberweisungEingang, zahlartErmitteln } = require('./_lib/zahlung');
 const {
   json,
   errorResponse,
@@ -98,6 +98,34 @@ async function bildLoeschenBestEffort(imageId) {
   }
 }
 
+// Zahlart (PayPal, Karte, Apple Pay …) für die Verwaltung: Buchungen mit Zahlung, aber
+// noch ohne gespeicherte Zahlart, werden beim Laden der Liste bei Stripe nachgefragt
+// (höchstens 15 je Aufruf, parallel; Fehler sind still, es wird beim nächsten Mal erneut
+// versucht). Einmal ermittelt, steht sie fest in der Buchung (Feld "zahlart").
+async function zahlartenNachtragen() {
+  try {
+    const state = await readState();
+    const offen = state.buchungen
+      .filter((b) => !b.zahlart && (b.stripePaymentIntent || b.ueberweisung) && (b.bezahltAm || b.status === 'wartet-ueberweisung' || b.status === 'pruefen'))
+      .slice(0, 15);
+    if (!offen.length) return;
+    const ergebnisse = await Promise.all(offen.map((b) => zahlartErmitteln(b).then((z) => ({ id: b.id, z, ueberweisung: b.status === 'wartet-ueberweisung' })).catch((err) => { console.error('zahlart ' + b.nummer + ':', err.message); return null; })));
+    const treffer = ergebnisse.filter((e) => e && e.z);
+    if (!treffer.length) return;
+    await withState((st) => {
+      let n = 0;
+      for (const e of treffer) {
+        const b = st.buchungen.find((x) => x.id === e.id);
+        // Bei offener Überweisung nur vorläufig anzeigen, nicht festschreiben (die Zahlung kommt später).
+        if (b && !b.zahlart && !e.ueberweisung) { b.zahlart = e.z; n++; }
+      }
+      return n ? { ok: true } : { ok: false, status: 200, error: 'unverändert' };
+    });
+  } catch (err) {
+    console.error('zahlartenNachtragen:', err.message);
+  }
+}
+
 exports.handler = async (event) => {
   blobsVerbinden(event);
   if (event.httpMethod !== 'POST') {
@@ -164,6 +192,7 @@ exports.handler = async (event) => {
   try {
 
     if (action === 'list') {
+      await zahlartenNachtragen();
       const state = await readState();
       const fuehrungen = state.fuehrungen
         .slice()
@@ -216,6 +245,7 @@ exports.handler = async (event) => {
           bezahltAm: b.bezahltAm || null,
           erstelltAm: b.erstelltAm,
           rechnungsnummer: b.rechnungsnummer || null,
+          zahlart: b.zahlart ? b.zahlart.text : (b.ueberweisung ? 'Banküberweisung' : null),
           mailBestaetigungAm: b.mailBestaetigungAm || null,
           erinnertAm: b.erinnertAm || null,
           stripeSessionId: b.stripeSessionId || null,
