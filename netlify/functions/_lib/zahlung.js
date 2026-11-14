@@ -388,7 +388,40 @@ async function zahlungenAbrufen({ seit }) {
   });
 }
 
+/**
+ * Womit der Gast bezahlt hat (für die Verwaltung). Fragt bei Stripe die Zahlung ab und
+ * liefert { typ, text }, z. B. { typ:'paypal', text:'PayPal' } oder
+ * { typ:'card', text:'Karte Visa · Apple Pay' }. null, wenn (noch) nicht bestimmbar.
+ */
+const ZAHLART_TEXT = { card: 'Karte', paypal: 'PayPal', klarna: 'Klarna', customer_balance: 'Banküberweisung', sepa_debit: 'Lastschrift', link: 'Link', sofort: 'Sofort', giropay: 'Giropay', eps: 'EPS', amazon_pay: 'Amazon Pay', revolut_pay: 'Revolut Pay' };
+const MARKE_TEXT = { visa: 'Visa', mastercard: 'Mastercard', amex: 'Amex', maestro: 'Maestro', discover: 'Discover', jcb: 'JCB', unionpay: 'UnionPay', diners: 'Diners', cartes_bancaires: 'CB' };
+const WALLET_TEXT = { apple_pay: 'Apple Pay', google_pay: 'Google Pay', link: 'Link', samsung_pay: 'Samsung Pay' };
+
+function zahlartAusDetails(d) {
+  if (!d || !d.type) return null;
+  if (d.type === 'card' && d.card) {
+    const marke = MARKE_TEXT[d.card.brand] || (d.card.brand ? d.card.brand : '');
+    const wallet = d.card.wallet && WALLET_TEXT[d.card.wallet.type];
+    return { typ: wallet ? d.card.wallet.type : 'card', text: wallet ? wallet + (marke ? ' (' + marke + ')' : '') : 'Karte' + (marke ? ' ' + marke : '') };
+  }
+  return { typ: d.type, text: ZAHLART_TEXT[d.type] || d.type };
+}
+
+async function zahlartErmitteln(buchung) {
+  if (buchung.ueberweisung && buchung.status === 'wartet-ueberweisung') return { typ: 'customer_balance', text: 'Banküberweisung' };
+  const art = betriebsart();
+  if (art === 'attrappe') return buchung.ueberweisung ? { typ: 'customer_balance', text: 'Banküberweisung' } : { typ: 'card', text: 'Karte (Probe)' };
+  if (art !== 'stripe' || !buchung.stripePaymentIntent) return null;
+  const pi = await client().paymentIntents.retrieve(buchung.stripePaymentIntent, { expand: ['latest_charge'] });
+  const ch = pi && pi.latest_charge && typeof pi.latest_charge === 'object' ? pi.latest_charge : null;
+  if (ch && ch.payment_method_details) return zahlartAusDetails(ch.payment_method_details);
+  if (buchung.ueberweisung) return { typ: 'customer_balance', text: 'Banküberweisung' };
+  return null;
+}
+
 module.exports = {
+  zahlartErmitteln,
+  zahlartAusDetails,
   betriebsart,
   attrappeAktiv,
   basisUrl,
