@@ -519,6 +519,9 @@
           '<form class="booking-form" novalidate>' +
             (vorab ? '<div class="full"><label>Vorab-Code</label><input type="text" name="vorabCode" required maxlength="20" autocomplete="off" value="' + escapeHtml(vorabCodeAusLink) + '"></div>' : '') +
             '<div class="full"><label>Name</label><input type="text" name="name" required maxlength="120" autocomplete="name"></div>' +
+            '<div class="full"><label>Straße und Hausnummer (für die Rechnung)</label><input type="text" name="strasse" required maxlength="120" autocomplete="street-address"></div>' +
+            '<div><label>PLZ</label><input type="text" name="plz" required maxlength="10" autocomplete="postal-code" inputmode="numeric"></div>' +
+            '<div><label>Ort</label><input type="text" name="ort" required maxlength="80" autocomplete="address-level2"></div>' +
             '<div><label>E-Mail</label><input type="email" name="email" required maxlength="200" autocomplete="email"></div>' +
             '<div><label>Telefon (für Rückfragen am Tourtag)</label><input type="tel" name="telefon" required maxlength="30" autocomplete="tel"></div>' +
             '<div><label>Personen</label><input type="number" name="personen" required min="1" max="30" value="1"></div>' +
@@ -568,6 +571,9 @@
 
         var name = form.elements.name.value.trim();
         var email = form.elements.email.value.trim();
+        var strasse = form.elements.strasse.value.trim();
+        var plz = form.elements.plz.value.trim();
+        var ort = form.elements.ort.value.trim();
         var telefon = form.elements.telefon.value.trim();
         var personen = parseInt(form.elements.personen.value, 10);
         var fahrzeug = form.elements.fahrzeug.value;
@@ -579,6 +585,7 @@
         function fehler(msg){ errorEl.textContent = msg; errorEl.classList.add('is-visible'); }
         if(form.elements.vorabCode && !vorabCode){ fehler('Bitte den Vorab-Code angeben.'); return; }
         if(!name){ fehler('Bitte einen Namen angeben.'); return; }
+        if(!strasse || !plz || !ort){ fehler('Bitte die vollständige Anschrift angeben (Straße, PLZ, Ort). Sie steht auf der Rechnung.'); return; }
         if(!email){ fehler('Bitte eine E-Mail-Adresse angeben.'); return; }
         if(!telefon){ fehler('Bitte eine Telefonnummer angeben (für Rückfragen am Tourtag).'); return; }
         if(!personen || personen < 1){ fehler('Bitte eine gültige Personenzahl angeben.'); return; }
@@ -592,7 +599,7 @@
         fetch('/.netlify/functions/buchung-anlegen', {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({terminId:t.id, name:name, email:email, telefon:telefon, personen:personen, fahrzeug:fahrzeug, agb:agb, firma:firma, vorabCode:vorabCode})
+          body:JSON.stringify({terminId:t.id, name:name, strasse:strasse, plz:plz, ort:ort, email:email, telefon:telefon, personen:personen, fahrzeug:fahrzeug, agb:agb, firma:firma, vorabCode:vorabCode})
         })
         .then(function(res){ return res.json().then(function(data){ return {status:res.status, data:data}; }); })
         .then(function(r){

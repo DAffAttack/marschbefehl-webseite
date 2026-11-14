@@ -206,6 +206,7 @@ exports.handler = async (event) => {
           name: b.name,
           email: b.email,
           telefon: b.telefon || '',
+          anschrift: b.anschrift || null,
           personen: b.personen,
           fahrzeug: b.fahrzeug || '',
           vorab: b.vorab === true,

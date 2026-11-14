@@ -40,7 +40,7 @@ const GEHEIM = 'Geheimer Treffpunkt ' + lauf + ', 15306 Seelow';
   pruef('Öffentliche Termine ohne Adresse', termine.status === 200 && !termine.text.includes('Geheimer'), 'Status ' + termine.status);
 
   // 3) Buchung: Antworten ohne Adresse, Mail mit Adresse
-  const b = await post('buchung-anlegen', { terminId: t.id, name: 'Treffpunkt Prüfgast', email: 'treffpunkt-' + lauf + '@example.com', telefon: '0170 1234', personen: 1, fahrzeug: 'eigen', agb: true, firma: '' });
+  const b = await post('buchung-anlegen', { terminId: t.id, name: 'Treffpunkt Prüfgast', email: 'treffpunkt-' + lauf + '@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 1234', personen: 1, fahrzeug: 'eigen', agb: true, firma: '' });
   pruef('Buchung angelegt, Antwort ohne Adresse', b.status === 200 && !b.roh.includes('Geheimer'), b.j.nummer);
   const s = new URL(b.j.url).searchParams.get('s');
   const z = await post('attrappe-bezahlen', { nr: b.j.nummer, s, ergebnis: 'bezahlt' });
@@ -74,7 +74,7 @@ const GEHEIM = 'Geheimer Treffpunkt ' + lauf + ', 15306 Seelow';
   const altD = JSON.parse((await roh('fuehrungen-oeffentlich?id=' + alt.j.fuehrung.id)).text);
   pruef('Ohne Treffpunkt: kein Hinweis, Ort öffentlich', altD.fuehrung.treffpunktNachBuchung === false && altD.fuehrung.ort === 'Öffentlicher Platz ' + lauf);
   const altT = (await admin('create-termin', { fuehrungId: alt.j.fuehrung.id, datumIso: '2027-04-17', uhrzeit: '09:00', maxPersonen: 10 })).j.termin;
-  const b2 = await post('buchung-anlegen', { terminId: altT.id, name: 'Ohne Treffpunkt', email: 'ohne-' + lauf + '@example.com', telefon: '0170 1235', personen: 1, fahrzeug: 'eigen', agb: true, firma: '' });
+  const b2 = await post('buchung-anlegen', { terminId: altT.id, name: 'Ohne Treffpunkt', email: 'ohne-' + lauf + '@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 1235', personen: 1, fahrzeug: 'eigen', agb: true, firma: '' });
   await post('attrappe-bezahlen', { nr: b2.j.nummer, s: new URL(b2.j.url).searchParams.get('s'), ergebnis: 'bezahlt' });
   const m2 = dateien().filter((d) => d.includes(b2.j.nummer.toLowerCase()) && d.endsWith('.txt'));
   pruef('Ohne Treffpunkt: Mail nennt den Ort', m2.length > 0 && fs.readFileSync(path.join(AUSGANG, m2[0]), 'utf8').includes('Treffpunkt: Öffentlicher Platz ' + lauf));

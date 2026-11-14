@@ -32,7 +32,7 @@ async function get(fn) { const r = await fetch(B + fn); return { status: r.statu
 async function adminListe() { const r = await post('admin-api', { action: 'list', password: PW }); if (!r.j.ok) throw new Error('Verwaltung: ' + (r.j.error || r.status)); return r.j; }
 const lauf = Date.now().toString(36);
 function gast(n, personen, terminId) {
-  return { terminId, name: 'Prüfgast ' + lauf + '-' + n, email: 'pruef-' + lauf + '-' + n + '@example.com', telefon: '0170 000' + n, personen, fahrzeug: 'eigen', agb: true, firma: '' };
+  return { terminId, name: 'Prüfgast ' + lauf + '-' + n, email: 'pruef-' + lauf + '-' + n + '@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 000' + n, personen, fahrzeug: 'eigen', agb: true, firma: '' };
 }
 
 (async () => {

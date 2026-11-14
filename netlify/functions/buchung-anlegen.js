@@ -47,6 +47,7 @@ function clientIp(event) {
 }
 
 const TELEFON_RE = /^[0-9+\s\/()-]{6,30}$/;
+const PLZ_RE = /^[0-9A-Za-z\s-]{3,10}$/;
 
 exports.handler = async (event) => {
   blobsVerbinden(event);
@@ -72,6 +73,9 @@ exports.handler = async (event) => {
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const telefon = typeof body.telefon === 'string' ? body.telefon.trim() : '';
+  const strasse = typeof body.strasse === 'string' ? body.strasse.trim() : '';
+  const plz = typeof body.plz === 'string' ? body.plz.trim() : '';
+  const ort = typeof body.ort === 'string' ? body.ort.trim() : '';
   const fahrzeug = body.fahrzeug === 'mitfahrer' ? 'mitfahrer' : body.fahrzeug === 'eigen' ? 'eigen' : '';
   const personen = Number(body.personen);
   const agb = body.agb === true;
@@ -79,6 +83,10 @@ exports.handler = async (event) => {
 
   if (!terminId) return errorResponse(400, 'Kein Termin angegeben.');
   if (!isNichtLeererText(name, 120)) return errorResponse(400, 'Bitte einen Namen angeben.');
+  // Anschrift steht auf der Rechnung (14.11.2026). PLZ locker, damit auch PL/AT/CH gehen.
+  if (!isNichtLeererText(strasse, 120) || !PLZ_RE.test(plz) || !isNichtLeererText(ort, 80)) {
+    return errorResponse(400, 'Bitte die vollständige Anschrift angeben (Straße, PLZ, Ort). Sie steht auf der Rechnung.');
+  }
   if (!istGueltigeEmail(email)) return errorResponse(400, 'Bitte eine gültige E-Mail-Adresse angeben.');
   if (!TELEFON_RE.test(telefon)) return errorResponse(400, 'Bitte eine Telefonnummer angeben (für Rückfragen am Tourtag).');
   if (!istGanzzahlInBereich(personen, 1, 30)) return errorResponse(400, 'Bitte eine Personenzahl zwischen 1 und 30 angeben.');
@@ -135,6 +143,7 @@ exports.handler = async (event) => {
         name,
         email,
         telefon,
+        anschrift: { strasse, plz, ort },
         personen,
         fahrzeug,
         preisCentProPerson,

@@ -20,7 +20,7 @@ async function post(fn, body) {
 }
 const admin = (action, daten) => post('admin-api', { action, password: PW, ...daten });
 const lauf = Date.now().toString(36);
-const gast = (n, terminId, extra) => ({ terminId, name: 'Vorabgast ' + lauf + n, email: 'vorab-' + lauf + n + '@example.com', telefon: '0170 0000' + n, personen: 1, fahrzeug: 'eigen', agb: true, firma: '', ...extra });
+const gast = (n, terminId, extra) => ({ terminId, name: 'Vorabgast ' + lauf + n, email: 'vorab-' + lauf + n + '@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 0000' + n, personen: 1, fahrzeug: 'eigen', agb: true, firma: '', ...extra });
 const inZukunft = (tage) => new Date(Date.now() + tage * 86400000).toISOString();
 const termineOeffentlich = async (fid) => (await (await fetch(B + 'termine-oeffentlich?fuehrungId=' + fid)).json()).termine;
 

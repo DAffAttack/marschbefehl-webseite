@@ -19,7 +19,7 @@ async function admin(action, body) { return post('admin-api', { action, password
 const mails = () => { try { return fs.readdirSync(AUSGANG).filter((d) => d.endsWith('.txt')); } catch { return []; } };
 const lauf = Date.now().toString(36);
 async function buchen(terminId, n, personen) {
-  const r = await post('buchung-anlegen', { terminId, name: 'Storno-Gast ' + lauf + '-' + n, email: 'storno-' + lauf + '-' + n + '@example.com', telefon: '0170 5' + n, personen, fahrzeug: 'eigen', agb: true, firma: '' });
+  const r = await post('buchung-anlegen', { terminId, name: 'Storno-Gast ' + lauf + '-' + n, email: 'storno-' + lauf + '-' + n + '@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 5' + n, personen, fahrzeug: 'eigen', agb: true, firma: '' });
   if (r.status !== 200) throw new Error('Buchung fehlgeschlagen: ' + JSON.stringify(r.j));
   return { nummer: r.j.nummer, s: new URL(r.j.url).searchParams.get('s') };
 }
@@ -75,7 +75,7 @@ async function buchungNach(nummer) { return (await admin('list')).j.buchungen.fi
   pruef('3 Absage-Mails im Ausgang', mails().length === m0 + 3, (mails().length - m0) + ' Mails');
   const oeff = await get('termine-oeffentlich?fuehrungId=' + fId);
   pruef('Abgesagter Termin nicht mehr öffentlich', oeff.j.ok && !oeff.j.termine.some((t) => t.id === t2.id));
-  r = await post('buchung-anlegen', { terminId: t2.id, name: 'Spät', email: 'spaet@example.com', telefon: '0170 1', personen: 1, fahrzeug: 'eigen', agb: true, firma: '' });
+  r = await post('buchung-anlegen', { terminId: t2.id, name: 'Spät', email: 'spaet@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 1', personen: 1, fahrzeug: 'eigen', agb: true, firma: '' });
   pruef('Buchen auf abgesagten Termin → abgewiesen', r.status === 400, r.j.error);
   r = await admin('cancel-termin', { terminId: t2.id });
   pruef('Termin zweimal absagen → abgewiesen', r.status === 400);

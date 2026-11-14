@@ -4,6 +4,7 @@
 
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { datumLesbar } = require('./zahlung');
+const { LOGO_PNG_BASE64, LOGO_SEITENVERHAELTNIS } = require('./logo-rechnung');
 
 function absender() {
   return {
@@ -72,22 +73,31 @@ async function rechnungPdf({ rechnungsnummer, rechnungsdatum, buchung, fuehrung,
   const zeichne = (text, x, yy, opt = {}) =>
     seite.drawText(String(text), { x, y: yy, size: opt.size || 10, font: opt.fett ? fett : normal, color: opt.farbe || rgb(0.12, 0.12, 0.12) });
 
-  // Kopf: Marke links, Absender rechts
-  zeichne(A.marke, rand, y - 14, { size: 16, fett: true, farbe: gruen });
-  zeichne('Führungen zu den Schauplätzen der Schlacht um die Seelower Höhen', rand, y - 30, { size: 9, farbe: grau });
+  // Kopf: ZSH-Logo links (enthält den Schriftzug), Absender rechts
+  const logo = await doc.embedPng(Buffer.from(LOGO_PNG_BASE64, 'base64'));
+  const logoH = 78;
+  const logoB = logoH * LOGO_SEITENVERHAELTNIS;
+  seite.drawImage(logo, { x: rand, y: y - logoH, width: logoB, height: logoH });
+  zeichne('Führungen zu den Schauplätzen der Schlacht um die Seelower Höhen', rand, y - logoH - 14, { size: 9, farbe: grau });
   const absZeilen = [A.name, A.strasse, A.ort, A.email, A.web].concat(A.steuernummer ? ['Steuernummer ' + A.steuernummer] : []);
   absZeilen.forEach((z, i) => {
     const w = normal.widthOfTextAtSize(z, 9);
     zeichne(z, 595.28 - rand - w, y - 14 - i * 12, { size: 9, farbe: grau });
   });
-  y -= 110;
+  y -= 130;
 
-  // Empfänger
+  // Empfänger mit vollständiger Anschrift (Buchungen vor dem 14.11.2026 haben keine)
   zeichne('Rechnung an', rand, y, { size: 8, farbe: grau });
   y -= 14;
   zeichne(buchung.name, rand, y, { size: 11, fett: true });
   y -= 14;
-  zeichne(buchung.email, rand, y, { size: 10 });
+  const an = buchung.anschrift || {};
+  for (const z of [an.strasse, [an.plz, an.ort].filter(Boolean).join(' ')]) {
+    if (!z) continue;
+    zeichne(z, rand, y, { size: 10 });
+    y -= 13;
+  }
+  zeichne(buchung.email, rand, y, { size: 9, farbe: grau });
   y -= 36;
 
   // Titel + Eckdaten

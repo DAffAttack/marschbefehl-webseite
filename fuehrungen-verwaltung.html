@@ -902,7 +902,7 @@
       buchungenListEl.innerHTML = buchungenFuerTermin.map(function(b){
         return '<div class="buchung-row" data-id="' + b.id + '">' +
           nummerText(b) + statusBadge(b) + ' ' +
-          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + (b.vorab ? ' &middot; Vorab' : '') + '</span></span>' +
+          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + (b.anschrift ? ' &middot; ' + escapeHtml(b.anschrift.strasse + ', ' + b.anschrift.plz + ' ' + b.anschrift.ort) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + (b.vorab ? ' &middot; Vorab' : '') + '</span></span>' +
           rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') +
         '</div>';
       }).join('');

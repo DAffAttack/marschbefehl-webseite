@@ -55,7 +55,7 @@ function pdfText(buf) {
 function tageAb(heute, n) { const d = new Date(heute + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
 const lauf = Date.now().toString(36);
 function gast(n, personen, terminId) {
-  return { terminId, name: 'Überweiser ' + lauf + '-' + n, email: 'ueberw-' + lauf + '-' + n + '@example.com', telefon: '0170 100' + n, personen, fahrzeug: 'eigen', agb: true, firma: '' };
+  return { terminId, name: 'Überweiser ' + lauf + '-' + n, email: 'ueberw-' + lauf + '-' + n + '@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 100' + n, personen, fahrzeug: 'eigen', agb: true, firma: '' };
 }
 async function attrappe(nr, s, ergebnis) { return (await post('attrappe-bezahlen', { nr, s, ergebnis })).j; }
 

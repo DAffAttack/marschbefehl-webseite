@@ -22,7 +22,7 @@ function dateien() { try { return fs.readdirSync(AUSGANG); } catch { return []; 
   const vorher = new Set(dateien());
 
   // 1) Buchen + zahlen
-  const b = await post('buchung-anlegen', { terminId: termin.id, name: 'Mail Prüfgast', email: 'mail-pruef@example.com', telefon: '0170 9999999', personen: 2, fahrzeug: 'eigen', agb: true, firma: '' });
+  const b = await post('buchung-anlegen', { terminId: termin.id, name: 'Mail Prüfgast', email: 'mail-pruef@example.com', strasse: 'Probeweg 1', plz: '15306', ort: 'Seelow', telefon: '0170 9999999', personen: 2, fahrzeug: 'eigen', agb: true, firma: '' });
   pruef('Buchung angelegt', b.status === 200, b.j.nummer);
   const s = new URL(b.j.url).searchParams.get('s');
   const z = await post('attrappe-bezahlen', { nr: b.j.nummer, s, ergebnis: 'bezahlt' });
