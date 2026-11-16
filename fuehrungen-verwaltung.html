@@ -401,11 +401,11 @@
     letter-spacing:0.04em;
     color:var(--muted);
     font-weight:600;
-    padding:0 10px 8px;
+    padding:0 7px 8px;
     border-bottom:1px solid var(--line);
   }
   .uebersicht-table td{
-    padding:10px 10px;
+    padding:10px 7px;
     border-bottom:1px solid var(--line);
     vertical-align:top;
   }
@@ -1323,6 +1323,7 @@
   function gebuchtAmText(b){
     var t = zeitpunktDe(b.erstelltAm);
     if(!t) return '<span class="muted">unbekannt</span>';
+    t = t.replace(', ', '<br>'); // Uhrzeit unter das Datum, sonst ragt die Tabelle aus dem Kasten
     var spaeter = b.bezahltAm && (new Date(b.bezahltAm) - new Date(b.erstelltAm) > 30 * 60 * 1000);
     return t + (spaeter ? '<br><span style="color:#777; font-size:.8rem;">bezahlt ' + zeitpunktDe(b.bezahltAm) + '</span>' : '');
   }
@@ -1371,10 +1372,10 @@
           '<td>' + (z.termin ? formatDatum(z.termin.datumIso, z.termin.uhrzeit) : '<span class="muted">Termin gelöscht</span>') + '</td>' +
           '<td style="white-space:nowrap;">' + gebuchtAmText(b) + '</td>' +
           '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
-          '<td>' + escapeHtml(b.email) + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
+          '<td style="overflow-wrap:break-word;">' + escapeHtml(b.email).replace('@', '@<wbr>') + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
           '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
           '<td style="white-space:nowrap;">' + zahlartText(b) + '</td>' +
-          '<td><div style="display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:120px;">' + rechnungLink(b) + mailErneutKnopf(b) + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</div></td>' +
+          '<td><div style="display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:100px;">' + rechnungLink(b) + mailErneutKnopf(b) + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</div></td>' +
         '</tr>';
       }).join('') +
       '</tbody></table>';
