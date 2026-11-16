@@ -903,7 +903,7 @@
       buchungenListEl.innerHTML = buchungenFuerTermin.map(function(b){
         return '<div class="buchung-row" data-id="' + b.id + '">' +
           nummerText(b) + statusBadge(b) + ' ' +
-          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + (b.anschrift ? ' &middot; ' + escapeHtml(b.anschrift.strasse + ', ' + b.anschrift.plz + ' ' + b.anschrift.ort) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + (b.vorab ? ' &middot; Vorab' : '') + (b.zahlart ? ' &middot; ' + escapeHtml(b.zahlart) : '') + '</span></span>' +
+          '<span class="who">' + escapeHtml(b.name) + ' <span>&middot; ' + escapeHtml(b.email) + (b.telefon ? ' &middot; ' + escapeHtml(b.telefon) : '') + (b.anschrift ? ' &middot; ' + escapeHtml(b.anschrift.strasse + ', ' + b.anschrift.plz + ' ' + b.anschrift.ort) : '') + ' &middot; ' + b.personen + ' Pers.' + (b.fahrzeug === 'eigen' ? ' &middot; eigenes Kfz' : b.fahrzeug === 'mitfahrer' ? ' &middot; Mitfahrer' : '') + (b.vorab ? ' &middot; Vorab' : '') + (b.zahlart ? ' &middot; ' + escapeHtml(b.zahlart) : '') + (zeitpunktDe(b.erstelltAm) ? ' &middot; gebucht ' + zeitpunktDe(b.erstelltAm) : '') + '</span></span>' +
           rechnungLink(b) + ' ' + mailErneutKnopf(b) + ' ' + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') +
         '</div>';
       }).join('');
@@ -1312,6 +1312,21 @@
   function zahlartText(b){ return b.zahlart ? '<span class="zahlart">' + escapeHtml(b.zahlart) + '</span>' : '<span style="color:#aaa;">–</span>'; }
   function nummerText(b){ return b.nummer ? '<span class="nummer" style="font-family:ui-monospace,Consolas,monospace; font-size:.85rem; color:#777;">' + escapeHtml(b.nummer) + '</span> ' : ''; }
 
+  // Zeitpunkt der Buchung (erstelltAm) als "16.11.2026, 18:03 Uhr" in deutscher Zeit.
+  // Bei Überweisung kommt das Geld später: dann zusätzlich "bezahlt ...".
+  function zeitpunktDe(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return '';
+    return d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+  }
+  function gebuchtAmText(b){
+    var t = zeitpunktDe(b.erstelltAm);
+    if(!t) return '<span class="muted">unbekannt</span>';
+    var spaeter = b.bezahltAm && (new Date(b.bezahltAm) - new Date(b.erstelltAm) > 30 * 60 * 1000);
+    return t + (spaeter ? '<br><span style="color:#777; font-size:.8rem;">bezahlt ' + zeitpunktDe(b.bezahltAm) + '</span>' : '');
+  }
+
   function renderBuchungsuebersicht(fuehrungen, termine, buchungen){
     if(buchungen.length === 0){
       uebersichtWrap.innerHTML = '<div class="state-note">Noch keine Buchungen vorhanden.</div>';
@@ -1347,13 +1362,14 @@
         '<div class="uebersicht-stat"><div class="zahl">' + gesamtPersonen + '</div><div class="label">Personen gesamt</div></div>' +
       '</div>' +
       '<table class="uebersicht-table"><thead><tr>' +
-        '<th>Führung</th><th>Termin</th><th>Name</th><th>E-Mail</th><th>Personen</th><th style="white-space:nowrap;">Bezahlt mit</th><th></th>' +
+        '<th>Führung</th><th>Termin</th><th style="white-space:nowrap;">Gebucht am</th><th>Name</th><th>E-Mail</th><th>Personen</th><th style="white-space:nowrap;">Bezahlt mit</th><th></th>' +
       '</tr></thead><tbody>' +
       zeilen.map(function(z){
         var b = z.buchung;
         return '<tr data-buchung-id="' + b.id + '">' +
           '<td class="fuehrung-name">' + (z.fuehrung ? escapeHtml(z.fuehrung.titel) : '<span class="muted">unbekannt</span>') + '</td>' +
           '<td>' + (z.termin ? formatDatum(z.termin.datumIso, z.termin.uhrzeit) : '<span class="muted">Termin gelöscht</span>') + '</td>' +
+          '<td style="white-space:nowrap;">' + gebuchtAmText(b) + '</td>' +
           '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
           '<td>' + escapeHtml(b.email) + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
           '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
