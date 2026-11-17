@@ -308,10 +308,13 @@ function neueId() {
 // 2026-08-17: keine genaue Zahl freier Plätze mehr nach außen zeigen, weder in
 // der Terminliste noch in Fehlermeldungen/Buchungsbestätigungen). "wenige" greift
 // unterhalb von 20% der Gesamtkapazität (mindestens 1 Platz Schwelle).
+// Seit 17.11.2026 zusätzlich "gefragt": ab 50% verkauft, damit die Verknappung
+// früher sichtbar wird (vorher stand bis 80% verkauft noch "verfügbar").
 function verfuegbarkeitsStatus(frei, maxPersonen) {
   if (frei <= 0) return 'ausgebucht';
   const schwelle = Math.max(1, Math.ceil(maxPersonen * 0.2));
-  return frei <= schwelle ? 'wenige' : 'frei';
+  if (frei <= schwelle) return 'wenige';
+  return frei <= maxPersonen * 0.5 ? 'gefragt' : 'frei';
 }
 
 // Schreibvorgänge nacheinander: Auf Netlify bearbeitet eine Function-Instanz ohnehin nur

@@ -174,7 +174,7 @@
   /* Ampel-Badges statt genauer Platzzahl -- bewusst keine exakten Zahlen nach
      außen (siehe werner_notizen.md, 2026-08-17): "verfügbar" / "wenige Plätze" /
      "ausgebucht" statt "12 von 20 frei". */
-  .badge-frei, .badge-wenige, .badge-full{
+  .badge-frei, .badge-gefragt, .badge-wenige, .badge-full{
     display:inline-flex;
     align-items:center;
     font-size:11px;
@@ -185,8 +185,9 @@
     border-radius:999px;
   }
   .badge-frei{ color:#2f6e3a; background:#eef7ef; }
-  .badge-wenige{ color:#8a6a1f; background:#fdf6e8; }
-  .badge-full{ color:#8a3f2f; background:#fdf1ee; }
+  .badge-gefragt{ color:#8a5a0b; background:#fbeed6; }
+  .badge-wenige{ color:#9b2c22; background:#fce5e2; }
+  .badge-full{ color:#5f5e5a; background:#efede7; }
 
   .termin-actions{ margin-top:16px; }
   .btn-book{
@@ -535,6 +536,7 @@
   function verfuegbarkeitsBadge(status){
     if(status === 'ausgebucht') return '<span class="badge-full">Ausgebucht</span>';
     if(status === 'wenige') return '<span class="badge-wenige">Nur noch wenige Plätze frei</span>';
+    if(status === 'gefragt') return '<span class="badge-gefragt">Gefragter Termin</span>';
     return '<span class="badge-frei">Plätze verfügbar</span>';
   }
 
@@ -559,7 +561,7 @@
         '<div class="termin-price">' + formatPreis(t.preisProPerson) + ' &euro;<span>pro Person</span></div>' +
       '</div>' +
       '<div class="termin-capacity">' +
-        '<div class="capacity-label">' + (vorab ? '<span class="badge-wenige">Vorab-Buchung für Kanalmitglieder &middot; für alle ab ' + escapeHtml(vorabAb) + '</span>' : verfuegbarkeitsBadge(t.verfuegbarkeit)) + '</div>' +
+        '<div class="capacity-label">' + (vorab ? '<span class="badge-gefragt">Vorab-Buchung für Kanalmitglieder &middot; für alle ab ' + escapeHtml(vorabAb) + '</span>' : verfuegbarkeitsBadge(t.verfuegbarkeit)) + '</div>' +
       '</div>' +
       '<div class="termin-actions">' +
         '<button type="button" class="btn-book"' + (t.ausgebucht ? ' disabled' : '') + '>' +
