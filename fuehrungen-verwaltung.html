@@ -559,6 +559,12 @@
     </div>
 
     <div class="panel">
+      <h2>Bewertungen</h2>
+      <p class="panel-sub">Was Gäste über den QR-Code auf den Karten abgegeben haben (Seite /bewerten.html). „Darf gezeigt werden“ heißt: Der Gast hat zugestimmt, dass die Bewertung mit Vornamen auf der Webseite erscheint.</p>
+      <div id="bewertungen-wrap"><div class="state-note">Wird geladen …</div></div>
+    </div>
+
+    <div class="panel">
       <h2>Abgleich Zahlungen ↔ Buchungen</h2>
       <p class="panel-sub">Läuft täglich um 6 Uhr: Was der Zahlungsanbieter kennt, gegen die Buchungsliste. Jede Abweichung mit Bedeutung und TO-DO; bei Abweichungen kommt eine Mail.</p>
       <div id="abgleich-wrap"><div class="state-note">Wird geladen …</div></div>
@@ -653,6 +659,43 @@
     dashView.style.display = 'block';
     ladeFuehrungen();
     ladeAbgleich();
+    ladeBewertungen();
+  }
+
+  // Bewertungen (17.11.2026): eigene Function "bewertung", GET liefert alle, POST loeschen.
+  function ladeBewertungen(){
+    var wrap = document.getElementById('bewertungen-wrap');
+    fetch('/.netlify/functions/bewertung', {credentials:'same-origin'})
+      .then(function(res){ return res.json().then(function(d){ return {status:res.status, d:d}; }); })
+      .then(function(r){
+        if(r.status === 401){ goToLogin(); return; }
+        if(!r.d.ok){ wrap.innerHTML = '<div class="state-note">Fehler: ' + escapeHtml(r.d.error || '') + '</div>'; return; }
+        if(!r.d.anzahl){ wrap.innerHTML = '<div class="state-note">Noch keine Bewertungen.</div>'; return; }
+        var html = '<p style="font-size:15px; margin:0 0 12px;"><strong>' + String(r.d.schnitt).replace('.', ',') + ' von 5 Sternen</strong> aus ' + r.d.anzahl + ' Bewertung' + (r.d.anzahl === 1 ? '' : 'en') + '</p>';
+        r.d.bewertungen.forEach(function(b){
+          var d = new Date(b.zeit);
+          var wann = d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+          html += '<div style="border:1px solid #e6e5e0; border-radius:10px; padding:10px 12px; margin-bottom:8px; background:#fff;">'
+            + '<div style="display:flex; justify-content:space-between; gap:10px; align-items:baseline;">'
+            + '<span style="color:#e3a72f; font-size:18px; letter-spacing:1px;">' + '★★★★★'.slice(0, b.sterne) + '<span style="color:#d7d5cd;">' + '★★★★★'.slice(b.sterne) + '</span></span>'
+            + '<span style="font-size:12px; color:#7a7a76;">' + escapeHtml(wann) + '</span></div>'
+            + (b.text ? '<p style="margin:6px 0; line-height:1.45;">' + escapeHtml(b.text) + '</p>' : '')
+            + '<div style="font-size:12.5px; color:#7a7a76;">' + escapeHtml(b.name || 'ohne Namen')
+            + (b.fuehrung ? ' · ' + escapeHtml(b.fuehrung) : '')
+            + ' · ' + (b.zeigen ? '<strong style="color:#4c6420;">darf gezeigt werden</strong>' : 'nur intern')
+            + ' · <a href="#" data-loeschen="' + escapeHtml(b.id) + '" style="color:#a33;">löschen</a></div></div>';
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll('[data-loeschen]').forEach(function(a){
+          a.addEventListener('click', function(e){
+            e.preventDefault();
+            if(!confirm('Diese Bewertung endgültig löschen?')) return;
+            fetch('/.netlify/functions/bewertung', {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({aktion:'loeschen', id:a.getAttribute('data-loeschen')})}).then(function(){ ladeBewertungen(); });
+          });
+        });
+      })
+      .catch(function(){ wrap.innerHTML = '<div class="state-note">Bewertungen konnten nicht geladen werden.</div>'; });
   }
 
   loginBtn.addEventListener('click', function(){

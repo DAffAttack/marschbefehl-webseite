@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Führung bewerten – Zeitreise Seelower Höhen</title>
+<meta name="description" content="Wie war deine Führung mit Zeitreise Seelower Höhen? Eine kurze Bewertung hilft, die Führungen besser zu machen.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/assets/nav.css">
+<script defer src="/assets/site-chrome.js"></script>
+<style>
+  :root{
+    --green:#A1C74F; --green-dark:#84a83c; --ink:#1b1b1b; --ink-soft:#303030;
+    --paper:#fafaf8; --line:#e6e5e0; --muted:#7a7a76; --gold:#e3a72f; --max:560px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--paper); color:var(--ink); -webkit-font-smoothing:antialiased;}
+  main{max-width:var(--max); margin:0 auto; padding:40px 20px 72px;}
+  h1{font-size:clamp(26px,6vw,34px); margin:0 0 8px;}
+  .intro{font-size:16px; color:var(--muted); line-height:1.55; margin:0 0 28px;}
+  .fuehrung{display:inline-block; font-size:13px; font-weight:600; background:#eef3e1; color:#4c6420; padding:5px 10px; border-radius:999px; margin-bottom:18px;}
+  form{display:flex; flex-direction:column; gap:14px;}
+  .sterne{display:flex; gap:6px; justify-content:space-between; max-width:340px;}
+  .sterne button{flex:1; aspect-ratio:1; font-size:clamp(34px,10vw,46px); line-height:1; background:none; border:none; cursor:pointer; color:#d7d5cd; padding:0; transition:transform 120ms ease, color 120ms ease;}
+  .sterne button.an{color:var(--gold);}
+  .sterne button:active{transform:scale(.9);}
+  .sterne-text{font-size:14px; color:var(--muted); min-height:20px; margin-top:-6px;}
+  label.feld{font-size:14px; font-weight:600; color:var(--ink-soft);}
+  textarea, input[type=text]{font-family:inherit; font-size:16px; padding:13px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); width:100%;}
+  textarea{resize:vertical; min-height:120px;}
+  textarea:focus, input[type=text]:focus{outline:none; border-color:var(--green-dark);}
+  .haken{display:flex; gap:10px; align-items:flex-start; font-size:14px; line-height:1.45; color:var(--ink-soft);}
+  .haken input{width:20px; height:20px; margin-top:1px; flex:none; accent-color:var(--green-dark);}
+  .topf{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;}
+  button.senden{font-family:inherit; font-size:16px; font-weight:700; padding:15px 26px; background:var(--green); color:var(--ink); border:none; border-radius:10px; cursor:pointer;}
+  button.senden:disabled{opacity:.5; cursor:default;}
+  .meldung{font-size:14px; color:#a33; min-height:18px;}
+  .hinweis{font-size:12.5px; color:var(--muted); line-height:1.5;}
+  .hinweis a{color:var(--green-dark);}
+  .danke{display:none; text-align:left;}
+  .danke h2{font-size:26px; margin:0 0 10px;}
+  .danke p{font-size:16px; line-height:1.55; color:var(--ink-soft);}
+  .weiter{display:flex; flex-direction:column; gap:10px; margin-top:22px;}
+  .weiter a{display:block; text-decoration:none; font-weight:700; padding:14px 18px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);}
+  .weiter a.haupt{background:var(--green); border-color:var(--green);}
+  footer{background:var(--ink-soft); color:#c7c7c2; text-align:center; padding:32px 20px; font-size:13px; margin-top:40px;}
+  footer a{color:#c7c7c2; opacity:.85; text-decoration:none;}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main>
+  <div id="formular-bereich">
+    <h1>Wie war die Führung?</h1>
+    <p class="intro">Danke, dass du dabei warst. Eine kurze Rückmeldung hilft mir, die Führungen noch besser zu machen.</p>
+    <div class="fuehrung" id="fuehrung-anzeige" hidden></div>
+
+    <form id="bewertung" novalidate>
+      <div class="sterne" id="sterne" role="radiogroup" aria-label="Sterne">
+        <button type="button" data-w="1" aria-label="1 Stern">★</button>
+        <button type="button" data-w="2" aria-label="2 Sterne">★</button>
+        <button type="button" data-w="3" aria-label="3 Sterne">★</button>
+        <button type="button" data-w="4" aria-label="4 Sterne">★</button>
+        <button type="button" data-w="5" aria-label="5 Sterne">★</button>
+      </div>
+      <div class="sterne-text" id="sterne-text">Tippe auf die Sterne.</div>
+
+      <label class="feld" for="text">Was hat dir gefallen, was kann ich besser machen?</label>
+      <textarea id="text" maxlength="1500" placeholder="Ein, zwei Sätze genügen."></textarea>
+
+      <label class="feld" for="name">Vorname (freiwillig)</label>
+      <input type="text" id="name" maxlength="80" autocomplete="given-name">
+
+      <label class="haken"><input type="checkbox" id="zeigen"> Meine Bewertung darf mit Vornamen auf marschbefehl.com gezeigt werden.</label>
+
+      <div class="topf" aria-hidden="true"><input type="text" id="firma" tabindex="-1" autocomplete="off"></div>
+
+      <button type="submit" class="senden" id="senden">Bewertung abschicken</button>
+      <div class="meldung" id="meldung"></div>
+      <p class="hinweis">Gespeichert werden nur Sterne, Text, Vorname und die Führung. Mehr dazu in der <a href="/datenschutz.html#bewertung">Datenschutzerklärung</a>.</p>
+    </form>
+  </div>
+
+  <div class="danke" id="danke">
+    <h2>Vielen Dank!</h2>
+    <p>Deine Bewertung ist angekommen. Wenn du noch mehr von den Seelower Höhen sehen willst:</p>
+    <div class="weiter">
+      <a class="haupt" href="/fuehrungen.html">Nächste Führung ansehen</a>
+      <a href="https://www.youtube.com/channel/UCS66v6xykvKupyUme3wpMwA/join" rel="noopener">YouTube-Mitglied werden</a>
+      <a href="/">Zur Startseite</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div>&copy; 2026 Zeitreise Seelower Höhen</div>
+  <div style="margin-top:10px;"><a href="/impressum.html">Impressum</a> &nbsp;·&nbsp; <a href="/datenschutz.html">Datenschutz</a></div>
+</footer>
+
+<script>
+(function(){
+  var TEXTE = ['', 'Schwach', 'Geht so', 'Gut', 'Sehr gut', 'Ausgezeichnet'];
+  var wert = 0;
+  var knoepfe = document.querySelectorAll('#sterne button');
+  function zeigen(w){
+    knoepfe.forEach(function(b){ b.classList.toggle('an', Number(b.dataset.w) <= w); b.setAttribute('aria-checked', Number(b.dataset.w) === w); });
+    document.getElementById('sterne-text').textContent = w ? w + ' von 5 – ' + TEXTE[w] : 'Tippe auf die Sterne.';
+  }
+  knoepfe.forEach(function(b){ b.addEventListener('click', function(){ wert = Number(b.dataset.w); zeigen(wert); }); });
+
+  // Führung aus dem QR-Code, z. B. /bewerten.html?f=Das%20Gro%C3%9Fkampfverfahren
+  var f = (new URLSearchParams(location.search).get('f') || '').slice(0, 120);
+  if (f) { var a = document.getElementById('fuehrung-anzeige'); a.textContent = 'Führung: ' + f; a.hidden = false; }
+
+  document.getElementById('bewertung').addEventListener('submit', function(e){
+    e.preventDefault();
+    var meldung = document.getElementById('meldung');
+    if (!wert) { meldung.textContent = 'Bitte zuerst 1 bis 5 Sterne antippen.'; return; }
+    var knopf = document.getElementById('senden');
+    knopf.disabled = true; meldung.textContent = '';
+    fetch('/.netlify/functions/bewertung', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        sterne: wert,
+        text: document.getElementById('text').value,
+        name: document.getElementById('name').value,
+        fuehrung: f,
+        zeigen: document.getElementById('zeigen').checked,
+        firma: document.getElementById('firma').value
+      })
+    }).then(function(r){ return r.json().then(function(d){ return {ok: r.ok && d.ok, d: d}; }); })
+      .then(function(r){
+        if (!r.ok) { meldung.textContent = r.d.error || 'Das hat nicht geklappt. Bitte noch einmal versuchen.'; knopf.disabled = false; return; }
+        document.getElementById('formular-bereich').style.display = 'none';
+        document.getElementById('danke').style.display = 'block';
+        window.scrollTo(0, 0);
+      })
+      .catch(function(){ meldung.textContent = 'Keine Verbindung. Bitte noch einmal versuchen.'; knopf.disabled = false; });
+  });
+})();
+</script>
+<script>
+(function(){
+  if(!/(^|\.)marschbefehl\.com$/.test(location.hostname)) return;
+  var s = document.createElement('script'); s.async = true; s.src = '//gc.zgo.at/count.js';
+  s.setAttribute('data-goatcounter', 'https://marschbefehl.goatcounter.com/count'); document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>
