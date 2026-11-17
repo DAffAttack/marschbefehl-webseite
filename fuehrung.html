@@ -509,7 +509,12 @@
     listWrap.appendChild(note);
   }
 
+  // Zahlarten-Leiste der Seite ausblenden, solange ein Buchungsformular offen ist (dort steht sie schon)
+  function zahlartenSeiteAbgleichen(){
+    document.getElementById('zahlarten-seite').hidden = !!document.querySelector('.booking-panel.ist-offen');
+  }
   function openPanel(panel){
+    panel.classList.add('ist-offen'); zahlartenSeiteAbgleichen();
     if(hasGsap && !reduceMotion){
       gsap.killTweensOf(panel);
       gsap.to(panel, {height:'auto', duration:0.32, ease:'power2.out'});
@@ -518,6 +523,7 @@
     }
   }
   function closePanel(panel){
+    panel.classList.remove('ist-offen'); zahlartenSeiteAbgleichen();
     if(hasGsap && !reduceMotion){
       gsap.killTweensOf(panel);
       gsap.to(panel, {height:0, duration:0.24, ease:'power2.in'});
