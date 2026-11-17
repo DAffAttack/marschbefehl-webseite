@@ -19,6 +19,7 @@
   h1{font-size:clamp(26px,6vw,34px); margin:0 0 8px;}
   .intro{font-size:16px; color:var(--muted); line-height:1.55; margin:0 0 28px;}
   .fuehrung{display:inline-block; font-size:13px; font-weight:600; background:#eef3e1; color:#4c6420; padding:5px 10px; border-radius:999px; margin-bottom:18px;}
+  .fuehrung[hidden]{display:none;}
   form{display:flex; flex-direction:column; gap:14px;}
   .sterne{display:flex; gap:6px; justify-content:space-between; max-width:340px;}
   .sterne button{flex:1; aspect-ratio:1; font-size:clamp(34px,10vw,46px); line-height:1; background:none; border:none; cursor:pointer; color:#d7d5cd; padding:0; transition:transform 120ms ease, color 120ms ease;}
@@ -26,6 +27,8 @@
   .sterne button:active{transform:scale(.9);}
   .sterne-text{font-size:14px; color:var(--muted); min-height:20px; margin-top:-6px;}
   label.feld{font-size:14px; font-weight:600; color:var(--ink-soft);}
+  select{font-family:inherit; font-size:16px; padding:13px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); width:100%;}
+  select:focus{outline:none; border-color:var(--green-dark);}
   textarea, input[type=text]{font-family:inherit; font-size:16px; padding:13px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); width:100%;}
   textarea{resize:vertical; min-height:120px;}
   textarea:focus, input[type=text]:focus{outline:none; border-color:var(--green-dark);}
@@ -58,6 +61,14 @@
     <div class="fuehrung" id="fuehrung-anzeige" hidden></div>
 
     <form id="bewertung" novalidate>
+      <div id="auswahl-bereich" hidden>
+        <label class="feld" for="auswahl">Welche Führung hast du besucht?</label>
+        <select id="auswahl" style="margin-top:8px;">
+          <option value="">Bitte wählen …</option>
+          <option value="Weiß ich nicht mehr">Weiß ich nicht mehr</option>
+        </select>
+      </div>
+
       <div class="sterne" id="sterne" role="radiogroup" aria-label="Sterne">
         <button type="button" data-w="1" aria-label="1 Stern">★</button>
         <button type="button" data-w="2" aria-label="2 Sterne">★</button>
@@ -114,9 +125,29 @@
   var f = (new URLSearchParams(location.search).get('f') || '').slice(0, 120);
   if (f) { var a = document.getElementById('fuehrung-anzeige'); a.textContent = 'Führung: ' + f; a.hidden = false; }
 
+  // Ohne QR-Code (Besucher über den Link auf der Webseite): Führung aus der Liste wählen lassen.
+  var auswahl = document.getElementById('auswahl');
+  if (!f) {
+    document.getElementById('auswahl-bereich').hidden = false;
+    fetch('/.netlify/functions/fuehrungen-oeffentlich')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        var liste = d && (d.fuehrungen || d.liste || (Array.isArray(d) ? d : null));
+        if (!liste) return;
+        var letzte = auswahl.lastElementChild;
+        liste.forEach(function(x){
+          if (!x || !x.titel) return;
+          var o = document.createElement('option'); o.value = o.textContent = String(x.titel).slice(0, 120);
+          auswahl.insertBefore(o, letzte);
+        });
+      })
+      .catch(function(){});
+  }
+
   document.getElementById('bewertung').addEventListener('submit', function(e){
     e.preventDefault();
     var meldung = document.getElementById('meldung');
+    if (!f && !auswahl.value) { meldung.textContent = 'Bitte zuerst die Führung auswählen.'; return; }
     if (!wert) { meldung.textContent = 'Bitte zuerst 1 bis 5 Sterne antippen.'; return; }
     var knopf = document.getElementById('senden');
     knopf.disabled = true; meldung.textContent = '';
@@ -126,7 +157,7 @@
         sterne: wert,
         text: document.getElementById('text').value,
         name: document.getElementById('name').value,
-        fuehrung: f,
+        fuehrung: f || auswahl.value,
         zeigen: document.getElementById('zeigen').checked,
         firma: document.getElementById('firma').value
       })
