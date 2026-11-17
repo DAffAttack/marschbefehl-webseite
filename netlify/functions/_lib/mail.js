@@ -210,6 +210,17 @@ function neueBuchungMail({ buchung, fuehrung, termin }) {
   return { betreff, text, html };
 }
 
+// Kopie an den Nutzer, sobald ein Gast Überweisung gewählt hat (Geld noch nicht da).
+// Geht das Geld ein, kommt zusätzlich die normale „Neue Buchung … bezahlt“-Kopie.
+function neueUeberweisungBuchungMail({ buchung, fuehrung, termin }) {
+  const wann = datumLesbar(termin.datumIso, termin.uhrzeit);
+  const u = buchung.ueberweisung || {};
+  const betreff = 'Neue Buchung ' + buchung.nummer + ' (Überweisung offen): ' + buchung.personen + ' Pers. für ' + wann;
+  const text = buchung.nummer + ' – ÜBERWEISUNG OFFEN\n' + fuehrung.titel + ' am ' + wann + '\n' + buchung.name + ' · ' + buchung.email + ' · ' + buchung.telefon + '\n' + buchung.personen + ' Pers., ' + (buchung.fahrzeug === 'eigen' ? 'eigenes Kfz' : 'Mitfahrer') + ', ' + euro(buchung.betragCent) + ' noch nicht bezahlt\nPlatz gehalten bis ' + fristLesbar(buchung.ueberweisungFrist) + ', Verwendungszweck ' + (u.referenz || buchung.nummer) + '\nDer Gast hat die Zahlungsanweisung per Mail bekommen. Bestätigung und Rechnung gehen automatisch raus, sobald das Geld eingeht; dann kommt hier noch eine Kopie „bezahlt“.\nVerwaltung: https://marschbefehl.com/fuehrungen-verwaltung.html\n';
+  const html = htmlRahmen('Neue Buchung – Überweisung offen', '<pre style="white-space:pre-wrap;font:inherit;">' + esc(text) + '</pre>');
+  return { betreff, text, html };
+}
+
 function stornoMail({ buchung, fuehrung, termin, grund, erstattet }) {
   const wann = termin ? datumLesbar(termin.datumIso, termin.uhrzeit) : '';
   const betreff = 'Buchung ' + buchung.nummer + ' storniert' + (erstattet ? ', Betrag wird erstattet' : '');
@@ -321,4 +332,4 @@ function ueberweisungVerfallenMail({ buchung, fuehrung, termin }) {
   return { betreff, text, html };
 }
 
-module.exports = { betriebsart, mailSenden, bestaetigungsMail, erinnerungsMail, neueBuchungMail, stornoMail, absageMail, abgleichMail, ueberweisungMail, ueberweisungErinnerungMail, ueberweisungVerfallenMail, absender, antwortAn, kopieAn, attrappeOrdner };
+module.exports = { betriebsart, mailSenden, bestaetigungsMail, erinnerungsMail, neueBuchungMail, neueUeberweisungBuchungMail,stornoMail, absageMail, abgleichMail, ueberweisungMail, ueberweisungErinnerungMail, ueberweisungVerfallenMail, absender, antwortAn, kopieAn, attrappeOrdner };

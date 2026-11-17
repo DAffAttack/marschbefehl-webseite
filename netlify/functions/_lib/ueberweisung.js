@@ -14,7 +14,7 @@
 
 const { withState, readState, findFuehrung, protokoll } = require('./store');
 const { zahlungAbbrechen } = require('./zahlung');
-const { mailSenden, ueberweisungMail, ueberweisungErinnerungMail, ueberweisungVerfallenMail } = require('./mail');
+const { mailSenden, ueberweisungMail, ueberweisungErinnerungMail, ueberweisungVerfallenMail, neueUeberweisungBuchungMail, kopieAn } = require('./mail');
 
 const ERINNERUNG_NACH_TAGEN = 2;
 
@@ -59,6 +59,23 @@ async function nachUeberweisungGewaehlt(buchungId) {
       if (x) x.mailUeberweisungAm = new Date().toISOString();
       return { ok: true };
     });
+  }
+  // Kopie an den Nutzer sofort (Wunsch 17.11.2026), unabhängig davon, ob die Gast-Mail klappte
+  if (kopieAn()) {
+    const u = await buchungMitUmfeld(buchungId);
+    if (u && u.termin) {
+      try {
+        const k = neueUeberweisungBuchungMail(u);
+        const erg = await mailSenden({ an: kopieAn(), betreff: k.betreff, text: k.text, html: k.html });
+        await withState((st) => {
+          const x = st.buchungen.find((y) => y.id === buchungId);
+          if (x) protokoll(st, { art: 'mail-kopie-ueberweisung', buchungId: x.id, nummer: x.nummer, text: erg.betriebsart + ' ' + erg.id });
+          return { ok: true };
+        });
+      } catch (err) {
+        console.error('ueberweisung: Kopie an den Nutzer fehlgeschlagen:', err.message);
+      }
+    }
   }
   return r;
 }
