@@ -393,7 +393,7 @@ async function zahlungenAbrufen({ seit }) {
  * liefert { typ, text }, z. B. { typ:'paypal', text:'PayPal' } oder
  * { typ:'card', text:'Karte Visa · Apple Pay' }. null, wenn (noch) nicht bestimmbar.
  */
-const ZAHLART_TEXT = { card: 'Karte', paypal: 'PayPal', klarna: 'Klarna', customer_balance: 'Banküberweisung', sepa_debit: 'Lastschrift', link: 'Link', sofort: 'Sofort', giropay: 'Giropay', eps: 'EPS', amazon_pay: 'Amazon Pay', revolut_pay: 'Revolut Pay' };
+const ZAHLART_TEXT = { card: 'Kredit-/Debitkarte', paypal: 'PayPal', klarna: 'Klarna', customer_balance: 'Banküberweisung', sepa_debit: 'Lastschrift', link: 'Link', sofort: 'Sofort', giropay: 'Giropay', eps: 'EPS', amazon_pay: 'Amazon Pay', revolut_pay: 'Revolut Pay' };
 const MARKE_TEXT = { visa: 'Visa', mastercard: 'Mastercard', amex: 'Amex', maestro: 'Maestro', discover: 'Discover', jcb: 'JCB', unionpay: 'UnionPay', diners: 'Diners', cartes_bancaires: 'CB' };
 const WALLET_TEXT = { apple_pay: 'Apple Pay', google_pay: 'Google Pay', link: 'Link', samsung_pay: 'Samsung Pay' };
 
@@ -403,7 +403,7 @@ function zahlartAusDetails(d) {
     const marke = MARKE_TEXT[d.card.brand] || (d.card.brand ? d.card.brand : '');
     const wallet = d.card.wallet && WALLET_TEXT[d.card.wallet.type];
     // Anzeige nur die Kartenmarke (sein Wunsch 14.11.2026: „Visa würde reichen“), auch bei Apple Pay, Google Pay, Link.
-    return { typ: wallet ? d.card.wallet.type : 'card', text: marke || wallet || 'Karte', wallet: wallet || '' };
+    return { typ: wallet ? d.card.wallet.type : 'card', text: marke || wallet || 'Kredit-/Debitkarte', wallet: wallet || '' };
   }
   return { typ: d.type, text: ZAHLART_TEXT[d.type] || d.type };
 }
