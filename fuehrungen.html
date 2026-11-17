@@ -229,6 +229,37 @@
   @media (prefers-reduced-motion: reduce){
     .fuehrung-card, .fuehrung-card .thumb img, .fuehrung-card .cta svg{ transition:none; }
   }
+
+  /* ---------- Werbevideo (Zwei-Klick: YouTube lädt erst nach Klick) ---------- */
+  .werbevideo{ margin:0 0 44px; }
+  .werbevideo .rahmen{
+    position:relative; aspect-ratio:16/9; border-radius:16px; overflow:hidden;
+    background:#111; box-shadow:0 10px 30px rgba(0,0,0,.12);
+  }
+  .werbevideo .rahmen img, .werbevideo .rahmen iframe{
+    position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:cover; display:block;
+  }
+  .werbevideo button.start{
+    position:absolute; inset:0; width:100%; height:100%; padding:0; border:0; cursor:pointer;
+    background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0) 45%);
+    display:flex; align-items:flex-end; justify-content:flex-start;
+  }
+  .werbevideo .knopf{
+    display:inline-flex; align-items:center; gap:12px; margin:0 0 22px 22px;
+    background:var(--green); color:#1b1b1b; font-weight:700; font-size:16px;
+    padding:12px 20px 12px 14px; border-radius:999px; transition:transform .2s, background .2s;
+  }
+  .werbevideo .knopf svg{ width:26px; height:26px; }
+  .werbevideo button.start:hover .knopf, .werbevideo button.start:focus-visible .knopf{
+    background:#b4d867; transform:scale(1.04);
+  }
+  .werbevideo button.start:focus-visible{ outline:3px solid var(--green); outline-offset:-3px; }
+  .werbevideo .hinweis{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:10px 2px 0; }
+  .werbevideo .hinweis a{ color:var(--green-dark); }
+  @media (max-width:640px){
+    .werbevideo .knopf{ margin:0 0 14px 14px; font-size:14px; padding:9px 16px 9px 11px; }
+    .werbevideo .knopf svg{ width:22px; height:22px; }
+  }
 </style>
 </head>
 <body>
@@ -238,6 +269,16 @@
 <main>
   <h1>Führungen vor Ort</h1>
   <p class="intro">Geführte Touren zu den Schauplätzen der Schlacht um die Seelower Höhen am Oderbruch – vor Ort, dort wo Geschichte stattgefunden hat.</p>
+
+  <section class="werbevideo" aria-label="Video: Ein Tag auf historischem Boden">
+    <div class="rahmen" id="werbevideo-rahmen">
+      <img src="/assets/fuehrungen/werbevideo-vorschau.jpg" alt="Schlachtfeldtour – Rapsfeld vor den Seelower Höhen" width="1280" height="720" loading="lazy">
+      <button type="button" class="start" id="werbevideo-start" aria-label="Video abspielen (lädt von YouTube)">
+        <span class="knopf"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1b1b1b"/><path d="M10 7.5v9l7-4.5z" fill="#A1C74F"/></svg>Video ansehen · 2:29</span>
+      </button>
+    </div>
+    <p class="hinweis">Das Video wird erst nach dem Klick von YouTube geladen. Dabei werden Daten an YouTube (Google) übertragen – mehr dazu in der <a href="/datenschutz.html#youtube">Datenschutzerklärung</a>.</p>
+  </section>
 
   <div class="steps">
     <div class="step">
@@ -382,6 +423,23 @@
   s.src = '//gc.zgo.at/count.js';
   s.setAttribute('data-goatcounter', 'https://marschbefehl.goatcounter.com/count');
   document.body.appendChild(s);
+})();
+</script>
+<script>
+// Werbevideo: Zwei-Klick-Lösung. Vor dem Klick keine Verbindung zu YouTube.
+(function(){
+  var knopf = document.getElementById('werbevideo-start');
+  if(!knopf) return;
+  knopf.addEventListener('click', function(){
+    var f = document.createElement('iframe');
+    f.src = 'https://www.youtube-nocookie.com/embed/HRN8_O7Mud4?autoplay=1&rel=0&playsinline=1';
+    f.title = 'Schlachtfeldtouren an den Seelower Höhen';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    f.allowFullscreen = true;
+    f.referrerPolicy = 'strict-origin-when-cross-origin';
+    var r = document.getElementById('werbevideo-rahmen');
+    r.innerHTML = ''; r.appendChild(f);
+  });
 })();
 </script>
 </body>
