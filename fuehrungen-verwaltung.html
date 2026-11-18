@@ -412,7 +412,10 @@
   .uebersicht-table tr:last-child td{ border-bottom:none; }
   .uebersicht-table .fuehrung-name{ font-weight:600; color:var(--ink); }
   .uebersicht-table .muted{ color:var(--muted); }
-  .uebersicht-table .btn-secondary{ font-size:12px; padding:5px 10px; }
+  .uebersicht-table .btn-secondary{ font-size:12px; padding:5px 8px; white-space:nowrap; }
+  /* Buchungsübersicht: feste Spaltenbreiten, damit die Tabelle nie aus dem Kasten ragt */
+  #buchungsuebersicht-wrap .uebersicht-table{ table-layout:fixed; }
+  #buchungsuebersicht-wrap .uebersicht-table td{ overflow-wrap:anywhere; }
 
   .state-note{
     padding:24px;
@@ -1371,6 +1374,35 @@
     return t + (spaeter ? '<br><span style="color:#777; font-size:.8rem;">bezahlt ' + zeitpunktDe(b.bezahltAm) + '</span>' : '');
   }
 
+  // Fahrzeuge je Termin (18.11.2026): jede aktive Buchung "eigenes Kfz" = 1 Fahrzeug in der
+  // Kolonne, Mitfahrer bringen keins mit. Stornierte/verfallene Buchungen zählen nicht.
+  function kfzJeTagHtml(zeilen){
+    var jeTermin = {}, reihenfolge = [];
+    zeilen.forEach(function(z){
+      if(!z.termin || istInaktiv(z.buchung)) return;
+      var id = z.termin.id;
+      if(!jeTermin[id]){ jeTermin[id] = {termin:z.termin, fuehrung:z.fuehrung, kfz:0, personen:0, mitfahrer:0, offen:0}; reihenfolge.push(id); }
+      var e = jeTermin[id], b = z.buchung;
+      e.personen += b.personen || 0;
+      if(b.fahrzeug === 'eigen'){ e.kfz += 1; if((b.status || 'bezahlt') !== 'bezahlt') e.offen += 1; }
+      else if(b.fahrzeug === 'mitfahrer'){ e.mitfahrer += b.personen || 0; }
+    });
+    if(!reihenfolge.length) return '';
+    return '<div style="margin-top:18px; padding-top:14px; border-top:2px solid var(--line);">' +
+      '<div style="font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:600; margin-bottom:8px;">Fahrzeuge je Termin</div>' +
+      reihenfolge.map(function(id){
+        var e = jeTermin[id];
+        return '<div style="display:flex; gap:16px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line);">' +
+          '<span style="flex:0 0 auto; font-size:26px; font-weight:700; color:var(--ink); min-width:1.6em; text-align:right;">' + e.kfz + '</span>' +
+          '<span style="flex:1; min-width:0;"><strong>Fahrzeug' + (e.kfz === 1 ? '' : 'e') + ' am ' + formatDatum(e.termin.datumIso, e.termin.uhrzeit) + '</strong>' +
+          '<br><span class="muted" style="font-size:.85rem;">' + (e.fuehrung ? escapeHtml(e.fuehrung.titel) + ' · ' : '') + e.personen + ' Personen' +
+          (e.mitfahrer ? ', davon ' + e.mitfahrer + ' Mitfahrer' : '') +
+          (e.offen ? ' · ' + e.offen + ' Fahrzeug' + (e.offen === 1 ? '' : 'e') + ' aus Buchungen mit offener Überweisung' : '') + '</span></span>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+
   function renderBuchungsuebersicht(fuehrungen, termine, buchungen){
     if(buchungen.length === 0){
       uebersichtWrap.innerHTML = '<div class="state-note">Noch keine Buchungen vorhanden.</div>';
@@ -1406,22 +1438,25 @@
         '<div class="uebersicht-stat"><div class="zahl">' + gesamtPersonen + '</div><div class="label">Personen gesamt</div></div>' +
       '</div>' +
       '<table class="uebersicht-table"><thead><tr>' +
-        '<th>Führung</th><th>Termin</th><th style="white-space:nowrap;">Gebucht am</th><th>Name</th><th>E-Mail</th><th>Personen</th><th style="white-space:nowrap;">Bezahlt mit</th><th></th>' +
+        // Nur sechs Spalten: Der Kasten ist 960 px breit, bei acht Spalten ragten die Knöpfe
+        // zweimal rechts heraus (14.11. und 18.11.2026). Neue Angaben in eine bestehende
+        // Spalte setzen, keine neue Spalte anfügen.
+        '<th style="width:24%;">Termin &amp; Führung</th><th style="width:20%;">Gast</th><th style="width:22%;">Kontakt</th><th style="width:8%;">Pers.</th><th style="width:14%;">Zahlung</th><th style="width:12%;"></th>' +
       '</tr></thead><tbody>' +
       zeilen.map(function(z){
         var b = z.buchung;
         return '<tr data-buchung-id="' + b.id + '">' +
-          '<td class="fuehrung-name">' + (z.fuehrung ? escapeHtml(z.fuehrung.titel) : '<span class="muted">unbekannt</span>') + '</td>' +
-          '<td>' + (z.termin ? formatDatum(z.termin.datumIso, z.termin.uhrzeit) : '<span class="muted">Termin gelöscht</span>') + '</td>' +
-          '<td style="white-space:nowrap;">' + gebuchtAmText(b) + '</td>' +
+          '<td><span class="fuehrung-name">' + (z.termin ? formatDatum(z.termin.datumIso, z.termin.uhrzeit) : '<span class="muted">Termin gelöscht</span>') + '</span>' +
+            '<br><span class="muted" style="font-size:.8rem;">' + (z.fuehrung ? escapeHtml(z.fuehrung.titel) : 'Führung unbekannt') + '</span></td>' +
           '<td>' + nummerText(b) + escapeHtml(b.name) + '<br>' + statusBadge(b) + '</td>' +
-          '<td style="overflow-wrap:break-word;">' + escapeHtml(b.email).replace('@', '@<wbr>') + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
+          '<td style="overflow-wrap:anywhere;">' + escapeHtml(b.email).replace('@', '@<wbr>') + (b.telefon ? '<br><span style="color:#777; font-size:.85rem;">' + escapeHtml(b.telefon) + '</span>' : '') + '</td>' +
           '<td>' + b.personen + (b.fahrzeug === 'eigen' ? '<br><span style="color:#777; font-size:.8rem;">eigenes Kfz</span>' : b.fahrzeug === 'mitfahrer' ? '<br><span style="color:#777; font-size:.8rem;">Mitfahrer</span>' : '') + '</td>' +
-          '<td style="white-space:nowrap;">' + zahlartText(b) + '</td>' +
-          '<td><div style="display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:100px;">' + rechnungLink(b) + mailErneutKnopf(b) + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</div></td>' +
+          '<td>' + zahlartText(b) + '<br><span style="color:#777; font-size:.8rem;">gebucht ' + gebuchtAmText(b) + '</span></td>' +
+          '<td><div style="display:flex; flex-direction:column; align-items:stretch; gap:6px;">' + rechnungLink(b) + mailErneutKnopf(b) + (istInaktiv(b) ? '' : '<button type="button" class="btn-secondary btn-cancel-buchung-uebersicht" data-status="' + (b.status || 'bezahlt') + '">Stornieren</button>') + '</div></td>' +
         '</tr>';
       }).join('') +
-      '</tbody></table>';
+      '</tbody></table>' +
+      kfzJeTagHtml(zeilen);
 
     uebersichtWrap.innerHTML = html;
 
