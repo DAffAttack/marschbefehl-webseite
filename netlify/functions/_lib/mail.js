@@ -206,8 +206,31 @@ function neueBuchungMail({ buchung, fuehrung, termin }) {
   const wann = datumLesbar(termin.datumIso, termin.uhrzeit);
   const betreff = 'Neue Buchung ' + buchung.nummer + ': ' + buchung.personen + ' Pers. für ' + wann;
   const text = buchung.nummer + '\n' + fuehrung.titel + ' am ' + wann + '\n' + buchung.name + ' · ' + buchung.email + ' · ' + buchung.telefon + '\n' + buchung.personen + ' Pers., ' + (buchung.fahrzeug === 'eigen' ? 'eigenes Kfz' : 'Mitfahrer') + ', ' + euro(buchung.betragCent) + ' bezahlt\nVerwaltung: https://marschbefehl.com/fuehrungen-verwaltung.html\n';
-  const html = htmlRahmen('Neue Buchung', '<pre style="white-space:pre-wrap;font:inherit;">' + esc(text) + '</pre>');
+  const html = htmlRahmen(
+    'Neue Buchung',
+    tabelle(betreiberZeilen(buchung, fuehrung, wann, euro(buchung.betragCent) + ' (bezahlt)')) + verwaltungKnopf()
+  );
   return { betreff, text, html };
+}
+
+// Betreiber-Kopien als Tabelle (wie die Gäste-Mails), nicht als Textblock: Proton & Co.
+// brechen lange Zeilen im <pre> sonst mitten im Satz um.
+function betreiberZeilen(buchung, fuehrung, wann, betrag) {
+  return [
+    ['Buchungsnummer', buchung.nummer],
+    ['Führung', fuehrung.titel],
+    ['Termin', wann],
+    ['Name', buchung.name],
+    ['E-Mail', buchung.email],
+    ['Telefon', buchung.telefon || '–'],
+    ['Personen', String(buchung.personen)],
+    ['Anreise', buchung.fahrzeug === 'eigen' ? 'eigenes Kfz' : 'Mitfahrer'],
+    ['Betrag', betrag],
+  ].map(([k, v]) => [esc(k), esc(v)]);
+}
+
+function verwaltungKnopf() {
+  return '<p style="margin:18px 0 0;"><a href="https://marschbefehl.com/fuehrungen-verwaltung.html" style="display:inline-block;background:#6F8F2E;color:#ffffff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:8px;">Verwaltung öffnen</a></p>';
 }
 
 // Kopie an den Nutzer, sobald ein Gast Überweisung gewählt hat (Geld noch nicht da).
@@ -217,7 +240,15 @@ function neueUeberweisungBuchungMail({ buchung, fuehrung, termin }) {
   const u = buchung.ueberweisung || {};
   const betreff = 'Neue Buchung ' + buchung.nummer + ' (Überweisung offen): ' + buchung.personen + ' Pers. für ' + wann;
   const text = buchung.nummer + ' – ÜBERWEISUNG OFFEN\n' + fuehrung.titel + ' am ' + wann + '\n' + buchung.name + ' · ' + buchung.email + ' · ' + buchung.telefon + '\n' + buchung.personen + ' Pers., ' + (buchung.fahrzeug === 'eigen' ? 'eigenes Kfz' : 'Mitfahrer') + ', ' + euro(buchung.betragCent) + ' noch nicht bezahlt\nPlatz gehalten bis ' + fristLesbar(buchung.ueberweisungFrist) + ', Verwendungszweck ' + (u.referenz || buchung.nummer) + '\nDer Gast hat die Zahlungsanweisung per Mail bekommen. Bestätigung und Rechnung gehen automatisch raus, sobald das Geld eingeht; dann kommt hier noch eine Kopie „bezahlt“.\nVerwaltung: https://marschbefehl.com/fuehrungen-verwaltung.html\n';
-  const html = htmlRahmen('Neue Buchung – Überweisung offen', '<pre style="white-space:pre-wrap;font:inherit;">' + esc(text) + '</pre>');
+  const html = htmlRahmen(
+    'Neue Buchung – Überweisung offen',
+    tabelle(betreiberZeilen(buchung, fuehrung, wann, euro(buchung.betragCent) + ' (noch nicht bezahlt)').concat([
+      ['Platz gehalten bis', esc(fristLesbar(buchung.ueberweisungFrist))],
+      ['Verwendungszweck', esc(u.referenz || buchung.nummer)],
+    ])) +
+      '<p style="color:#555;margin:0;">Der Gast hat die Zahlungsanweisung per Mail bekommen. Bestätigung und Rechnung gehen automatisch raus, sobald das Geld eingeht; dann kommt hier noch eine Kopie „bezahlt“.</p>' +
+      verwaltungKnopf()
+  );
   return { betreff, text, html };
 }
 
